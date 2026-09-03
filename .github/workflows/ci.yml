@@ -17,3 +17,15 @@ jobs:
       - name: Run tests
         working-directory: backend
         run: ./mvnw -B test
+
+  branches:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate branch contents against the manifest
+        run: python scripts/validate_lab_branches.py --repo . --remote origin
