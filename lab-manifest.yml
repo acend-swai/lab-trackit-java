@@ -1,0 +1,51 @@
+# Lab content manifest - source of truth for what each branch of this repo must and
+# must not contain. Same mechanism as acend-swai/lab-trackit, validated by
+# scripts/validate_lab_branches.py (copied from inc-edu-sweai).
+#
+# WHY: start branches are hand-authored snapshots and drift silently. A branch that
+# ships a file the lab has participants create turns the lab into a read-along.
+#
+#   must_exist     - scaffold the lab treats as already there
+#   must_not_exist - files the lab has the participant create
+#
+# When a lab changes what it creates or reads, UPDATE THIS FILE.
+
+branches:
+  m1-1-start:
+    role: starting point for lab 1, module M1.1
+    must_exist:
+      - README.md
+      - verify.sh
+      - lab-manifest.yml
+      - .env.example
+      - .devcontainer/devcontainer.json
+      - docs/architecture.md
+      - docs/adr/0001-layered-spring-architecture.md
+      - backend/pom.xml
+      - backend/mvnw
+      - backend/src/main/resources/application.yml
+      - backend/src/main/java/ch/incratec/trackit/TrackitApplication.java
+      - backend/src/main/java/ch/incratec/trackit/web/HealthController.java
+      - backend/src/test/java/ch/incratec/trackit/web/HealthControllerTest.java
+    must_not_exist:
+      - AGENTS.md
+      - CLAUDE.md
+      - backend/src/main/java/ch/incratec/trackit/domain/Task.java
+      - backend/src/main/java/ch/incratec/trackit/domain/TaskStatus.java
+      - backend/src/main/java/ch/incratec/trackit/dto/CreateTaskRequest.java
+      - backend/src/main/java/ch/incratec/trackit/service/TaskService.java
+      - backend/src/main/java/ch/incratec/trackit/web/TaskController.java
+      - backend/src/test/java/ch/incratec/trackit/web/TaskControllerTest.java
+
+  m1-1-solution:
+    role: reference state after lab 1
+    must_exist:
+      - AGENTS.md
+      - CLAUDE.md
+      - backend/src/main/java/ch/incratec/trackit/domain/Task.java
+      - backend/src/main/java/ch/incratec/trackit/domain/TaskStatus.java
+      - backend/src/main/java/ch/incratec/trackit/dto/CreateTaskRequest.java
+      - backend/src/main/java/ch/incratec/trackit/service/TaskService.java
+      - backend/src/main/java/ch/incratec/trackit/web/TaskController.java
+      - backend/src/test/java/ch/incratec/trackit/web/TaskControllerTest.java
+      - backend/src/main/java/ch/incratec/trackit/web/HealthController.java
