@@ -28,4 +28,4 @@ jobs:
         with:
           python-version: "3.12"
       - name: Validate branch contents against the manifest
-        run: python scripts/validate_lab_branches.py --repo . --remote origin
+        run: python scripts/validate_lab_branches.py --repo . --remote origin --manifest lab-manifest.yml
