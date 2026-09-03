@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: trackit
+server:
+  port: 8080

@@ -1,0 +1,16 @@
+{
+  "name": "lab-trackit-java",
+  "image": "maven:3.9-eclipse-temurin-21",
+  "workspaceFolder": "/workspaces/lab-trackit-java",
+  "postCreateCommand": "cd backend && ./mvnw -q -B dependency:go-offline || true",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vmware.vscode-boot-dev-pack",
+        "Anthropic.claude-code",
+        "GitHub.copilot"
+      ]
+    }
+  }
+}
