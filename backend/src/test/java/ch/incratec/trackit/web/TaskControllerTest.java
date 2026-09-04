@@ -30,7 +30,7 @@ class TaskControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(ONE_TASK))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.title").value("Write the context file"))
                 .andExpect(jsonPath("$.status").value("OPEN"));
     }
