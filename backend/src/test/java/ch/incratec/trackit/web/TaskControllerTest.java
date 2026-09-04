@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import ch.incratec.trackit.service.TaskService;
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -30,7 +31,7 @@ class TaskControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(ONE_TASK))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.title").value("Write the context file"))
                 .andExpect(jsonPath("$.status").value("OPEN"));
     }
@@ -41,6 +42,29 @@ class TaskControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"\",\"project\":\"trackit\"}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getTaskByIdReturnsTheTask() throws Exception {
+        String created = mockMvc.perform(post("/api/v1/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ONE_TASK))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        long id = JsonPath.parse(created).read("$.id", Integer.class);
+
+        mockMvc.perform(get("/api/v1/tasks/" + id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value((int) id))
+                .andExpect(jsonPath("$.title").value("Write the context file"));
+    }
+
+    @Test
+    void getUnknownTaskReturnsNotFound() throws Exception {
+        mockMvc.perform(get("/api/v1/tasks/999"))
+                .andExpect(status().isNotFound());
     }
 
     @Test

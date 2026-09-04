@@ -4,6 +4,7 @@ import ch.incratec.trackit.domain.Task;
 import ch.incratec.trackit.domain.TaskStatus;
 import ch.incratec.trackit.dto.CreateTaskRequest;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.stereotype.Service;
@@ -27,5 +28,9 @@ public class TaskService {
 
     public List<Task> findAll() {
         return List.copyOf(tasks);
+    }
+
+    public Optional<Task> findById(long id) {
+        return tasks.stream().filter(task -> task.id() == id).findFirst();
     }
 }
