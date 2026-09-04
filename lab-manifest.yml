@@ -72,3 +72,20 @@ branches:
       - backend/src/main/java/ch/incratec/trackit/web/TaskNotFoundException.java
       - backend/src/main/java/ch/incratec/trackit/web/TaskController.java
       - backend/src/test/java/ch/incratec/trackit/web/TaskControllerTest.java
+
+  m1-3-start:
+    role: starting point for lab 3, module M1.3 - the M1.2 solution plus the server shortlist
+    must_exist:
+      - docs/mcp-candidates.md
+      - sandbox/.gitkeep
+      - .claude/skills/add-endpoint/SKILL.md
+    must_not_exist:
+      - .mcp.json
+      - docs/mcp-scoping.md
+
+  m1-3-solution:
+    role: reference state after lab 3 - feature F3, one scoped server and the written verdict
+    must_exist:
+      - .mcp.json
+      - docs/mcp-scoping.md
+      - docs/mcp-candidates.md
