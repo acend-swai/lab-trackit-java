@@ -84,6 +84,11 @@ git push -u mine m1-1-start:my-workshop
 
 `git remote -v` shows `mine` next to `origin`, and the branch `my-workshop` shows up on your own remote.
 
+Point `mine` at an empty repo, not at a fork of this one. A fork carries the same branch
+names as `origin`, and every later `git checkout mN-start` then fails with
+`matched multiple (2) remote tracking branches`. If you already added a fork, name the
+remote on each checkout: `git checkout -b m1-2-start origin/m1-2-start`.
+
 ### Bring your own stack
 
 Everything except the Maven commands works on any repo you bring. Do the same setup there:
@@ -108,9 +113,9 @@ We compare how the models handle the same workload, so the numbers only mean som
 you write them down while you work. The suggested models are a starting point, swap in your
 own if you would rather measure those.
 
-**1. The comparison sheet.** Copy this into a scratch file. You fill one column per model
-you run today, Opus in task 1 and two more in task 5. The five-minute discussion at the end
-of the module runs on it, so bring it filled in.
+**1. The comparison sheet.** Copy this into a scratch file. You fill one column per model you
+run today: Opus in task 1, kimi-k3 in task 5, and a third if you take the optional step 5.
+The five-minute discussion at the end of the module runs on it, so bring it filled in.
 
 | Criterion | Model 1 | Model 2 | Model 3 | Model 4 |
 |---|---|---|---|---|
@@ -145,7 +150,7 @@ You bring these lines to the transfer discussion in M4.2.
 | Command | What it does |
 |---|---|
 | `/init` | Scans the repo and writes a `CLAUDE.md` describing it |
-| `/cost` | What the session has cost so far. Alias for `/usage` |
+| `/usage` | What the session has cost so far. `/cost` shows the same session block |
 | `/context` | What fills the context window right now |
 | `/compact` | Summarises the session and frees the window |
 | `/permissions` | Allow, ask and deny rules per tool |
@@ -164,11 +169,15 @@ handout. Reference: [Claude Code commands](https://code.claude.com/docs/en/comma
 |---|---|
 | `Esc` | Interrupts Claude mid-turn and keeps the work so far. Closes a dialog, declines a permission prompt |
 | `Esc` `Esc` | On an empty prompt, opens the rewind menu. With text, clears the draft |
-| `Shift+Tab` | Cycles the permission mode: manual, accept edits, plan |
+| `Shift+Tab` | Cycles the permission mode: manual, accept edits, plan, and auto |
 | `Ctrl+R` | Searches your command history |
 
 Interrupt a run that goes somewhere you did not ask for. `Ctrl+C` also interrupts, and
 twice on an empty prompt it exits Claude Code.
+
+**Note.** On a paid plan the session starts in auto mode, where a classifier approves most
+actions instead of you. The first `Shift+Tab` takes you to manual. The status bar always
+names the mode you are in. `CHEATSHEET.md` in the repo root has the full table.
 
 ---
 
@@ -435,7 +444,7 @@ It points at the `dto` rule in `AGENTS.md`. An answer that cites nothing is a gu
 ### Step 4: Explain the test yourself
 
 Open `backend/src/test/java/ch/acend/trackit/web/TaskControllerTest.java` and answer one
-question out loud: how does the test give the controller a `TaskService`? `@WebMvcTest`
+question explicit: how does the test give the controller a `TaskService`? `@WebMvcTest`
 loads the web layer alone, so the service is either mocked or imported explicitly. Both are
 correct, and they test different things. Find which one your run chose.
 
@@ -463,10 +472,27 @@ the Claude session:
 /cost
 ```
 
-Write the figure into the comparison sheet. That is the cost of one full loop on your own
-repo, and the module asks you for it.
+Here is an example, what this result looks like:
 
-Then compare against the reference:
+```text
+Total cost:            $1.47
+Total duration (API):  3m 41s
+Total duration (wall): 22m 22s
+Total code changes:    123 lines added, 6 lines removed
+Usage by model:
+       claude-opus-5:  650 input, 16.2k output, 1.2m cache read, 73.4k cache write ($1.46)
+```
+
+Three lines are worth reading. The API duration is the time the model actually worked, the
+wall duration is the time you spent, and the gap between them is you reading and deciding.
+The cache read is far larger than the input because every turn re-sends the conversation,
+and the cached part is billed at a fraction. That is why a long session in one window costs
+less than the same work restarted in four.
+
+Write the figure into the comparison sheet. That is the cost of one full loop on your own
+repo.
+
+Then compare the created code implementation against the reference:
 
 ```bash
 git diff origin/m1-1-solution --stat
@@ -485,7 +511,7 @@ and which file should not be there. That catches the mistakes that matter in a r
 **Trap:** Code you cannot explain is code you cannot maintain. Green tests are not a reason
 to skip reading it, they are a reason you have time to.
 
-## Task 3: Take the context file away (5 min)
+## Task 3: Take the context file away (5 min, optional)
 
 Task 1 ran with `AGENTS.md` in place and the strongest model available. Now we remove the
 grounding and keep everything else, so the only variable is the context file.
@@ -558,7 +584,7 @@ Most "the model is bad" verdicts are missing context, not missing capability.
 debugging conversation into one sentence. Write one for your repo and check the agent
 prerequisites, not just the app.
 
-## Task 4: Write the context file yourself (6 min)
+## Task 4: Write the context file yourself (6 min, optional)
 
 Tasks 1 and 3 showed what the shipped `AGENTS.md` is worth. **Nobody hands you that file in
 your own repo**, so this is the task where you produce one: generate a draft with `/init`, put
@@ -674,10 +700,11 @@ long and unread.
 
 Reference: [skills and context](https://code.claude.com/docs/en/skills)
 
-## Task 5: Run the same job on other models (9 min)
+## Task 5: Run the same job using OpenCode and open-weight models (optional)
 
-We run task 1 again against different models through the gateway. Use the same job text, the
-comparison only holds if the input is identical.
+We run task 1 again, this time through OpenCode against OpenRouter on `moonshotai/kimi-k3`.
+Use the same job text, the comparison only holds if the input is identical. Steps 1 to 4 are
+the required run; step 5 adds a third model if the clock allows.
 
 ### Step 1: Start from a clean clone
 
@@ -687,21 +714,70 @@ Clone the branch again so the second run starts where the first one did:
 cd ..
 git clone -b m1-1-start https://github.com/acend-swai/lab-trackit-java.git trackit-b
 cd trackit-b
-cp ../trackit/.env . && set -a && source .env && set +a
+cp ../trackit/.env .env
+set -a; source .env; set +a
+```
+
+`git branch --show-current` reads `m1-1-start` and `git status` shows a clean tree: a second
+clone, `trackit-b`, that holds none of your task 1 work. `AGENTS.md` and `opencode.json` both
+ship on the branch, so the keys are the only thing to carry over.
+
+**Warning.** Run these lines in the terminal you started them in, not inside the devcontainer
+you opened on `trackit`. That container is bound to the first clone, so `cd ..` there does not
+reach `trackit-b`. Outside the container the `source` line is what exports
+`OPENROUTER_API_KEY`; without it OpenCode starts but every model call fails on a missing key.
+
+### Step 2: Pick the model
+
+Start OpenCode from the repo root:
+
+```bash
 opencode
 ```
 
-You see the OpenCode prompt in a second clone, `trackit-b`, that holds none of your task 1
-work. `AGENTS.md` ships on the branch, so there is nothing to copy over.
+A terminal UI opens on an empty session, with the model and the current agent on the status
+line. The loop is the one from task 1: you state a job, it reads and edits files and runs
+commands, you correct it. These are the commands you need for this run:
 
-### Step 2: Pick the model
+| Command | What it does |
+|---|---|
+| `/models` | Switches the model, at the start or mid-session |
+| `/agents` | Lists the agents and switches between them. `Tab` cycles them directly |
+| `/new` | Starts a fresh session, so the next model begins where this one did |
+| `/undo` | Removes the last exchange and reverts the files it changed |
+| `/init` | Writes an `AGENTS.md`, the same job `/init` did in task 3 |
+| `/help` | Lists what your version has |
+
+Two agents matter today, and `Tab` switches between them. `build` is the default and holds
+all tools. `plan` cannot edit your code, only write plan files under `.opencode/plans/`, so
+it reads and proposes where you want a plan before a change. There is no cost command; open
+the sidebar with `Ctrl+X` then `b` for tokens and dollars spent.
+
+Three differences from Claude Code decide what you do in this lab:
+
+| In Claude Code | In OpenCode |
+|---|---|
+| Anthropic models | Any provider it is configured for, which is why this comparison is possible at all |
+| Reads `CLAUDE.md` | Reads `AGENTS.md`, so task 3's context file steers this run with nothing to port |
+| Asks permission in the session | Reads a `permission` block in `opencode.json`, and ships permissive: it edits and runs commands without asking |
+
+**Warning.** `/undo` restores files through git, so commit before you hand the agent a job.
+On an uncommitted tree it has nothing to restore you to.
+
+Now list the models:
 
 ```text
 /models
 ```
 
-The models on offer are the ones in `GATEWAY_MODELS` in your `.env`. Take a commercial one
-for this run.
+The list holds the models `opencode.json` in the repo root declares for the OpenRouter
+provider. Pick `moonshotai/kimi-k3`, a frontier open-weights MoE. That is the one run
+everyone does, so the comparison sheet has the same second column in every seat. `/models`
+also works mid-session, so a model that stalls can be swapped without losing the thread.
+
+Task 1 ran on Opus through Claude Code. This run changes two things at once, the model and
+the harness, and that is the point: you are comparing loops you could actually put in front
+of your own repo, not model cards.
 
 ### Step 3: Run the same job
 
@@ -722,8 +798,8 @@ Show me your plan before you change any file.
 ```
 
 **Warning.** Correct this plan only as much as you corrected the one in task 1, and note how
-many corrections each model needed. Corrections you make on one model and not the other are
-the fastest way to a comparison that means nothing.
+many corrections it needed. Corrections you make on one model and not on another are the
+fastest way to a comparison that means nothing.
 
 ### Step 4: Check the result yourself
 
@@ -742,32 +818,42 @@ BUILD SUCCESS
 Count the turns it took to get there and fill in the column. Then hold the result against
 the six files you read in task 2. The layers are the check, not the prose.
 
-### Step 5: Do it again on an open-weights model
+Do not judge which answer is prettier. Find where the model breaks:
 
-Throw the run away and repeat steps 2 to 4, this time picking an open-weights model:
+- Tool selection: did it pick the right tool for the step?
+- `AGENTS.md`: did it stick to the standards or drift?
+- Error output: did it act on the failure or repeat itself?
+- Stopping: did it stop while red, or never stop?
+
+### Step 5 - OPTIONAL: Run a third model
+
+Do this one if the clock allows. Two filled columns already carry the discussion; stop here
+if you are short on time and come back after Part 1.
+
+Throw the run away and repeat steps 2 to 4 on another model:
 
 ```bash
 git checkout -- . && git clean -fd
 opencode
 ```
 
-`git status` shows a clean tree before the third run starts. Type `/models` and pick:
+`git status` shows a clean tree before the third run starts. Type `/models` and pick one:
 
 | Model id | What it is | 4-bit footprint |
 |---|---|---|
-| `moonshotai/kimi-k3` | frontier MoE, open weights | far beyond a workstation |
 | `qwen/qwen3-coder-next` | 80B MoE, 3B active, 262k context | about 46 GB |
+| `mistralai/devstral-2512` | Devstral 2, 123B dense | about 62 GB |
+| `nvidia/nemotron-3-super-120b-a12b` | 120B MoE, 12B active, 1M context | about 60 GB |
+| `deepseek/deepseek-v4-flash` | frontier MoE, open weights | far beyond a workstation |
+| `qwen/qwen3.8-max-0902` | Qwen flagship, hosted only | not open weights |
 
-Both are open weights, but only one of them runs on hardware you might own, so the variable
-is how much model the loop can afford when the repository may not leave the building.
-`opencode.json` in the repo root lists both and reads your key from the environment.
+The top two run on hardware you might own; kimi-k3 and deepseek-v4-flash do not, and the
+last one is not open weights at all. That is the variable worth testing: how much model the
+loop can afford when the repository may not leave the building. Pick `qwen/qwen3-coder-next`
+if you want the sharpest contrast with kimi-k3, a small active-parameter count against a
+frontier one.
 
-Do not judge which answer is prettier. Find where the smaller model breaks:
-
-- Tool selection: did it pick the right tool for the step?
-- `AGENTS.md`: did it stick to the standards or drift?
-- Error output: did it act on the failure or repeat itself?
-- Stopping: did it stop while red, or never stop?
+Judge it the same way as the kimi-k3 run, on the four checks above.
 
 **Take home:** Run this bake-off on your own codebase before you standardise on a model. A
 leaderboard says nothing about your repo. Judge on turns to green and rule adherence, not
@@ -829,28 +915,177 @@ and an unreadable one.
 
 **Trap:** Every layer is sent on every turn. `/context` tells you what you are paying.
 
-## Task A3 - ADVANCED: Plan and execute, strictly separated
+## Task A3 - ADVANCED: Separate the plan from the execution
 
-*Deepens task 1.* Do the feature again on a fresh clone:
+*Deepens task 1.* In task 1 you approved each action as it came up, and the job text was
+written for you. Here we build the same feature again, but you write the job text, the agent
+plans without being able to touch a file, and you set the boundary of what it may do before
+it runs. Budget 15 minutes.
 
-1. Write the job text yourself, without the template.
-2. Have it plan in one turn. Do not let it execute. Judge the plan.
-3. Restrict the tool permissions with `/permissions`, deny what this task does not need.
-4. Execute in a new turn.
-5. Ask: `Where were you uncertain in this task, and what did you guess?`
+### Step 1: Start from a clean tree
 
-Compare the two runs: did the separation change the result, or only your confidence in it?
+Task 1 left the feature in your working tree. We build it a second time, so throw that work
+away first:
+
+In your `trackit` clone from the setup:
+
+```bash
+git checkout -- . && git clean -fd
+git status
+```
+
+The output ends in:
+
+```text
+nothing to commit, working tree clean
+```
+
+**Warning.** This deletes the code from task 1. If you want to keep it, commit it to a
+branch of your own first with `git switch -c my-task-1 && git commit -am "task 1 result"`,
+then `git switch m1-1-start`.
+
+### Step 2: Write the job text yourself
+
+Task 1 handed you a finished prompt. Write your own this time, without looking at it. Cover
+four things, because these are what the agent guesses at when you leave them out:
+
+| Part | What it answers |
+|---|---|
+| The goal | Which endpoints, which HTTP verbs, which status codes |
+| The data | Which fields a task has, and what a new task's status is |
+| In scope | Which layers and which tests you expect |
+| Not in scope | Database, frontend, auth, update, delete |
+
+Keep it in a scratch file for now. You send it in step 3.
+
+### Step 3: Let it plan, with editing switched off
+
+Start a session and switch it into plan mode, so a wrong plan cannot become a wrong commit:
+
+```bash
+claude
+```
+
+Press `Shift+Tab` until the status line reads:
+
+```text
+⏸ plan mode on
+```
+
+In this mode the agent reads files and runs read-only commands, and every edit is blocked
+until you approve the plan. Now paste your job text from step 2 and send it.
+
+You get a plan and no file changes. Confirm that in a second terminal:
+
+```bash
+git status
+```
+
+The output still reads:
+
+```text
+nothing to commit, working tree clean
+```
+
+Judge the plan yourself, without the correction table from task 1 to lean on. Then write
+down the answer to one question: **which part of the plan is there because your job text
+said so, and which part did the agent decide on its own?** The second group is the part your
+job text left open.
+
+### Step 4: Set the boundary before you run
+
+The agent is about to edit files. Decide now what it may not touch, instead of deciding it
+one dialog at a time while it runs. Open the permission rules:
+
+```text
+/permissions
+```
+
+The dialog lists the rules under **Allow**, **Ask** and **Deny**, and names the settings file
+each rule comes from. Add deny rules for what this feature has no business doing. These three
+fit the task, add your own:
+
+| Rule | Why it fits this task |
+|---|---|
+| `Bash(git push:*)` | Nothing here goes to a remote |
+| `Edit(./backend/pom.xml)` | The dependencies you need are already in it |
+| `WebFetch` | The pattern to copy is in the repo, not on the web |
+
+Leave the dialog. The rules are in `.claude/settings.local.json`, so check what you wrote:
+
+```bash
+cat .claude/settings.local.json
+```
+
+The output holds your rules:
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Bash(git push:*)",
+      "Edit(./backend/pom.xml)",
+      "WebFetch"
+    ]
+  }
+}
+```
+
+**Note.** `.claude/settings.local.json` is gitignored and stays on your machine.
+`.claude/settings.json` is committed, and that is the one a new joiner inherits on clone.
+Move a rule there once it has proven itself.
+
+### Step 5: Execute, then ask what it guessed
+
+Approve the plan and let it run to green:
+
+```text
+The plan is fine. Implement exactly that, and stop when ./mvnw test passes.
+```
+
+Confirm the result yourself, in the second terminal:
+
+```bash
+cd backend && ./mvnw -q test
+```
+
+The output ends in:
+
+```text
+BUILD SUCCESS
+```
+
+A green suite tells you the code works, not where the agent filled a gap. Ask it directly:
+
+```text
+Where were you uncertain in this task, and what did you guess?
+```
+
+It names the decisions it made without you: a field type, a status code, a package name.
+Hold each one against your job text from step 2. Every guess marks a sentence you did not
+write.
+
+### Step 6: Compare the two runs
+
+Answer this in one line, and bring it to the discussion:
+
+**Did the separation change the result, or only your confidence in it?**
+
+Both answers happen. Often the code comes out much the same and what changed is that you now
+know why it is right. That is a real gain, but it is a gain in review cost, not in
+correctness.
 
 **Take home:** Permission rules belong in the repository, not in each developer's head.
 Committed rules mean a new joiner inherits the deny list on clone. Build the list from
-what went wrong, not from imagination.
+what went wrong in your runs, not from imagination.
 
-**Trap:** A permission dialog is a prompt, and prompts get clicked through. What actually
-stops a command is a hook that refuses it. That is M3.
+**Trap:** A permission dialog is a prompt, and prompts get clicked through. The fifteenth
+dialog at 16:30 gets an approval by reflex. What stops a command whether or not you are
+paying attention is a hook that refuses it. That is M3.
 
 References: [permissions](https://code.claude.com/docs/en/permissions) ·
-[hooks](https://code.claude.com/docs/en/hooks) ·
-[subagents](https://code.claude.com/docs/en/sub-agents)
+[permission modes](https://code.claude.com/docs/en/permission-modes) ·
+[hooks](https://code.claude.com/docs/en/hooks)
 
 ## Task A4 - ADVANCED: Find where the small model breaks
 
@@ -878,8 +1113,9 @@ generalise from one bounded task to "local models are fine", or to the opposite.
 
 ## Bring to the discussion
 
-Five minutes, one question, so have the answer ready in a sentence:
+Five minutes, two questions, please prepare your answers:
 
+- **What did each session cost you?"
 - **What did the smaller model do differently, and where exactly did it break?**
 
 Three more are worth answering for yourself. They come back in M3 and after lunch:
