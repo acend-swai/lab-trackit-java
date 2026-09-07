@@ -77,8 +77,8 @@ if [ -f compose.yaml ]; then
     case "$health" in
       healthy)   echo "[OK]      database container healthy" ;;
       starting)  echo "[MISSING] database container still starting - wait, then re-run" ;;
-      "")        echo "[MISSING] database not started - run: docker compose up -d  (expected before lab 1.2, not before lab 1.1)" ;;
-      *)         echo "[MISSING] database container is '$health' - run: docker compose logs db" ;;
+      "")        echo "[MISSING] database container not running - it starts with the devcontainer, so rebuild it (Dev Containers: Rebuild Container)" ;;
+      *)         echo "[MISSING] database container is '$health' - run: docker logs trackit-db" ;;
     esac
   fi
 fi
