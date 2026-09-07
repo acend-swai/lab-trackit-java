@@ -98,8 +98,11 @@ gap is exactly why task 2 exists.
 **Take home:** `.claude/settings.json` is committed, so the whole team inherits the deny
 list on clone. Add `*.tfstate` to yours today.
 
-**Trap:** Believing `.gitignore` protects anything from the agent. It governs git, and the
-agent is not git.
+**Trap:** Treating the `deny` list as security. You just watched it refuse the Read tool and
+wave `cat .env` through in the same minute. It constrains Claude's own file tools and
+nothing else: not the shell, not an MCP server, not a hook, not anything else running as
+your user. Use it to stop the accident, and keep the secret out of the repo to stop the
+attacker.
 
 Reference: [permissions](https://code.claude.com/docs/en/permissions)
 
