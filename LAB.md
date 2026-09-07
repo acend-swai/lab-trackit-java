@@ -371,29 +371,147 @@ the internet.
 
 Optional. Start when Part 1 is green and committed.
 
-## Task A1 - ADVANCED: A skill that reviews for cost
+## Task A1 - ADVANCED: Validate with Microsoft's Azure skills
 
-Write `.claude/skills/infra-cost-review/SKILL.md`: given a Terraform directory, it reports
-every resource whose size, tier or replica count drives cost, with the chosen value and a
-cheaper alternative, and it flags anything with no explicit size at all.
+*Deepens task 4.* You reviewed the generated configuration by hand. Microsoft publishes a
+plugin of Azure skills through Anthropic's curated marketplace, so let it review the same
+files.
 
-Run it on your own configuration. Then answer: which findings could you have got from
-`terraform validate`? None of them, and that is the point of the skill.
+### Step 1: Read what it brings, then install
 
-**Trap:** A skill that estimates prices in francs. It does not know your discounts or your
-region's pricing, and a confident wrong number is worse than a list of what to go and price.
+```text
+/plugin
+```
 
-## Task A2 - ADVANCED: A skill that reviews for security
+Find **azure** in **Discover** and read the "Will install" pane before you install
+anything. It brings the Azure MCP server and around 40 skills, and one of them,
+`azure-deploy`, runs `terraform apply` and `azd up`. **You are about to give a plugin the
+ability to deploy.**
 
-Write `.claude/skills/infra-security-review/SKILL.md` encoding the checklist from task 4
-step 2, plus public network access, TLS enforcement, retention periods, managed identity
-instead of a connection string, and anything reading a secret from a file.
+```text
+/plugin install azure@claude-plugins-official
+```
 
-Run it, then compare with what you found by hand. **What did only you find, and what did
-only the skill find?**
+### Step 2: Validate the configuration
 
-**Take home:** That comparison is the answer to "can I automate my review", and the honest
-answer is usually "partly".
+`azure-validate` checks configuration and infrastructure, Bicep or Terraform, before a
+deployment. Say what you want, do not name the skill:
+
+```text
+Run pre-deployment validation on the Terraform in deploy/terraform. It targets Azure
+Container Apps with a PostgreSQL flexible server.
+```
+
+You are not logged in to Azure, so anything that queries a real subscription cannot answer.
+**Note which findings came from reading your files and which came back empty.** That
+difference is the useful part: it tells you which half of the review you can run in CI, and
+which half needs an account.
+
+Compare the result with task 4: `terraform validate` says the provider understands your
+file. This says whether Azure would accept it.
+
+### Step 3: Watch your guardrail earn itself
+
+Ask for the thing the plugin can now do:
+
+```text
+Use the azure-deploy skill to deploy this to Azure.
+```
+
+The hook you wrote in task 2 refuses the `terraform apply`. You installed a vendor plugin
+whose skills can deploy, and the guard you put up **before** you installed it is what
+stands between that capability and a subscription. That is the order this lab has been
+arguing for, and this is where it pays.
+
+**Take home:** Install the vendor's skills rather than writing your own guesses about their
+platform, and put the guardrails up first. A plugin brings capability you did not write and
+did not review line by line.
+
+**Tip:** The same plugin ships `azure-cost` and `azure-compliance`. Both query a live
+subscription, and `azure-cost` needs the Cost Management Reader role, so neither runs today.
+Those are the two to try at your desk against a real account.
+
+**Trap:** Judging a plugin by the skill you wanted. This one also brought a deploy skill and
+an MCP server. The "Will install" pane is where you find that out, and it is the last moment
+it costs nothing.
+
+References: [microsoft/azure-skills](https://github.com/microsoft/azure-skills) ·
+[discover and install plugins](https://code.claude.com/docs/en/discover-plugins)
+
+## Task A2 - ADVANCED: Run Anthropic's security reviewer on your Terraform
+
+*Deepens task 4 step 2.* You produced at least two findings by hand. Now install a published
+reviewer and compare the two lists.
+
+### Step 1: Check the prerequisite
+
+The plugin runs its checks through Python:
+
+```bash
+python3 --version
+```
+
+```text
+Python 3.12.3
+```
+
+Any 3.8 or newer is fine. If it is missing, `sudo apt-get install -y python3`.
+
+### Step 2: Install it
+
+```text
+/plugin install security-guidance@claude-plugins-official
+```
+
+Published by Anthropic, in the curated marketplace. It works in three layers: regex warnings
+on every `Edit` and `Write`, an LLM review of the diff when a turn ends, and an agentic
+reviewer that reads across files on `git commit`.
+
+**It makes an extra model call on every turn**, and your workshop key is capped. Turn it off
+again when you are done with this task:
+
+```bash
+export SECURITY_GUIDANCE_DISABLE=1
+```
+
+### Step 3: Review the Terraform
+
+```text
+Review deploy/terraform for security problems and list them by severity.
+```
+
+Then commit, so the agentic reviewer runs across files too:
+
+```bash
+git commit --allow-empty -m "chore: trigger the security review"
+```
+
+### Step 4: Compare the two lists
+
+Put your task 4 findings next to the plugin's and answer both questions:
+
+- What did only the plugin find?
+- What did only you find?
+
+Expect it to be strong on hardcoded secrets and quiet on Azure. It covers code
+vulnerability classes: injection, XSS, SSRF, hardcoded secrets, IDOR, auth bypass, unsafe
+deserialisation, path traversal. "The database is reachable from the public internet" and
+"no backup retention" are not on that list, because they are not code vulnerabilities. They
+are infrastructure decisions, and nobody has written your architecture down for a tool to
+check.
+
+**Take home:** That gap is the honest answer to "can I automate my review". A published
+reviewer covers its classes completely and tirelessly, which is more than you will manage by
+hand. It does not cover your architecture. Install one **and** keep the checklist.
+
+**Tip:** `SECURITY_GUIDANCE_DISABLE=1` is a kill switch, and the layers can be turned off
+one at a time with `ENABLE_PATTERN_RULES=0` and `ENABLE_CODE_SECURITY_REVIEW=0`. Check what a
+review plugin costs per turn before you put it in a team repo.
+
+**Trap:** Reading a clean report as "this is secure". It means nothing in the classes it
+checks was found. Ask any reviewer, human or plugin, what it did not look at.
+
+Reference: [security-guidance](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/security-guidance)
 
 ## Task A3 - ADVANCED: Make the hook precise
 
