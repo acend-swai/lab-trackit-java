@@ -67,8 +67,9 @@ belongs to OpenCode alone.
 
 `AGENTS.md` holds the project context: stack, layering, coding standards, the git rules
 and the entity model. `CLAUDE.md` is one line, `@AGENTS.md`, so Claude Code and OpenCode
-read the same file and there is only one place to change it. Lab 1.1 uses it as the
-grounding for the second half of the comparison. Lab 1.2 writes one from scratch.
+read the same file and there is only one place to change it. Task 1 of lab 1.1 compares a
+run without that context against a run with it; task 2 has `/init` generate one and asks
+what it could not know.
 
 ## OpenCode against OpenRouter
 

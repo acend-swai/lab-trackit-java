@@ -1,10 +1,10 @@
-# Lab 1: your first controlled loop
+# Lab 1.1: your first controlled loop
 
 | Info | Detail |
 |---|---|
 | Module | M1.1 - Agentic loop, harness, models |
 | Duration | 30 minutes |
-| Harness | Claude Code. For task 1.4 also opencode against the gateway |
+| Harness | Claude Code. For task 4 also OpenCode against OpenRouter |
 | Stack | Java 21, Spring Boot 3.5, Maven wrapper. Your own stack works too - every reference artefact is Java |
 | Repo | `lab-trackit-java`, branch `m1-1-start` |
 | Target state | create and list a task, in memory (branch `m1-1-solution`) |
@@ -17,7 +17,7 @@ through it in order.
 **Part 2 is advanced.** Start it only when Part 1 runs green. It is marked
 **ADVANCED** on every task and it is optional - nothing in the afternoon depends on it.
 
-Task 1.4 in Part 1 has to happen. The module discussion runs on your comparison rows.
+Task 4 in Part 1 has to happen. The module discussion runs on your comparison rows.
 
 ## What you build
 
@@ -26,8 +26,8 @@ Today it holds tasks in memory. Persistence comes in M2, the container in M3.
 
 `m1-1-start` has one endpoint, `GET /api/v1/health`. That is your reference pattern -
 read it before you have anything generated. The branch also ships `AGENTS.md` and its
-one-line `CLAUDE.md`: task 1.1 compares a run without that context against a run with it,
-task 1.2 writes one from scratch.
+one-line `CLAUDE.md`: task 1 compares a run without that context against a run with it,
+task 2 writes one from scratch.
 
 ## Standard commands you use today
 
@@ -36,12 +36,12 @@ knowing on its own.
 
 | Command | What it does | Details |
 |---|---|---|
-| `/init` | Scans the repo and writes a `CLAUDE.md` describing it. Used in task 1.2 | [init](https://code.claude.com/docs/en/commands) |
+| `/init` | Scans the repo and writes a `CLAUDE.md` describing it. Used in task 2 | [init](https://code.claude.com/docs/en/commands) |
 | `/cost` | Shows what the session has cost so far. Alias for `/usage` | [costs](https://code.claude.com/docs/en/costs) |
 | `/context` | Shows what fills the context window right now | [commands](https://code.claude.com/docs/en/commands) |
 | `/compact` | Summarises the session and frees the window | [commands](https://code.claude.com/docs/en/commands) |
 | `/permissions` | Allow, ask and deny rules per tool, in a dialog | [permissions](https://code.claude.com/docs/en/permissions) |
-| `/models` | In OpenCode: switch the model at runtime. Task 1.1 | [opencode config](https://opencode.ai/docs/config/) |
+| `/models` | In OpenCode: switch the model at runtime. Task 1 | [opencode config](https://opencode.ai/docs/config/) |
 
 `/help` lists everything your version has. Versions differ - trust `/help` over any
 handout, including this one.
@@ -52,7 +52,7 @@ handout, including this one.
 
 Everyone works through this part. About 25 of the 30 minutes.
 
-## Task 1.1 - The same task, three times (10 min)
+## Task 1 - The same task, three times (10 min)
 
 One task, run three times, so that only one thing changes per run: how much context the
 agent has, and how much model is behind the loop.
@@ -161,7 +161,7 @@ debugging conversation into one sentence.
 [OpenCode configuration](https://opencode.ai/docs/config/) ·
 [OpenRouter with OpenCode](https://openrouter.ai/docs/cookbook/coding-agents/opencode-integration)
 
-## Task 1.2 - Generate the context file, then sharpen it (6 min)
+## Task 2 - Generate the context file, then sharpen it (6 min)
 
 The context file is the strongest control you have over the loop. There is deliberately
 none on this branch. Do not write it from scratch - let Claude Code write the first draft
@@ -243,7 +243,7 @@ request. Short and enforced beats long and ignored.
 **Reference.** [Claude Code commands](https://code.claude.com/docs/en/commands) ·
 [skills and context](https://code.claude.com/docs/en/skills)
 
-## Task 1.3 - The first controlled loop (10 min)
+## Task 3 - The first controlled loop (10 min)
 
 Have the task API built: create a task and list all tasks. In memory, no database.
 
@@ -346,9 +346,9 @@ room. It feels like speed and it costs a review cycle later.
 **Reference.** [Claude Code commands](https://code.claude.com/docs/en/commands) ·
 [costs and usage](https://code.claude.com/docs/en/costs)
 
-## Task 1.4 - Same task, second model (10 min)
+## Task 4 - Same task, second model (10 min)
 
-Run task 1.3 again against a different model through the gateway. **Use the same task
+Run task 3 again against a different model through the gateway. **Use the same task
 text** - the comparison only holds if the input is identical.
 
 Work on a throwaway copy so your own state stays intact:
@@ -412,7 +412,7 @@ independent of each other.
 
 ## Task A1 - ADVANCED - Two harnesses on one repo
 
-*Deepens task 1.1.*
+*Deepens task 1.*
 
 Start opencode on the same repo in a second terminal, alongside your Claude Code
 session. Both read the same `.env`.
@@ -437,9 +437,9 @@ before you run them in parallel, and never point two sessions at the same workin
 
 ## Task A2 - ADVANCED - Derive the context file from the code
 
-*Deepens task 1.2.*
+*Deepens task 2.*
 
-Throw away the template block from task 1.2 and write `AGENTS.md` from what is actually
+Throw away the template block from task 2 and write `AGENTS.md` from what is actually
 in the repo. Read `HealthController`, `docs/architecture.md` and
 `docs/adr/0001-layered-spring-architecture.md` first.
 
@@ -468,7 +468,7 @@ rules would the agent have followed anyway? Delete those.
 
 ## Task A3 - ADVANCED - Plan and execute, strictly separated
 
-*Deepens task 1.3.*
+*Deepens task 3.*
 
 Do the feature again on a fresh clone, and this time:
 
@@ -504,7 +504,7 @@ stops a command is a hook that refuses it - that is M3, and it is the difference
 
 ## Task A4 - ADVANCED - Three models, and where the small one breaks
 
-*Deepens task 1.4.*
+*Deepens task 4.*
 
 Run a third model, deliberately under 20 GB. Then name the step in the loop where it
 breaks. Tick one on the comparison sheet:
