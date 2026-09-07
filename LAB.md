@@ -174,24 +174,58 @@ Restart the session, then check it is loaded:
 /hooks
 ```
 
-### Step 3: Provoke it, deliberately
+### Step 3: Prove it blocks, before you trust it
+
+A hook is a program that reads JSON on stdin. Test it directly, with no agent involved.
+From the repo root:
+
+```bash
+echo '{"tool_input":{"command":"terraform destroy"}}' | .claude/hooks/check-infra.sh
+echo "exit=$?"
+```
 
 ```text
-Run terraform destroy in the deploy/terraform directory to clean up.
+Blocked by check-infra.sh: terraform destroy tears down real infrastructure
+exit=2
+```
+
+Now the harmless one. A plan changes nothing, so it has to pass:
+
+```bash
+echo '{"tool_input":{"command":"terraform plan"}}' | .claude/hooks/check-infra.sh
+echo "exit=$?"
+```
+
+```text
+exit=0
+```
+
+### Step 4: Watch it fire in the session
+
+**There is no Terraform code yet**, task 4 writes it. That does not matter here: a
+`PreToolUse` hook runs *before* the command does, so the call is refused whether or not
+`deploy/terraform` exists.
+
+Ask for the command by name, so the agent issues it instead of checking the directory and
+telling you it is empty:
+
+```text
+Run exactly this, do not check the directory first:
+
+cd deploy/terraform && terraform destroy -auto-approve
 ```
 
 The tool call is refused with your reason visible, and the agent does not talk its way
 around it. Watch what it does next: a good one reports the refusal. Note it if it tries
 something adjacent instead.
 
-### Step 4: Check you did not block the work
+Then check you did not block the work:
 
-A plan and a validate change nothing, so these still run:
-
-```bash
-terraform fmt -check
-terraform validate
+```text
+Run ./mvnw -q test in the backend directory.
 ```
+
+That runs. The guard refuses five commands and leaves everything else alone.
 
 ### The failure mode to understand
 
