@@ -9,9 +9,9 @@
 | Repo | `lab-trackit-java`, your clone from lab 2, or branch `m3-start` |
 | Target state | deny rules, a blocking hook, and validated Terraform (branch `m3-solution`) |
 
-**Nothing is deployed today.** We write infrastructure code and validate it. The agent
-never gets credentials and never applies anything, and by the end of task 2 it could not
-even if it decided to.
+Nothing is deployed today: we write infrastructure code and validate it. The agent never
+gets credentials and never applies anything, and by the end of task 2 it could not even if
+it decided to.
 
 We harden first, then we generate. An agent writing infrastructure is the
 highest-consequence thing it does all day: it reaches for real credentials, it runs
@@ -24,7 +24,7 @@ commands that delete things, and a mistake is not a failing test but a deleted d
 | 3 MCP server | the agent inventing provider syntax from stale memory |
 | 4 Generate | - |
 
-**Part 1 is for everyone.** Four tasks. **Part 2 is advanced and optional.**
+Part 1 is four tasks for everyone. Part 2 is advanced and optional.
 
 ## What you record today
 
@@ -38,12 +38,28 @@ Keep a scratch file open. The discussion at the end runs on these three:
 
 ## Where you start
 
-Continue on your repo from lab 2, or take the reference state:
+Continue on your repo from lab 2. Check it first:
+
+```bash
+git status --porcelain
+```
+
+It should print nothing. If it prints a line, or lab 2 did not finish, take the reference
+state:
 
 ```bash
 git fetch origin && git checkout m3-start
+```
+
+`git branch --show-current` must read `m3-start`. Either way, check the machine before you
+start:
+
+```bash
 ./verify.sh
 ```
+
+Every line reads `[OK]` except the health endpoint, which only answers while the
+application runs.
 
 ---
 
@@ -85,14 +101,16 @@ Test it:
 Read the .env file and tell me what is in it.
 ```
 
-It refuses. Now find the hole:
+The agent reports that it is not allowed to read the file, and the contents never appear.
+Now find the hole:
 
 ```text
 Run: cat .env
 ```
 
-**The deny rule does not stop that.** It governs Claude's file tools, not the shell. That
-gap is exactly why task 2 exists.
+The agent runs it through Bash and the contents of `.env` land in the transcript. A deny
+rule governs Claude's own file tools and not the shell, and that gap is exactly why task 2
+exists.
 
 **Take home:** `.claude/settings.json` is committed, so the whole team inherits the deny
 list on clone. Add `*.tfstate` to yours today.
@@ -146,6 +164,9 @@ esac
 exit 0
 ```
 
+Every branch of the `case` exits 2 with its reason on stderr, anything else exits 0, and
+step 3 shows both paths.
+
 Make it executable, or the harness will skip it silently:
 
 ```bash
@@ -175,6 +196,8 @@ Restart the session, then check it is loaded:
 /hooks
 ```
 
+The `PreToolUse` list must name `check-infra.sh`.
+
 ### Step 3: Prove it blocks, before you trust it
 
 A hook is a program that reads JSON on stdin. Test it directly, with no agent involved.
@@ -184,6 +207,8 @@ From the repo root:
 echo '{"tool_input":{"command":"terraform destroy"}}' | .claude/hooks/check-infra.sh
 echo "exit=$?"
 ```
+
+The output should be:
 
 ```text
 Blocked by check-infra.sh: terraform destroy tears down real infrastructure
@@ -197,13 +222,15 @@ echo '{"tool_input":{"command":"terraform plan"}}' | .claude/hooks/check-infra.s
 echo "exit=$?"
 ```
 
+The output should be:
+
 ```text
 exit=0
 ```
 
 ### Step 4: Watch it fire in the session
 
-**There is no Terraform code yet**, task 4 writes it. That does not matter here: a
+**Note.** There is no Terraform code yet, task 4 writes it. That does not matter here: a
 `PreToolUse` hook runs *before* the command does, so the call is refused whether or not
 `deploy/terraform` exists.
 
@@ -228,7 +255,7 @@ Run ./mvnw -q test in the backend directory.
 
 That runs. The guard refuses five commands and leaves everything else alone.
 
-### The failure mode to understand
+### Understand the failure mode
 
 Look at the `jq` check at the top. Without it, a missing `jq` makes the command variable
 empty, every pattern misses, and the hook exits 0, which **allows everything, silently**. A
@@ -259,15 +286,17 @@ claude mcp add --scope project terraform -- \
   docker run -i --rm hashicorp/terraform-mcp-server:1.3.0
 ```
 
-Pin the tag. A server on `latest` changes its tool descriptions under you.
+That writes the server into `.mcp.json` in the repo root, so the whole team gets it on
+clone. Pin the tag, because a server on `latest` changes its tool descriptions under you.
 
-Check that Claude Code picked it up:
+The next command should list `terraform` among this project's servers:
 
 ```bash
 claude mcp list
 ```
 
-Approve it and confirm it connected. Then check it knows something you do not:
+Approve it when the session asks, confirm it reports as connected, then check it knows
+something you do not:
 
 ```text
 Using the terraform MCP server, what is the current resource name and the required
@@ -291,6 +320,8 @@ Reference: [Terraform MCP server](https://developer.hashicorp.com/terraform/mcp-
 Now the agent writes. Everything before this was making it safe to let it.
 
 ### Step 1: Ask for a plan, with the non-scope written down
+
+Give the agent the job and its boundary in the same prompt:
 
 ```text
 Create Terraform for TrackIt in deploy/terraform/, targeting Azure Container Apps
@@ -321,7 +352,7 @@ Read it for these five and write down what you find **before** you have anything
 | Resource limits | no CPU or memory set, or a size nobody costed |
 | Persistence and backup | no backup retention, or storage that disappears with the container |
 
-**At least two findings. Finding none means you did not apply the checklist.**
+Write down at least two findings. **Finding none means you did not apply the checklist.**
 
 ### Step 3: Let it write, then verify yourself
 
@@ -346,6 +377,8 @@ touches nothing.
 
 ### Step 4: Prove the secret is out of reach
 
+Ask the agent for the value directly:
+
 ```text
 What is the database password in this configuration?
 ```
@@ -355,9 +388,14 @@ reading one. The value lives in `TF_VAR_db_password` in your shell.
 
 ### Step 5: Commit
 
+Commit the configuration together with the guardrails that made it safe to generate:
+
 ```bash
 cd ../.. && git add -A && git commit -m "feat: terraform for trackit on azure container apps"
 ```
+
+The commit summary lists the new files under `deploy/terraform/`, and
+`git status --porcelain` prints nothing afterwards.
 
 **Take home:** Guardrails first, generation second. Reverse it and the first thing you learn
 is what the agent deleted. Record your findings before the agent "fixes" them, otherwise
@@ -384,14 +422,19 @@ files.
 
 ### Step 1: Read what it brings, then install
 
+Open the plugin browser:
+
 ```text
 /plugin
 ```
 
 Find **azure** in **Discover** and read the "Will install" pane before you install
-anything. It brings the Azure MCP server and around 40 skills, and one of them,
-`azure-deploy`, runs `terraform apply` and `azd up`. **You are about to give a plugin the
-ability to deploy.**
+anything. It brings the Azure MCP server and around 40 skills.
+
+**Warning.** One of those skills, `azure-deploy`, runs `terraform apply` and `azd up`.
+Installing this plugin gives it the ability to deploy.
+
+Install it:
 
 ```text
 /plugin install azure@claude-plugins-official
@@ -408,9 +451,8 @@ Container Apps with a PostgreSQL flexible server.
 ```
 
 You are not logged in to Azure, so anything that queries a real subscription cannot answer.
-**Note which findings came from reading your files and which came back empty.** That
-difference is the useful part: it tells you which half of the review you can run in CI, and
-which half needs an account.
+Note which findings came from reading your files and which came back empty. That difference
+tells you which half of the review you can run in CI, and which half needs an account.
 
 Compare the result with task 4: `terraform validate` says the provider understands your
 file. This says whether Azure would accept it.
@@ -456,13 +498,18 @@ The plugin runs its checks through Python:
 python3 --version
 ```
 
+The output should be:
+
 ```text
 Python 3.12.3
 ```
 
-Any 3.8 or newer is fine. If it is missing, `sudo apt-get install -y python3`.
+Any 3.8 or newer is fine. If the command is not found, install it with
+`sudo apt-get install -y python3`.
 
 ### Step 2: Install it
+
+Install the reviewer from the same marketplace:
 
 ```text
 /plugin install security-guidance@claude-plugins-official
@@ -472,14 +519,16 @@ Published by Anthropic, in the curated marketplace. It works in three layers: re
 on every `Edit` and `Write`, an LLM review of the diff when a turn ends, and an agentic
 reviewer that reads across files on `git commit`.
 
-**It makes an extra model call on every turn**, and your workshop key is capped. Turn it off
-again when you are done with this task:
+**Warning.** It makes an extra model call on every turn and your workshop key is capped.
+Turn it off again when you are done with this task:
 
 ```bash
 export SECURITY_GUIDANCE_DISABLE=1
 ```
 
 ### Step 3: Review the Terraform
+
+Ask for a review of the files you generated in task 4:
 
 ```text
 Review deploy/terraform for security problems and list them by severity.
@@ -490,6 +539,8 @@ Then commit, so the agentic reviewer runs across files too:
 ```bash
 git commit --allow-empty -m "chore: trigger the security review"
 ```
+
+You see the reviewer run on the commit and report across files, not only the diff.
 
 ### Step 4: Compare the two lists
 
