@@ -44,41 +44,94 @@ it happens:
 | Task 5 | What the plugin's "Will install" pane listed, and whether you would put that plugin in your team's `.claude/settings.json` |
 | Task 7 | Your four answers per component, plus the verdict line |
 
-## Where you start
+## Return to your own clone
 
-Task 4 of lab 1.1 left you in the second clone, `trackit-b`. Go back to your own clone
-first, and check that nothing is uncommitted:
+Lab 1.1 task 5 moved you into the second clone, `trackit-b`. Check where you are, and go
+back to your own clone if that is where you ended up:
 
 ```bash
-cd ../trackit          # skip this if you never left
+pwd                    # if this ends in /trackit-b, run the next line
+cd ../trackit
 git status --porcelain
 ```
 
-`pwd` ends in `/trackit`, and `git status --porcelain` prints nothing. If it prints a line,
-commit it or throw it away, `git checkout` refuses to switch over uncommitted work:
+`pwd` ends in `/trackit`, and `git status --porcelain` prints nothing.
+
+**Warning.** If `git status --porcelain` prints a line, deal with it before you continue.
+`git checkout` refuses to switch branches over uncommitted work:
 
 ```bash
 git add -A && git commit -m "chore: end of lab 1.1"
 ```
 
-Now fetch the branch that ships the skills, and check the environment:
+## Check out the branch that ships the skills
+
+Fetch the branch and land on it:
 
 ```bash
 git fetch origin
-git checkout m1-2-start
+git checkout -b m1-2-start origin/m1-2-start
+```
+
+`git branch --show-current` prints:
+
+```text
+m1-2-start
+```
+
+**Note.** If you added a second remote in lab 1.1 and it carries the same branch names, a
+plain `git checkout m1-2-start` fails with `matched multiple (2) remote tracking branches`.
+The line above names the remote, so it works either way. If the branch already exists
+locally, drop the `-b` and the `origin/m1-2-start`.
+
+**Note.** You do not need your lab 1.1 result here. `m1-2-start` is the lab 1.1 solution
+with new scaffolding on top.
+
+## Rebuild the devcontainer, then verify
+
+The database and the frontend arrive with this branch, so the container you built in lab
+1.1 does not have them yet. Run the check to see that:
+
+```bash
 ./verify.sh
 ```
 
-Every line of `./verify.sh` reads `[OK]` except the health endpoint, which only answers
-while the application runs. PostgreSQL runs inside the devcontainer, so the line
-`database container healthy` reads `[OK]` before you start. If that line fails, rebuild the
-container from the command palette, *Dev Containers: Rebuild Container*.
+**Expect this first run to report `[MISSING]`.** These two lines are the ones that matter:
 
-There is deliberately no container for the application itself, that is M3. The database is
-defined in `compose.yaml`, which M3 builds around.
+```text
+[MISSING] docker - lab 1.2 needs it to start the database
+[MISSING] frontend dependencies - run: cd frontend && npm ci
+```
 
-**Note:** You do not need your lab 1.1 result here. `m1-2-start` is the lab 1.1 solution
-with new scaffolding on top.
+Rebuild the devcontainer from the command palette, *Dev Containers: Rebuild Container*. The
+rebuild reads this branch's `.devcontainer/`, which adds the docker CLI, pulls `postgres:17`
+and runs `npm ci` in `frontend/`. It takes a few minutes and you only do it once.
+
+Then open a **new** terminal and run the check again:
+
+```bash
+./verify.sh
+```
+
+Every line now reads `[OK]` except the last one, the health endpoint, which only answers
+while the application runs. These four are the ones the rebuild fixed:
+
+```text
+[OK]      docker (Docker version 27.3.1, build ce12230)
+[OK]      postgres:17 image present
+[OK]      database container healthy
+[OK]      frontend dependencies installed
+```
+
+PostgreSQL starts with the devcontainer, so `database container healthy` reads `[OK]`
+without you starting anything.
+
+**Note.** Outside the devcontainer you also get `[MISSING] OPENROUTER_API_KEY not
+exported`. Fix it the way lab 1.1 did, with `set -a; source .env; set +a`. Nothing in this
+lab uses that key, so it is not a reason to stop.
+
+**Note.** There is deliberately no container for the application itself, that is M3. The
+database is defined in `compose.yaml`, which M3 builds around.
 
 ## What the branch ships
 
@@ -104,39 +157,84 @@ personal setting.
 The repo grew since you wrote `AGENTS.md` in lab 1.1. It has a task API, a frontend
 folder, a database and three skills. Your context file describes none of that.
 
-### Step 1: See what a fresh reader sees
+### Step 1: Put the pointer aside
+
+`CLAUDE.md` on this branch is one line, `@AGENTS.md`. Move it away first, because `/init`
+suggests improvements to a context file that already exists instead of writing a fresh
+description, and a fresh description is what we want to read:
+
+```bash
+mv CLAUDE.md CLAUDE.md.off
+ls CLAUDE*
+```
+
+The output should be:
+
+```text
+CLAUDE.md.off
+```
+
+### Step 2: See what a fresh reader sees
+
+Start a session in the repo root:
+
+```bash
+claude
+```
+
+Ask it to describe the repo:
 
 ```text
 /init
 ```
 
-`/init` scans the repo and writes a `CLAUDE.md` describing what it found. We are not
-keeping that file, we are reading it.
+`/init` scans the repo and writes a `CLAUDE.md` with the stack, the layout, and how to
+build and test. We are not keeping that file, we are reading it.
 
-### Step 2: Compare it with your rules
+### Step 3: Compare it with your rules
 
 Put the fresh description next to the rules you wrote:
 
 ```bash
-diff <(sed -n '1,200p' CLAUDE.md) AGENTS.md | head -40
+diff CLAUDE.md AGENTS.md | head -40
 ```
 
-The `<` lines come from `CLAUDE.md`. In them you see what `/init` found and `AGENTS.md`
-never mentions: the task API, the `frontend/` folder, the database and the three skills.
-Those are your gaps.
+`diff` marks lines from `CLAUDE.md` with `<` and lines from `AGENTS.md` with `>`. The output
+is long, and it looks like this:
 
-### Step 3: Put the pointer back
+```text
+< ## Frontend
+< Vue 3 with Vite and TypeScript in `frontend/`, PrimeVue components.
+< Dev server: `npm run dev` on port 5173.
+---
+> ## Coding Standards
+> - Records for value types, no Lombok
+```
 
-Throw the generated file away and keep only the gaps you just found:
+Read the `<` lines. In them you find what `/init` saw and `AGENTS.md` never mentions: the
+task API, the `frontend/` folder, the database and the three skills. Those are your gaps.
+
+### Step 4: Put the pointer back
+
+Throw the generated file away and restore the one line, in that order:
 
 ```bash
-git checkout -- CLAUDE.md
+rm CLAUDE.md
+mv CLAUDE.md.off CLAUDE.md
+cat CLAUDE.md
 ```
 
-The command prints nothing. `cat CLAUDE.md` shows the single line that points at
-`AGENTS.md` again.
+The output should be:
 
-Now open `AGENTS.md` and find these three rules. The next two tasks are held to them:
+```text
+@AGENTS.md
+```
+
+You keep the gaps you just read, not the file that showed them to you.
+
+### Step 5: Find the three rules the next tasks are held to
+
+Open `AGENTS.md` and find these three lines. Tasks 3 and 4 check the agent against them:
 
 - The JPA entity is a separate class from the record
 - The schema belongs to a Flyway migration, never to `ddl-auto`
@@ -154,23 +252,26 @@ Reference: [Claude Code commands](https://code.claude.com/docs/en/commands)
 
 ### Step 1: Fire the skill without naming it
 
-Stage the working tree:
+Stage the working tree, so there is something to write a message about:
 
 ```bash
 git add -A
 ```
 
-`git add` prints nothing. Now ask for a message:
+`git add` prints nothing. Now ask for a message, in the Claude session:
 
 ```text
 Write me a commit message for what I just staged.
 ```
 
+It answers with a message in the house format, `<area>: <what changed>`, and it changes no
+file.
+
 You did not name the skill. It fired because its `description` matches what you asked.
 Open `.claude/skills/commit-message/SKILL.md` and read that field, it lists the phrasings
 it answers to. That field is the whole trigger mechanism.
 
-Notice what it did not do: it printed a message and stopped. Its frontmatter says
+Notice what it did not do: it printed a message and stopped. Its frontmatter reads
 `disallowed-tools: Write, Edit`, so it could not commit even if it decided to.
 
 ### Step 2: Run the agent
@@ -181,20 +282,27 @@ Send the same repository to a worker with its own context:
 Use the api-reviewer agent to review the task API.
 ```
 
-Read `.claude/agents/api-reviewer.md` while it runs: `tools: Read, Grep, Glob` and
-`model: haiku`. It has its own context window, a cheaper model, and cannot edit or run
-anything.
+It reports one line per finding and closes with a verdict line:
+
+```text
+verdict: 0 blocker, 2 should, 1 note
+```
+
+Your counts will differ. Read `.claude/agents/api-reviewer.md` while it runs:
+`tools: Read, Grep, Glob` and `model: haiku`. It has its own context window, a cheaper
+model, and cannot edit or run anything.
 
 ### Step 3: Name the difference
 
-One line each, for the discussion:
+Write one line each, for the discussion. Answer them from what you just watched, not from
+the definitions at the top of this handout:
 
-- The skill changed **how** something was done in your session.
-- The agent did a job **somewhere else** and handed back a report.
+- Where did the skill's work happen, and where did the agent's?
+- Which of the two came back with a report, and what was in your session afterwards?
 
 **Take home:** `disallowed-tools` in a skill genuinely removes tools, but `allowed-tools`
 only pre-approves and restricts nothing. An agent's `tools` list is an allowlist, so an
-agent is a real boundary. That is the reason to reach for one.
+agent is a real boundary.
 
 **Tip:** When a skill does not fire, fix the description first, not the body. Write
 descriptions as the phrasings people actually type.
@@ -208,7 +316,11 @@ References: [skills](https://code.claude.com/docs/en/skills) ·
 ## Task 3: Put the tasks in the database (8 min)
 
 Read `.claude/skills/add-persistence/SKILL.md` first, it is one page and it is the house
-pattern for this job. Then give Claude Code the work:
+pattern for this job.
+
+### Step 1: Give it the job, and ask for a plan
+
+Type this in the Claude session:
 
 ```text
 Move task storage out of the in-memory list in TaskService and into PostgreSQL.
@@ -217,44 +329,64 @@ The database is already running from compose.yaml.
 Show me your plan before you change any file.
 ```
 
-You did not name the skill. Check that it fired: the plan mentions an entity *beside* the
-record, a Flyway migration, and `ddl-auto: validate`. If it does not, type this and let it
-start again, because a plan that ignores the skill produces code that ignores it too:
+### Step 2: Check that the skill fired
+
+You did not name the skill, so check the plan for the three things the skill prescribes: an
+entity *beside* the record, a Flyway migration, and `ddl-auto: validate`.
+
+If any of the three is missing, send it back. A plan that ignores the skill produces code
+that ignores it too:
 
 ```text
 That plan does not follow the add-persistence skill in .claude/skills. Read it and plan
 again.
 ```
 
-It will ask you about dependencies, because `AGENTS.md` forbids adding one silently. Read
-what it wants and why, then approve by naming what you are approving:
+### Step 3: Approve the dependencies by name
+
+It asks you about dependencies, because `AGENTS.md` forbids adding one silently. It needs
+`spring-boot-starter-data-jpa`, `flyway-core`, `flyway-database-postgresql` and the
+PostgreSQL driver. Read what it asks for, then approve by naming what you are approving:
 
 ```text
 The plan is fine and those dependencies are fine. Implement exactly that, and stop when
 ./mvnw test passes.
 ```
 
-### Verify, in this order
+### Step 4: Run the test suite yourself
 
-Run the suite first:
+In a second terminal:
 
 ```bash
 cd backend
 ./mvnw -q test
 ```
 
-The run ends in `BUILD SUCCESS`. Hand the failing output back to Claude Code if it does
-not.
+The output ends in:
 
-Start the application against the database:
+```text
+BUILD SUCCESS
+```
+
+Hand the failing output back to the Claude session if it does not.
+
+### Step 5: Start the application against the database
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-Spring Boot logs a `Started` line once it is up. Leave it running in that terminal.
+Spring Boot logs a `Started` line once it is up:
 
-In a second terminal, create a task:
+```text
+Started TrackitApplication in 4.312 seconds (process running for 4.9)
+```
+
+Leave it running in that terminal.
+
+### Step 6: Create a task
+
+In a third terminal:
 
 ```bash
 curl -s -X POST localhost:8080/api/v1/tasks \
@@ -262,33 +394,62 @@ curl -s -X POST localhost:8080/api/v1/tasks \
   -d '{"title":"Survive a restart","project":"trackit"}'
 ```
 
-The command returns the created task as JSON, with a generated `id` and the title you sent.
+The output holds a generated id and the title you sent:
 
-Now the check the tests cannot make. Stop the application with `Ctrl+C`, start it again,
-and ask for the list:
+```json
+{"id":1,"title":"Survive a restart","project":"trackit","status":"OPEN"}
+```
+
+### Step 7: Make the check the tests cannot make
+
+Stop the application with `Ctrl+C` in the second terminal, start it again with
+`./mvnw spring-boot:run`, and ask for the list:
 
 ```bash
 curl -s localhost:8080/api/v1/tasks
 ```
 
-You see `Survive a restart` in the list, returned by a process that started with an empty
-memory. Look in the database yourself:
+The output should be your task, returned by a process that started with an empty memory:
+
+```json
+[{"id":1,"title":"Survive a restart","project":"trackit","status":"OPEN"}]
+```
+
+Look in the database yourself:
 
 ```bash
 docker exec trackit-db psql -U trackit -d trackit -c 'SELECT * FROM task;'
 ```
 
-`psql` prints one row per stored task, and yours is among them.
+`psql` prints one row per stored task, and yours is among them:
+
+```text
+ id |       title       | project | status
+----+-------------------+---------+--------
+  1 | Survive a restart | trackit | OPEN
+(1 row)
+```
 
 A green test suite proved none of that. The controller test mocks the service away, so the
 whole storage path is absent from the run. Persistence is proven by a restart and by
 nothing else.
 
-Commit the slice now that it survives a restart:
+### Step 8: Commit the slice
+
+It survives a restart, so commit it. Go back to the repo root first:
 
 ```bash
-cd .. && git add -A && git commit -m "feat: store tasks in postgres"
+cd .. && git add -A && git commit -m "service: store tasks in postgres"
 ```
+
+`git commit` names the branch and counts the files:
+
+```text
+[m1-2-start 4d5e6f7] service: store tasks in postgres
+ 8 files changed, 214 insertions(+), 11 deletions(-)
+```
+
+The hash and the counts are yours, not these.
 
 **Take home:** For every feature, name the check the test suite cannot make, then make it.
 That is your real acceptance criterion.
@@ -302,39 +463,66 @@ Reference: [skills](https://code.claude.com/docs/en/skills)
 
 ## Task 4: Put the tasks on a screen (8 min)
 
-Same shape, other subsystem. Read `.claude/skills/add-view/SKILL.md`, then:
+Same shape, other subsystem. Read `.claude/skills/add-view/SKILL.md` first.
+
+### Step 1: Give it the job
 
 ```text
 Build the task board in the frontend: list all tasks, and add a new one.
 Use the existing REST API. Show me your plan before you change any file.
 ```
 
-Check the skill fired: the plan mentions a typed API module under `src/api/`, one view per
-route, and the route going into `router/index.ts`. Then approve:
+### Step 2: Check that the skill fired, then approve
+
+Check the plan for the three things `add-view` prescribes: a typed API module under
+`src/api/`, one view per route, and the route registered in `router/index.ts`. Then
+approve:
 
 ```text
 The plan is fine. Implement exactly that, and stop when npx vue-tsc -b exits 0.
 ```
 
-In a second terminal:
+### Step 3: Check the types yourself
+
+In a third terminal:
 
 ```bash
 cd frontend
-npx vue-tsc -b     # must exit 0
+npx vue-tsc -b
+echo "exit=$?"
+```
+
+`vue-tsc` prints nothing when the types line up, and the exit code is what you check:
+
+```text
+exit=0
+```
+
+### Step 4: Start the dev server and use the board
+
+```bash
 npm run dev
 ```
 
-Open <http://localhost:5173> with the backend still running, add a task, and see it in the
-list. Reload the page, it is still there, because it is in the database now.
+Vite prints the address:
 
-Commit the board:
-
-```bash
-cd .. && git add -A && git commit -m "feat: add the task board"
+```text
+  ➜  Local:   http://localhost:5173/
 ```
 
-Note roughly how long the two jobs took in sequence. Task A2 does the same two jobs at the
-same time, and the comparison is the point of that task.
+With the backend still running, open <http://localhost:5173>, add a task, and see it appear
+in the list. Reload the page. The task is still there, because it is in the database now.
+
+### Step 5: Commit the board
+
+Go back to the repo root and commit:
+
+```bash
+cd .. && git add -A && git commit -m "web: add the task board"
+```
+
+Write down how long the two jobs took in sequence. Task A2 runs the same two jobs at the
+same time and asks you to compare.
 
 **Take home:** Have the agent read the real API contract instead of describing it in the
 prompt. The prompt goes stale, the code does not.
@@ -366,8 +554,9 @@ Run this in your Claude Code session:
 /plugin
 ```
 
-Claude Code registers Anthropic's official marketplace, `claude-plugins-official`, on its
-first interactive start, so there is nothing to add. Cycle the tabs with `Tab`:
+A pane opens on the marketplace browser. Claude Code registers Anthropic's official
+marketplace, `claude-plugins-official`, on its first interactive start, so there is nothing
+to add. Cycle the tabs with `Tab`:
 
 | Tab | What it holds |
 |---|---|
@@ -376,17 +565,18 @@ first interactive start, so there is nothing to add. Cycle the tabs with `Tab`:
 | Marketplaces | the catalogues themselves |
 | Errors | anything that failed to load |
 
-### Step 2: Read before you install
+### Step 2: Read the details pane before you install
 
 Go to **Discover** and select **commit-commands**. Do not press install yet. The details
-pane is the review surface:
+pane is the review surface, and three fields carry the review:
 
 - **Context cost**: what this plugin adds to your context window on *every turn*
 - **Last updated**: whether anyone still maintains it
 - **Will install**: every command, agent, skill, hook, MCP server and LSP server it brings
 
-Read the "Will install" list out loud to yourself. A plugin runs with your permissions, on
-your files. This pane is the last moment saying no costs you nothing.
+Read the "Will install" list out loud to yourself, and write it into your scratch file for
+task 7. A plugin runs with your permissions, on your files. This pane is the last moment
+saying no costs you nothing.
 
 ### Step 3: Install it at user scope
 
@@ -396,7 +586,7 @@ Install it by name, marketplace included:
 /plugin install commit-commands@claude-plugins-official
 ```
 
-Choose **User** scope, yourself, across all projects. If the summary says
+Choose **User** scope, so it belongs to you across all projects. If the summary reads
 `Run /reload-plugins to activate.`, run that.
 
 ### Step 4: Use it
@@ -407,8 +597,10 @@ Call the plugin's own command:
 /commit-commands:commit
 ```
 
-You now have two ways to write a commit message: the repo's own `commit-message` skill,
-which fires from its description, and this one, which you call by name. Plugin skills are
+It proposes a commit message, the same job the repo's own skill did in task 2.
+
+You now have two ways to write a commit message: the repo's `commit-message` skill, which
+fires from its description, and this one, which you call by name. Plugin commands are
 namespaced, `/commit-commands:commit`, so an installed plugin can never shadow something
 you wrote.
 
@@ -437,7 +629,7 @@ Your session wrote Vue 3 and PrimeVue 4 from what the model remembers, and its m
 older than the versions in `frontend/package.json`. That gap is the case for MCP: not extra
 capability, current information.
 
-### Step 1: Connect it
+### Step 1: Connect the server
 
 One command, from `docs/mcp-candidates.md`, where every entry was run and checked:
 
@@ -445,10 +637,16 @@ One command, from `docs/mcp-candidates.md`, where every entry was run and checke
 claude mcp add --scope project --transport http context7 https://mcp.context7.com/mcp
 ```
 
+The output names the server and the scope it landed in:
+
+```text
+Added HTTP MCP server context7 with URL: https://mcp.context7.com/mcp to project config
+```
+
 `--scope project` writes `.mcp.json` in the repo root. That file is committed, so this is a
 team decision, the same distinction you just met with plugin scopes.
 
-### Step 2: Approve it and check it connected
+### Step 2: Check that it connected
 
 Ask Claude Code what it now holds:
 
@@ -456,8 +654,14 @@ Ask Claude Code what it now holds:
 claude mcp list
 ```
 
-A project-scope server shows as `Pending approval` until you approve it in an interactive
-session. A server arriving through a `git pull` does not connect silently.
+A project-scope server you have not approved yet reads:
+
+```text
+context7: https://mcp.context7.com/mcp (HTTP) - Pending approval
+```
+
+Approve it in your interactive session when it asks, then run `claude mcp list` again. It
+reads `Connected`. A server arriving through a `git pull` does not connect silently.
 
 ### Step 3: Use it on a real question
 
@@ -469,13 +673,17 @@ anything that is deprecated or renamed in the version in package.json, and quote
 doc line you got it from.
 ```
 
-The server shows connected and the agent called one of its tools. Finding no problem is a
-good outcome, "the code matches the current docs, and here is the line that says so" is a
-real answer.
+The answer quotes a documentation line, and the session shows a `context7` tool call.
+Finding no problem is a good outcome, "the code matches the current docs, and here is the
+line that says so" is a real answer.
 
-### Where to find the servers that are not on our list
+**Note.** The whole room shares one address, so it can rate-limit. Ask the trainer for the
+key and add `--header "Authorization: Bearer <key>"` to the command in step 1.
 
-Three directories carry them, and you vet before you add, not after:
+### Step 4: Note where the other servers come from
+
+Three directories carry the servers that are not on our list, and you vet before you add,
+not after:
 
 | Directory | What it gives you |
 |---|---|
@@ -501,8 +709,8 @@ you run on both.
 
 ### Step 1: Answer four questions per component
 
-Answer these for the plugin and again for the MCP server, in a new file
-`docs/mcp-scoping.md`:
+Create `docs/mcp-scoping.md` and answer these four for the plugin, then again for the MCP
+server:
 
 - **Slice.** Which part of which system does it touch? Not "GitHub", but which
 repositories and which resource type. For the plugin: which of your files and which tools.
@@ -551,14 +759,17 @@ References: [MCP](https://code.claude.com/docs/en/mcp) ·
 
 # Part 3 - ADVANCED
 
-Optional. Start when `./mvnw -q test` passes and `git status` lists nothing uncommitted
-from Parts 1 and 2. The tasks are independent, so do **task A2 first** if you only do one.
+Optional. Start when `./mvnw -q test` ends in `BUILD SUCCESS` and `git status --porcelain`
+prints nothing. The tasks are independent, so do **task A2 first** if you only do one.
 
 ## Task A1 - ADVANCED: Write a skill of your own
 
 *Deepens tasks 3 and 4.* Write `add-endpoint`: generate a new REST endpoint in the house
-pattern, including the service method, the error handling and a MockMvc test. Start from
-this frontmatter:
+pattern, including the service method, the error handling and a MockMvc test.
+
+### Step 1: Start from this frontmatter
+
+Create `.claude/skills/add-endpoint/SKILL.md` with these lines at the top:
 
 ```markdown
 ---
@@ -571,6 +782,8 @@ description: Use when adding a REST endpoint to TrackIt, or when the user says "
 
 Those lines are the frontmatter only. The body below it, the steps the skill follows, is
 what you write.
+
+### Step 2: Use it on a real endpoint
 
 Then use it to add `GET /api/v1/tasks/{id}`, returning 404 for an unknown id.
 
@@ -605,11 +818,18 @@ git worktree add ../trackit-parallel m1-2-start
 cd ../trackit-parallel
 ```
 
-`git worktree list` now shows a second working tree at `../trackit-parallel`.
+`git worktree list` now shows a second working tree:
+
+```text
+/workspaces/trackit             1a2b3c4 [m1-2-start]
+/workspaces/trackit-parallel    1a2b3c4 [m1-2-start]
+```
+
+The paths and the hash are yours, not these.
 
 ### Step 2: Write two agent definitions
 
-Use `/agents`, or write the files directly:
+Use `/agents`, or write the files directly. This is `.claude/agents/db-builder.md`:
 
 ```markdown
 ---
@@ -659,10 +879,10 @@ both reports unchanged.
 Both run in the background and report as they finish. While they work you are doing
 nothing.
 
-### Step 5: Compare
+### Step 5: Compare against your Part 1 run
 
-Against your Part 1 run: how long did it take, and what did you give up? You reviewed two
-reports instead of two plans, and you never saw either plan before it ran.
+Answer two things: how long did it take, and what did you give up? You reviewed two reports
+instead of two plans, and you never saw either plan before it ran.
 
 **Take home:** Reach for an agent for parallelism or a fresh context window. "It is
 specialised" is not a reason, a skill can be specialised. Make "what did you NOT verify" a
@@ -679,7 +899,9 @@ Reference: [subagents](https://code.claude.com/docs/en/sub-agents)
 ## Task A3 - ADVANCED: Make the partition real with worktrees
 
 *Deepens task A2.* In A2 the agents stayed out of each other's way because you told them
-to, and an instruction is not a boundary. Give each one its own working tree:
+to, and an instruction is not a boundary. Give each one its own working tree.
+
+### Step 1: Create one worktree per agent
 
 ```bash
 git worktree add ../trackit-db -b m1-2-db
@@ -688,14 +910,40 @@ git worktree add ../trackit-fe -b m1-2-fe
 
 `git worktree list` now shows three working trees, one per branch.
 
-Run one agent in each, then merge both branches back in your original tree:
+### Step 2: Run one agent in each, then merge
+
+Run `db-builder` in `../trackit-db` and `frontend-builder` in `../trackit-fe`, then merge
+both branches back in your original tree:
 
 ```bash
 git merge m1-2-db m1-2-fe
 ```
 
-You see either one merge commit across both branches, or `CONFLICT` lines naming every file
-both agents touched.
+Two outcomes are possible and both are useful. Where the partition held, the output reads:
+
+```text
+Fast-forwarding to: m1-2-db
+Trying simple merge with m1-2-fe
+Merge made by the 'octopus' strategy.
+ backend/src/main/java/ch/acend/trackit/domain/TaskEntity.java | 24 ++++++
+ frontend/src/views/TaskBoardView.vue                          | 61 +++++++++++
+```
+
+Where the two agents touched the same file, `git` names every one of them:
+
+```text
+Fast-forwarding to: m1-2-db
+Trying simple merge with m1-2-fe
+Simple merge did not work, trying automatic merge.
+Auto-merging backend/src/main/resources/application.yml
+ERROR: content conflict in backend/src/main/resources/application.yml
+fatal: merge program failed
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+**Note.** A three-way octopus merge reports `ERROR: content conflict in <file>`, not the
+`CONFLICT (content):` line a normal two-branch merge prints. Merge the branches one at a
+time if you would rather see the familiar form.
 
 Answer: which conflicts did git surface that the single-tree run would have silently lost,
 and what did the isolation cost the frontend agent?
@@ -708,7 +956,7 @@ unreviewed changes instead of one.
 
 Reference: [git worktree](https://git-scm.com/docs/git-worktree)
 
-## Task A4 - ADVANCED: Add a marketplace nobody vetted for you
+## Task A4 - ADVANCED: Add marketplaces
 
 *Deepens task 5.* A marketplace is just a repository with a
 `.claude-plugin/marketplace.json` in it. There are three tiers of trust:
@@ -727,10 +975,11 @@ Add it by owner and repository:
 /plugin marketplace add anthropics/claude-plugins-community
 ```
 
-Plugins from it install as `@claude-community`. Browse **Discover** and find one that
-would be useful in your own work.
+It reports the marketplace added and how many plugins it carries. Plugins from it install
+as `@claude-community`. Browse **Discover** and find one that would be useful in your own
+work.
 
-### Step 2: Before you install it, find out who wrote it
+### Step 2: Find out who wrote it, before you install it
 
 Open its homepage from the details pane and answer four things in writing:
 
@@ -762,13 +1011,16 @@ References: [discover and install plugins](https://code.claude.com/docs/en/disco
 
 ## Task A5 - ADVANCED: Narrow the exposure and re-run
 
-*Deepens tasks 6 and 7.* Add the GitHub server, narrowed:
+*Deepens tasks 6 and 7.* Add the GitHub server, narrowed to read-only issues:
 
 ```bash
 claude mcp add --scope project github --transport http \
   https://api.githubcopilot.com/mcp/x/issues/readonly
 claude mcp login github
 ```
+
+`claude mcp login` opens a browser for the OAuth flow and reports the account it
+authenticated.
 
 `/x/issues` selects the toolset and `/readonly` restricts it to read tools. **The limit
 lives in the endpoint, not in a prompt.** Compare with the full-access URL and give the
@@ -801,11 +1053,13 @@ Reference: [plugins](https://code.claude.com/docs/en/plugins)
 
 ## Task A7 - ADVANCED: Give the agent a read-only database role
 
-*Deepens task 7.* Give the agent a way into the database that cannot write:
+*Deepens task 7.* Give the agent a way into the database that cannot write.
+
+### Step 1: Create the role and grant it reads
 
 ```bash
 docker exec trackit-db psql -U trackit -d trackit -c "
-  CREATE ROLE trackit_ro LOGIN PASSWORD 'readonly';
+  CREATE ROLE trackit_ro LOGIN PASSWORD '<a password you choose>';
   GRANT CONNECT ON DATABASE trackit TO trackit_ro;
   GRANT USAGE ON SCHEMA public TO trackit_ro;
   GRANT SELECT ON ALL TABLES IN SCHEMA public TO trackit_ro;"
@@ -820,7 +1074,7 @@ GRANT
 GRANT
 ```
 
-Prove the limit instead of trusting it:
+### Step 2: Prove the limit instead of trusting it
 
 ```bash
 docker exec trackit-db psql -U trackit_ro -d trackit -c 'SELECT * FROM task;'
@@ -833,7 +1087,10 @@ The first command prints the task rows. The second one is refused:
 ERROR:  permission denied for table task
 ```
 
-Now ask the agent to delete all tasks through that connection and record what comes back.
+### Step 3: Send the agent at it
+
+Ask the agent to delete all tasks through that connection, and record what comes back. The
+refusal comes from the database, not from the model's willingness.
 
 **Take home:** This is the shape of the answer whenever someone asks how to keep an agent
 out of a table. Not a prompt, not a tool description, not a promise from the model: a role
