@@ -3,7 +3,7 @@
 | Info | Detail |
 |---|---|
 | Module | M1.1 - Agentic loop, harness, models |
-| Duration | 30 minutes |
+| Duration | 40 minutes, plus 5 minutes of discussion before the break |
 | Harness | Claude Code. For task 4 also OpenCode against OpenRouter |
 | Stack | Java 21, Spring Boot 3.5, Maven wrapper. Your own stack works too - every reference artefact is Java |
 | Repo | `lab-trackit-java`, branch `m1-1-start` |
@@ -17,7 +17,8 @@ through it in order.
 **Part 2 is advanced.** Start it only when Part 1 runs green. It is marked
 **ADVANCED** on every task and it is optional - nothing in the afternoon depends on it.
 
-Task 4 in Part 1 has to happen. The module discussion runs on your comparison rows.
+Task 4 in Part 1 has to happen. The discussion after the lab is five minutes long and
+runs on your comparison rows, so bring them filled in.
 
 ## What you build
 
@@ -50,7 +51,7 @@ handout, including this one.
 
 # Part 1 - Standard
 
-Everyone works through this part. About 25 of the 30 minutes.
+Everyone works through this part. About 36 of the 40 minutes.
 
 ## Task 1 - The same task, three times (10 min)
 
@@ -315,7 +316,8 @@ That commit is your rollback point for the rest of the day.
 Write the figure down. It is the number the module asks you for: the cost of one full
 loop on your own repo.
 
-**Write down one moment.** The point where the agent did something you did not ask for: a file it touched, a dependency it added, a step it skipped, or a claim it made without checking. One line is enough. Question 1 of the module discussion asks for exactly this.
+**Write down one moment.** The point where the agent did something you did not ask for: a file it touched, a dependency it added, a step it skipped, or a claim it made without checking. One line is enough. It is yours to keep - the transfer discussion in M4.2 comes back to
+it, and it is the most useful thing you take back to your own team.
 
 Compare against the reference when you are done:
 
@@ -537,9 +539,15 @@ incratec measurement, `research/2026-08-26_opencode-local-models-poc/RESULTS.md`
 
 ## Bring to the discussion
 
+Five minutes, one question, so have your answer ready in a sentence:
+
+- **What did the smaller model do differently, and where exactly did it break?**
+
+Three more are worth answering for yourself. They come back in M3 and in the transfer
+discussion after lunch:
+
 - The point where your loop got away from you
 - Whether you approved a plan you had not really read
-- What the smaller model did differently
 - Whether you have code that must not go to a hosted model, and what you do today
 
 ## Further reading
