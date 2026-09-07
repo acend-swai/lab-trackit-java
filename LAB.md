@@ -811,7 +811,7 @@ References: [MCP](https://code.claude.com/docs/en/mcp) ·
 
 # Part 3 - ADVANCED
 
-Optional. Start when `./mvnw -q test` ends in `BUILD SUCCESS` and `git status --porcelain`
+Optional. Start when `./mvnw test` ends in `BUILD SUCCESS` and `git status --porcelain`
 prints nothing. The tasks are independent, so do **task A2 first** if you only do one.
 
 ## Task A1 - ADVANCED: Write a skill of your own
@@ -904,7 +904,7 @@ You own the backend. Follow the `add-persistence` skill.
 ## Report back, under 15 lines
 1. Files created and changed, one line each
 2. Dependencies added, with a reason each
-3. The result of ./mvnw -q test, quoted, not summarised
+3. The result of ./mvnw test, quoted, not summarised
 4. What you did NOT verify
 5. Anything you guessed
 ```
