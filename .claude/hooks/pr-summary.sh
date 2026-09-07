@@ -32,27 +32,39 @@ fi
   echo ""
   for dir in "${in_flight[@]}"; do
     name=$(basename "$dir")
-    echo "- Implements \`$name\` (\`$dir/proposal.md\`)"
+    echo "- Implements \`$name\`"
   done
   echo ""
+
+  # The format below is not cosmetic: scripts/dod_check.sh parses it. It needs a
+  # line starting "Spec:" and real "- [ ]" / "- [x]" checklist lines. A heading
+  # with a bare path underneath, or a "3/7 tasks checked" summary, parses as
+  # neither, and the draft fails the gate it exists to feed.
   echo "## Spec"
   echo ""
   for dir in "${in_flight[@]}"; do
-    echo "$dir/proposal.md"
+    echo "Spec: $dir/proposal.md"
   done
   echo ""
-  echo "## Definition of Done"
+  echo "## Acceptance criteria"
   echo ""
   for dir in "${in_flight[@]}"; do
     tasks_file="$dir/tasks.md"
-    if [ -f "$tasks_file" ]; then
-      total=$(grep -c '^- \[[ x]\]' "$tasks_file" 2> /dev/null || echo 0)
-      done=$(grep -c '^- \[x\]' "$tasks_file" 2> /dev/null || echo 0)
-      echo "- \`$dir/tasks.md\`: $done/$total tasks checked"
-    fi
+    [ -f "$tasks_file" ] || continue
+    # Copy the checklist verbatim, checkbox state included, so the gate counts
+    # what tasks.md actually says rather than a summary of it.
+    grep -E '^- \[[ x]\] ' "$tasks_file" || true
   done
   echo ""
-  echo "See \`.github/pull_request_template.md\` for the full checklist."
+  echo "## Out of scope"
+  echo ""
+  echo "<!-- Required for every unchecked box above. Write one line per box, or check it. -->"
+  echo ""
+  echo "## Verification"
+  echo ""
+  echo '```'
+  echo "Paste the real test output here, quoted, not summarised."
+  echo '```'
 } > "$draft"
 
 echo "pr-summary.sh: wrote $draft from ${#in_flight[@]} in-flight OpenSpec change(s)"

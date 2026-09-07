@@ -62,7 +62,17 @@ if [ -z "$nospec_line" ] && [ "$total_count" -eq 0 ]; then
 fi
 
 if [ "$unchecked_count" -gt 0 ]; then
-  out_of_scope=$(printf '%s\n' "$body" | awk '/^## Out of scope/{flag=1; next} /^## /{flag=0} flag' | tr -d '[:space:]')
+  # HTML comments are stripped first: the pull-request template ships its guidance
+  # as <!-- ... --> inside this very section, so counting it as content let a PR
+  # with unexplained unchecked boxes pass the gate simply by not deleting the
+  # template's own placeholder. Only prose a human wrote counts.
+  #
+  # If perl is missing the pipeline yields an empty section and the check FAILS,
+  # which is the safe direction for a gate: stricter, never laxer.
+  out_of_scope=$(printf '%s\n' "$body" \
+    | awk '/^## Out of scope/{flag=1; next} /^## /{flag=0} flag' \
+    | perl -0777 -pe 's/<!--.*?-->//gs' \
+    | tr -d '[:space:]')
   if [ -z "$out_of_scope" ]; then
     add_finding "$unchecked_count unchecked acceptance criterion/criteria, but '## Out of scope' is missing or empty"
   fi
