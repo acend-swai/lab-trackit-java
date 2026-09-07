@@ -42,10 +42,29 @@ knowing on its own.
 | `/context` | Shows what fills the context window right now | [commands](https://code.claude.com/docs/en/commands) |
 | `/compact` | Summarises the session and frees the window | [commands](https://code.claude.com/docs/en/commands) |
 | `/permissions` | Allow, ask and deny rules per tool, in a dialog | [permissions](https://code.claude.com/docs/en/permissions) |
+| `/model` | Switches the Claude Code model mid-session. Task 1 | [model config](https://code.claude.com/docs/en/model-config) |
 | `/models` | In OpenCode: switch the model at runtime. Task 1 | [opencode config](https://opencode.ai/docs/config/) |
+
+A slash command is typed into the same prompt as your task text. Most of them queue behind
+the turn Claude is working on; `/model`, `/effort` and `/fast` run immediately and take
+effect from the next request.
 
 `/help` lists everything your version has. Versions differ - trust `/help` over any
 handout, including this one.
+
+## Driving the session
+
+Four keys carry most of the day. The first one is the important one: you are meant to
+interrupt a run that is going somewhere you did not ask for, not sit and watch it finish.
+
+| Key | What it does |
+|---|---|
+| `Esc` | Interrupts Claude mid-turn and keeps the work done so far. On a dialog it closes it, on a permission prompt it declines |
+| `Esc` `Esc` | On an empty prompt, opens the rewind menu to restore an earlier point. With text in the prompt, clears the draft |
+| `Shift+Tab` | Cycles the permission mode: manual, accept edits, plan |
+| `Ctrl+R` | Searches your command history |
+
+`Ctrl+C` also interrupts; pressed twice on an empty prompt it exits Claude Code.
 
 ---
 
@@ -244,13 +263,16 @@ request. Short and enforced beats long and ignored.
 **Reference.** [Claude Code commands](https://code.claude.com/docs/en/commands) ·
 [skills and context](https://code.claude.com/docs/en/skills)
 
-## Task 3 - The first controlled loop (10 min)
+## Task 3 - The inner loop: plan, build, test, run, verify (10 min)
 
 Have the task API built: create a task and list all tasks. In memory, no database.
 
-Work the five steps in order. The order is the lesson.
+This is the full inner loop, one stage at a time: **plan, build, test, run, verify**. Work
+them in order and do not skip the two that feel optional. The order is the lesson - an
+agent that is never made to close the loop reports done on red.
 
-**Step 1 - write the task with an explicit non-scope.** Start from this text:
+**1 Plan.** Write the task with an explicit non-scope, and have it plan before it edits.
+Start from this text:
 
 ```text
 Add two endpoints to trackit, following the pattern in HealthController:
@@ -266,16 +288,31 @@ Not in scope: a database, a frontend, authentication, updating or deleting tasks
 Show me your plan before you change any file.
 ```
 
-**Step 2 - read the plan.** Before you approve, check three things: does it stay in
-scope, does it add a dependency, does it follow the layering in your context file?
+Read the plan before you approve it. Three things: does it stay in scope, does it add a
+dependency, does it follow the layering in your context file?
 
-**Step 3 - approve the run.**
+**2 Build.** Approve the run and let it write the code and the tests. Do not hand-patch
+while it works - a correction mid-run costs you the ability to judge the result.
 
-**Step 4 - check the result yourself.**
+**3 Test.** The tests are part of the build, not a favour afterwards:
 
 ```bash
 cd backend
 ./mvnw -q test
+```
+
+The output should end in:
+
+```text
+BUILD SUCCESS
+```
+
+If it is red, hand it back to the agent with the failing output and let it fix on red.
+The task is not done until this line is green.
+
+**4 Run.** A green test suite is not a running application:
+
+```bash
 ./mvnw spring-boot:run
 ```
 
@@ -296,10 +333,10 @@ Expected output, exactly:
 [{"id":1,"title":"Write the context file","project":"trackit","status":"OPEN"}]
 ```
 
-An empty title must answer `400`. `./mvnw test` passes. You can explain every file that
-was created.
+**5 Verify.** The output above must match exactly. An empty title must answer `400`. And
+you can explain every file that was created - if you cannot, the loop ran without you.
 
-**Step 5 - commit.**
+Only now commit:
 
 ```bash
 cd .. && git add . && git commit -m "feat: create and list tasks in memory"
