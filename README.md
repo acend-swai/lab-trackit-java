@@ -55,3 +55,37 @@ Answers `{"status":"ok"}`. On `m1-1-start` that is the only endpoint - that is c
 
 Your personal `.env` arrives by mail on the morning of the workshop. Put it in the repo
 root, next to this README. It is in `.gitignore`.
+
+## Context file
+
+`AGENTS.md` holds the project context: stack, layering, coding standards, the git rules
+and the entity model. `CLAUDE.md` is one line, `@AGENTS.md`, so Claude Code and OpenCode
+read the same file and there is only one place to change it. Lab 1.1 uses it as the
+grounding for the second half of the comparison. Lab 1.2 writes one from scratch.
+
+## OpenCode against the gateway
+
+Lab 1.1 runs the same task once more through OpenCode against an open-weight model. Your
+key and the base URL come with the `.env` you receive by mail. Put a provider block in
+`opencode.json` in the repo root:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "workshop-gateway": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Workshop gateway",
+      "options": {
+        "baseURL": "<GATEWAY_BASE_URL from your .env>",
+        "apiKey": "{env:GATEWAY_API_KEY}"
+      },
+      "models": {
+        "<one of GATEWAY_MODELS>": { "name": "Open-weight model" }
+      }
+    }
+  }
+}
+```
+
+Pick the model in the session with `/models`. Docs: <https://opencode.ai/docs/providers/>
