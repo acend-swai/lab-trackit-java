@@ -22,6 +22,29 @@ the comparison sheet the module discussion runs on.
 **Part 2 is advanced and optional.** Start it when Part 1 is green. Nothing later in the
 day depends on it.
 
+## What you record today
+
+Two things travel with you out of this lab. Set them up now, before you start task 1.
+
+**1. The comparison sheet.** Copy this into a scratch file. You fill one column per model
+you run today, two in task 1 and two in task 4. The five-minute discussion at the end of
+the module runs on it, so bring it filled in.
+
+| Criterion | Model 1 | Model 2 | Model 3 | Model 4 |
+|---|---|---|---|---|
+| Model name | | | | |
+| Turns until the tests passed | | | | |
+| Followed `AGENTS.md`? | | | | |
+| Invented dependencies | | | | |
+| Where it broke: tool choice, context, error reading, stopping | | | | |
+| Cost of the run | | | | |
+| Did you feel in control? | | | | |
+
+**2. One moment where the agent got away from you.** A file it touched, a dependency it
+added, a step it skipped, a claim it made without checking. One line, written down when it
+happens. The transfer discussion in M4.2 comes back to it, and it is the most useful thing
+you take back to your own team.
+
 ## Commands you use today
 
 | Command | What it does |
@@ -142,19 +165,7 @@ Do not judge which answer is prettier. Find where the small model breaks:
 - Error output: did it act on the failure or repeat itself?
 - Stopping: did it stop while red, or never stop?
 
-**The comparison sheet.** Copy this into a scratch file. Fill one column per model you run
-today, two here and two more in task 4. The five-minute discussion at the end of the module
-runs on it, so bring it filled in.
-
-| Criterion | Model 1 | Model 2 | Model 3 | Model 4 |
-|---|---|---|---|---|
-| Model name | | | | |
-| Turns until the tests passed | | | | |
-| Followed `AGENTS.md`? | | | | |
-| Invented dependencies | | | | |
-| Where it broke: tool choice, context, error reading, stopping | | | | |
-| Cost of the run | | | | |
-| Did you feel in control? | | | | |
+Fill in a column on the comparison sheet for each of the two models.
 
 **Take home:** Run grounded against ungrounded on your own repo before you judge any
 model. Most "the model is bad" verdicts are missing context, not missing capability.
@@ -341,9 +352,8 @@ git diff origin/m1-1-solution --stat
 A different file list is fine. Check one thing: does your version follow the rules you
 wrote in `AGENTS.md`? If not, the rule was too vague. That is the finding, not the diff.
 
-**Write down one moment** where the agent did something you did not ask for: a file it
-touched, a dependency it added, a step it skipped, a claim it made without checking. One
-line. The transfer discussion in M4.2 comes back to it.
+**This is a good moment for the second thing you record.** If the agent did something you
+did not ask for during this loop, write that line down now.
 
 **Take home:** Make "show me your plan first" the default for anything non-trivial, put
 "tests run and pass" in the context file, and commit as soon as a slice is green.
@@ -379,7 +389,7 @@ opencode
 
 The models on offer are the ones in `GATEWAY_MODELS` in your `.env`. Do one run against a
 commercial model and one against an open-weights model, then fill in the two remaining
-columns of the comparison sheet from task 1.
+columns of the comparison sheet.
 
 **Take home:** Run this bake-off on your own codebase before you standardise on a model. A
 leaderboard says nothing about your repo. Judge on turns to green and rule adherence, not
