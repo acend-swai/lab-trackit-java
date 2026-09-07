@@ -105,7 +105,7 @@ attacker.
 
 Reference: [permissions](https://code.claude.com/docs/en/permissions)
 
-## Task 2: A hook that blocks instead of asking (9 min)
+## Task 2: Write a hook that blocks instead of asking (9 min)
 
 A permission dialog is a prompt, and prompts get clicked through at 16:45 on a Friday. A
 hook is a shell command the harness runs at a fixed point in its lifecycle. **The model does
@@ -145,6 +145,8 @@ esac
 
 exit 0
 ```
+
+Make it executable, or the harness will skip it silently:
 
 ```bash
 chmod +x .claude/hooks/check-infra.sh
@@ -250,12 +252,16 @@ The agent's memory of the `azurerm` provider is as old as its training data, and
 schemas change every few weeks. HashiCorp publishes an official MCP server that reads the
 Terraform registry live.
 
+Add the server to this project, pinned to a version:
+
 ```bash
 claude mcp add --scope project terraform -- \
   docker run -i --rm hashicorp/terraform-mcp-server:1.3.0
 ```
 
 Pin the tag. A server on `latest` changes its tool descriptions under you.
+
+Check that Claude Code picked it up:
 
 ```bash
 claude mcp list
