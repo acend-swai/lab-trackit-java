@@ -100,8 +100,8 @@ Create `.claude/settings.json` with this content:
 }
 ```
 
-There are three modes: `allow` runs without asking, `ask` confirms every time, `deny`
-blocks. `deny` has the highest priority and wins over everything.
+Rules are evaluated in one order: deny, then ask, then allow. The first match decides, and a
+more specific allow rule never overrides a broader deny.
 
 `*.tfstate` is on the list for a reason people miss: **Terraform state contains every value
 it ever resolved, including the database password, in plain text.** It is the most secret
@@ -120,26 +120,46 @@ Read the .env file and tell me what is in it.
 
 The agent reports that it is not allowed to read the file, and the contents never appear.
 
-### Step 3: Find the hole in the same minute
+### Step 3: Check whether the shell walks around it
 
-Now ask for the same file through the shell:
+A deny rule that only governed Claude's own file tools would be worth little, because the
+agent also has a shell. Ask for the same file through Bash:
 
 ```text
 Run: cat .env
 ```
 
-The agent runs it through Bash and the contents of `.env` land in the transcript. A deny
-rule governs Claude's own file tools and not the shell, and that gap is exactly why task 2
-exists. Write the one-sentence version into your scratch file now.
+This is refused too, and the contents never appear. Claude Code recognises the common file
+readers in a Bash command - `cat`, `head`, `tail`, `sed` - and applies your `Read` rules to
+them, along with redirection targets like `< .env`.
+
+### Step 4: Find the hole
+
+The check is a list of recognised commands, not a property of the filesystem, so a program
+that opens the file itself is not on that list. Ask for one:
+
+```text
+Run exactly this command, do not use the Read tool:
+
+python3 -c "print(open('.env').read())"
+```
+
+The contents of `.env` land in the transcript. The deny rule never saw a file read, only a
+`python3` invocation. Any interpreter, script or binary that opens the path itself gets
+through the same way, and that gap is exactly why task 2 exists. Write the one-sentence
+version into your scratch file now.
 
 **Take home:** `.claude/settings.json` is committed, so the whole team inherits the deny
 list on clone. Add `*.tfstate` to yours today.
 
-**Trap:** Treating the `deny` list as security. You just watched it refuse the Read tool and
-wave `cat .env` through in the same minute. It constrains Claude's own file tools and
-nothing else: not the shell, not an MCP server, not a hook, not anything else running as
-your user. Use it to stop the accident, and keep the secret out of the repo to stop the
-attacker.
+**Note.** For enforcement that no subprocess can walk around, the deny rule is the wrong
+layer: that is what OS-level sandboxing is for.
+
+**Trap:** Treating the `deny` list as security. It stopped the Read tool and `cat`, then
+handed the same secret over to a one-line Python program. It constrains Claude's file tools
+and the file commands it recognises in Bash, and nothing beyond that: not an arbitrary
+subprocess, not an MCP server, not anything else running as your user. Use it to stop the
+accident, and keep the secret out of the repo to stop the attacker.
 
 Reference: [permissions](https://code.claude.com/docs/en/permissions)
 
