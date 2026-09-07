@@ -71,26 +71,19 @@ grounding for the second half of the comparison. Lab 1.2 writes one from scratch
 ## OpenCode against OpenRouter
 
 Lab 1.1 runs the same task once more through OpenCode against an open-weight model. The
-gateway is OpenRouter and your key arrives by mail; it starts with `sk-or-v1-`.
+gateway is OpenRouter and your key arrives by mail in `.env`; it starts with `sk-or-v1-`.
 
-Store it once, inside OpenCode:
-
-```bash
-opencode
-/connect
-```
-
-Search for OpenRouter and paste the key. It is saved to
-`~/.local/share/opencode/auth.json`, not read from `.env`.
-
-`opencode.json` in the repo root already lists the three models for the lab. Switch
-between them in the session with `/models`:
+`opencode.json` in the repo root reads that key from the environment and lists the three
+models the lab compares:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
   "provider": {
     "openrouter": {
+      "options": {
+        "apiKey": "{env:OPENROUTER_API_KEY}"
+      },
       "models": {
         "qwen/qwen3.8-max-0902": {},
         "moonshotai/kimi-k3": {},
@@ -100,5 +93,16 @@ between them in the session with `/models`:
   }
 }
 ```
+
+OpenCode reads the environment, not the file, so export `.env` in the shell you start it
+from:
+
+```bash
+set -a; source .env; set +a
+opencode
+```
+
+In the devcontainer every new terminal does this for you. Switch models in the session
+with `/models`.
 
 Docs: <https://openrouter.ai/docs/cookbook/coding-agents/opencode-integration>

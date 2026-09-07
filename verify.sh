@@ -41,18 +41,19 @@ check_cmd "Node (installs the CLIs)" node
 check_cmd "Claude Code CLI"          claude
 check_cmd "OpenCode CLI"             opencode
 
-if [ -f .env ]; then
-  echo "[OK]      .env present"
-else
+if [ ! -f .env ]; then
   echo "[MISSING] .env - it arrives by mail on the workshop morning"
+elif grep -qE '^OPENROUTER_API_KEY=.+' .env; then
+  echo "[OK]      .env present, OpenRouter key set"
+else
+  echo "[MISSING] .env is there but OPENROUTER_API_KEY is empty - OpenCode needs it in lab 1.1"
 fi
 
-# OpenCode stores the OpenRouter key itself; .env is not read by it.
-opencode_auth="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/auth.json"
-if [ -f "$opencode_auth" ]; then
-  echo "[OK]      OpenCode credentials stored"
+# opencode.json reads the key from the environment, so the file alone is not enough.
+if [ -n "${OPENROUTER_API_KEY:-}" ]; then
+  echo "[OK]      OPENROUTER_API_KEY exported in this shell"
 else
-  echo "[MISSING] OpenCode has no stored key - run 'opencode', then /connect, and paste your OpenRouter key"
+  echo "[MISSING] OPENROUTER_API_KEY not exported - run: set -a; source .env; set +a"
 fi
 
 echo "-------------------------------"
