@@ -17,6 +17,11 @@ compiles and its tests pass before you touch anything.
 git clone -b m1-1-start https://github.com/acend-swai/lab-trackit-java.git trackit
 ```
 
+The repo is public, so this needs no account and no token. Clone it in full - a `--depth`
+clone has no `origin/m1-1-solution` to compare against and no `origin/m2-start` to fall
+back to. Your clone is yours: nothing you commit reaches this repo, and if you want to
+keep your work, add a remote of your own and push there.
+
 | Module | Start | Solution | Stage |
 |---|---|---|---|
 | M1.1 Agentic loop | `m1-1-start` | `m1-1-solution` | create and list a task, in memory |

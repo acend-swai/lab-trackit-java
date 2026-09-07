@@ -77,16 +77,23 @@ Everyone works through this part. About 36 of the 40 minutes.
 One task, run three times, so that only one thing changes per run: how much context the
 agent has, and how much model is behind the loop.
 
-**Step 1 - set up and check.**
+**Step 1 - set up and check.** The repo is public, so the clone needs no account and no
+token:
 
 ```bash
 git clone -b m1-1-start https://github.com/acend-swai/lab-trackit-java.git trackit
 cd trackit
-cp ~/Downloads/trackit.env .env       # the file from your mail
+cp <the file from your mail> .env     # your personal keys
 set -a; source .env; set +a           # OpenCode reads the environment, not the file
 ./verify.sh
 git commit --allow-empty -m "chore: start of my workshop repo"
 ```
+
+Clone it in full - no `--depth`. Task 3 compares your result against
+`origin/m1-1-solution`, and lab 2 falls back to `origin/m2-start`; a shallow clone has
+neither. The clone you now have is yours: work on it, commit into it, and nothing you do
+reaches the workshop repo. If you want to keep your work after today, add a remote of your
+own with `git remote add mine <your repo>` and push there.
 
 Every line must read `[OK]`, except the health check at the very end - that answers only
 while the application runs, so `[MISSING]` there is expected now. If
@@ -390,14 +397,19 @@ room. It feels like speed and it costs a review cycle later.
 Run task 3 again against a different model through the gateway. **Use the same task
 text** - the comparison only holds if the input is identical.
 
-Work on a throwaway copy so your own state stays intact:
+Work on a throwaway copy so your own state stays intact. Clone the branch again rather
+than copying your working tree, so the second run starts from the same place the first one
+did:
 
 ```bash
-cd .. && git clone -b m1-1-start trackit trackit-b && cd trackit-b
+cd ..
+git clone -b m1-1-start https://github.com/acend-swai/lab-trackit-java.git trackit-b
+cd trackit-b
 cp ../trackit/.env . && set -a && source .env && set +a
-cp ../trackit/AGENTS.md .
 opencode
 ```
+
+`AGENTS.md` ships on the branch, so there is nothing to copy over.
 
 Switch the model inside opencode and run your task text again:
 
