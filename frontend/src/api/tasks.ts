@@ -1,6 +1,6 @@
 import { client } from "./client";
 
-// Mirrors ch.incratec.trackit.domain.Task field for field.
+// Mirrors ch.acend.trackit.domain.Task field for field.
 export type TaskStatus = "OPEN" | "DONE";
 
 export interface Task {

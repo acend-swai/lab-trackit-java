@@ -1,4 +1,4 @@
-package ch.incratec.trackit.domain;
+package ch.acend.trackit.domain;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
