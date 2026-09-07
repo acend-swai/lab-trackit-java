@@ -1,5 +1,17 @@
 spring:
   application:
     name: trackit
+  datasource:
+    url: ${TRACKIT_DB_URL:jdbc:postgresql://localhost:5432/trackit}
+    username: ${TRACKIT_DB_USER:trackit}
+    password: ${TRACKIT_DB_PASSWORD:trackit}
+  jpa:
+    hibernate:
+      # The schema belongs to Flyway. validate makes a drifted schema fail at
+      # startup instead of being silently rewritten.
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
 server:
   port: 8080
