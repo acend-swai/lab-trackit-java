@@ -13,12 +13,12 @@
 
 **Part 1 and Part 2 are for everyone.** Part 1 runs before the MCP input, Part 2 after
 it. You do not write a skill, an agent or a configuration file in either part - you use
-the ones the branch ships and you check what they did. Six tasks, all with the commands
-in this handout.
+the ones the branch ships, install one somebody else wrote, and check what all of them
+can reach. Seven tasks, all with the commands in this handout.
 
 **Part 3 is advanced and optional.** That is where you write your own skill, define your
-own agents, run two of them in parallel and narrow an MCP server. Start it only when
-Parts 1 and 2 run green. **Nothing later in the day depends on Part 3** - the afternoon
+own agents, run two of them in parallel, add an unvetted marketplace and narrow an MCP
+server. Start it only when Parts 1 and 2 run green. **Nothing later in the day depends on Part 3** - the afternoon
 starts from the state Part 1 produces.
 
 If you finish Part 1 with time to spare, go to Part 3 task A2. It is the most useful one.
@@ -33,12 +33,16 @@ two **skills** - short files that describe how this project does persistence and
 does screens. You give Claude Code the job, the right skill fires by itself, and your
 work is to check what came out.
 
+Then Part 2 brings two things in from outside the repository, a plugin and an MCP server,
+and asks the same question of both: what can it reach, and how did you find out before
+you said yes?
+
 | Mechanism | What it is | Where you meet it |
 |---|---|---|
 | Skill | a written working instruction: how something is done here | Part 1, given to you |
 | Agent | a worker with its own context, model and limits | Part 1 given, Part 3 you write one |
+| Plugin | how a skill or agent travels between repos and teams | Part 2, you install one |
 | MCP | a connection to something outside this repo | Part 2, one command |
-| Plugin | how skills and agents reach the rest of your team | Part 3 |
 
 ## Where you start
 
@@ -335,21 +339,105 @@ claims.
 
 Start this after the MCP input.
 
-## Task 5 - Connect one server and use it (7 min)
+Both things in this part come from **outside your repository**: a plugin somebody else
+wrote, and a server somebody else runs. The question is the same for both, and it is the
+one the module is really about: what can it reach, and how do you know before you say yes?
 
-Your session just wrote Vue 3 and PrimeVue 4 from what the model remembers. Its memory is
-older than the versions in `frontend/package.json`. That gap is the case for MCP: not
-extra capability, current information.
+## Task 5 - Install a plugin somebody else wrote (5 min)
 
-**Step 1 - connect it.** One command, from `docs/mcp-candidates.md`, where every entry
-was run and checked:
+You have used skills that ship in this repo. Most useful skills are not in your repo. They
+arrive as **plugins** from a marketplace, and installing one is two keystrokes - which is
+exactly why the review matters.
+
+**Step 1 - open the plugin manager.**
+
+```text
+/plugin
+```
+
+Claude Code registers Anthropic's official marketplace, `claude-plugins-official`, on its
+first interactive start, so there is nothing to add. Cycle the tabs with `Tab`:
+
+| Tab | What it holds |
+|---|---|
+| Discover | plugins from every marketplace you have added |
+| Installed | what you have, and what you can disable or remove |
+| Marketplaces | the catalogues themselves |
+| Errors | anything that failed to load |
+
+**Step 2 - read before you install.** Go to **Discover** and select **commit-commands**.
+Do not press install yet. The details pane is the review surface:
+
+- **Context cost** - what this plugin adds to your context window on *every turn*
+- **Last updated** - whether anyone still maintains it
+- **Will install** - every command, agent, skill, hook, MCP server and LSP server it
+  brings
+
+**Read the "Will install" list out loud to yourself.** That is the whole security
+question: a plugin runs with your permissions, on your files. This pane is where you find
+out what it can reach, and it is the last moment it costs you nothing to say no.
+
+**Step 3 - install it at user scope.**
+
+```text
+/plugin install commit-commands@claude-plugins-official
+```
+
+Choose **User** scope - yourself, across all projects. If the summary says
+`Run /reload-plugins to activate.`, run that.
+
+**Step 4 - use it, and notice the collision that is not one.**
+
+```text
+/commit-commands:commit
+```
+
+You now have two ways to write a commit message: the repo's own `commit-message` skill,
+which fires from its description, and this one, which you call by name. Plugin skills are
+**namespaced** - `/commit-commands:commit` - precisely so an installed plugin can never
+shadow something you wrote.
+
+**Expected result.** One plugin installed, and you can say what it added, what it costs
+per turn, and why it could not overwrite your own skill.
+
+**Take this to your team**
+
+| | In this lab | In your repo |
+|---|---|---|
+| Where skills come from | one you wrote, one you installed | Both. Write what is yours, install what is generic. Do not rebuild a commit-message plugin |
+| The review | the "Will install" pane, read before installing | Make reading it the rule. A plugin executes code with your privileges - Anthropic does not vet what third-party plugins do |
+| Scope | user scope, just you | **Project** scope adds the plugin to `.claude/settings.json` and it ships to everyone who clones. That is a pull-request decision, not a personal one |
+| Context cost | shown in the details pane | Check it. Every installed plugin is paid for on every turn, whether you use it or not |
+| Staying tidy | n/a today | The **Installed** tab flags plugins you have not used in two weeks. Uninstall those - they still cost startup and context |
+
+**Tip.** This repo is Java plus TypeScript, so `jdtls-lsp` and `typescript-lsp` would give
+Claude real type errors and go-to-definition after every edit. They need the language
+server binary installed separately, so they are a good thing to set up at your desk rather
+than in a 5-minute lab slot.
+
+**Trap.** "It is from a marketplace, so it is safe." The official marketplace is curated
+by Anthropic; the community one passes automated screening. Neither is a guarantee about
+what the code does on your machine. Adding a marketplace from a random repository has no
+screening at all - that is task A4.
+
+**Reference.** [discover and install plugins](https://code.claude.com/docs/en/discover-plugins) ·
+[plugins](https://code.claude.com/docs/en/plugins)
+
+## Task 6 - Connect one MCP server and use it (5 min)
+
+Your session wrote Vue 3 and PrimeVue 4 from what the model remembers. Its memory is older
+than the versions in `frontend/package.json`. That gap is the case for MCP: not extra
+capability, current information.
+
+**Step 1 - connect it.** One command, from `docs/mcp-candidates.md`, where every entry was
+run and checked:
 
 ```bash
 claude mcp add --scope project --transport http context7 https://mcp.context7.com/mcp
 ```
 
 `--scope project` writes `.mcp.json` in the repo root. That file is committed, so this is
-a team decision, not a local convenience.
+a team decision - the same distinction you just met with plugin scopes.
 
 **Step 2 - approve it and check it connected.**
 
@@ -380,29 +468,29 @@ docs, and here is the line that says so" is a real answer.
 | Why connect one | the model's library knowledge is older than your lockfile | The best MCP cases are current information, not more power |
 | Scope | `--scope project`, committed | Team decision, reviewed in a pull request |
 | Approval | pending until approved interactively | Keep it that way. A server that connects on `git pull` is a supply-chain path |
-| Cost | every connected server's tool descriptions sit in context | Check with `/context`. Connect what the repo needs, not what looks useful |
+| Cost | tool descriptions sit in context every turn | Same arithmetic as a plugin. Check with `/context` |
 
 **Tip.** Ask for the quoted doc line, not the conclusion. It turns an unverifiable claim
 into a citation you can check in five seconds.
 
-**Trap.** Connecting five servers because they all look useful. Every tool description is
-in the context window on every turn.
+**Trap.** Connecting five servers because they all look useful.
 
 **Reference.** [MCP](https://code.claude.com/docs/en/mcp) · `docs/mcp-candidates.md`
 
-## Task 6 - Write down what it can reach (8 min)
+## Task 7 - Write down what they can reach (5 min)
 
-No configuration in this task. Three questions, answered in writing, in a new file
+No configuration in this task. You brought two things in from outside - a plugin and a
+server. Answer the same three questions for **each** of them, in a new file
 `docs/mcp-scoping.md`:
 
-- **Slice.** Which part of the system does it expose? Not "GitHub" - which repositories,
-  which resource type.
+- **Slice.** Which part of which system does it touch? Not "GitHub" - which repositories,
+  which resource type. For the plugin: which of your files and which tools.
 - **Credential.** Which one does it use, and where does it come from? Your own account, a
   service account, none at all?
 - **Direction.** Read-only or writing? And is that enforced by the endpoint, or only
   requested in a prompt?
 
-Then one more line. Three things together make a session dangerous:
+Then one line more. Three things together make a session dangerous:
 
 - access to private data
 - content from an untrusted source entering the context
@@ -411,17 +499,17 @@ Then one more line. Three things together make a session dangerous:
 With all three, content can act as an instruction and data can leave. Removing any one
 breaks the chain. Tick the ones present in your session and write one verdict line.
 
-**Expected result.** Four written lines you can read out in the discussion.
+**Expected result.** Two sets of three answers, plus one verdict line, ready to read out.
 
 **Take this to your team**
 
 | | In this lab | In your repo |
 |---|---|---|
-| The three questions | slice, credential, direction | Ask them before connecting, every time. They take a minute and they are the whole review |
+| The three questions | asked of a plugin and of a server | The same three work for anything you install. They take a minute and they are the whole review |
 | Where a limit lives | in the endpoint, in the grant, in the token | Never in the prompt. A prompt-level limit is a request, and requests get argued with |
-| Vetting | a tool description is third-party text in your context | Review a server before committing it to a team repo. The description is an input, not documentation |
+| Vetting | a tool description is third-party text in your context | Review before committing to a team repo. The description is an input, not documentation |
 
-**Tip.** A server nobody can describe in three lines does not get committed. That rule
+**Tip.** Anything nobody can describe in three lines does not get committed. That rule
 alone removes most of the risk.
 
 **Trap.** "It is read-only" because the prompt said so. Read-only is a property of the
@@ -599,9 +687,72 @@ unreviewed changes instead of one.
 
 **Reference.** [git worktree](https://git-scm.com/docs/git-worktree)
 
-## Task A4 - ADVANCED - Narrow the exposure and re-run
+## Task A4 - ADVANCED - Add a marketplace nobody vetted for you
 
-*Deepens tasks 5 and 6.*
+*Deepens task 5.*
+
+Task 5 installed from Anthropic's curated marketplace. Most plugins you will actually want
+are not there. They live in somebody's GitHub repository, and a marketplace is just a
+repository with a `.claude-plugin/marketplace.json` in it.
+
+There are three tiers of trust, and knowing which one you are in is the skill:
+
+| Source | What screening it had | How you add it |
+|---|---|---|
+| `claude-plugins-official` | curated by Anthropic | already there |
+| `claude-community` | automated validation and safety screening, pinned to a commit SHA | `/plugin marketplace add anthropics/claude-plugins-community` |
+| anyone's repository | **none** | `/plugin marketplace add owner/repo` |
+
+**Step 1 - add the community marketplace and install from it.**
+
+```text
+/plugin marketplace add anthropics/claude-plugins-community
+```
+
+Plugins from it install as `@claude-community`. Browse the **Discover** tab and find one
+that would be useful in your own work.
+
+**Step 2 - before you install it, find out who wrote it.** Open its homepage from the
+details pane. Answer four things in writing:
+
+- Who publishes it, and would you run their shell script on your laptop?
+- When was it last updated, and does it still work against your Claude Code version?
+- What does the "Will install" pane list - and is there anything in it the plugin's
+  description did not lead you to expect?
+- Does it bring an MCP server or a hook? Those two reach furthest: a hook runs on an
+  event whether or not you invoked anything.
+
+**Step 3 - the third tier.** Do not actually install one, but find a plugin marketplace
+in a repository belonging to neither Anthropic nor your employer, and say what would have
+to be true for you to add it. `/plugin marketplace add owner/repo` clones and trusts it
+with no screening whatsoever.
+
+**Take this to your team**
+
+The documentation is blunt about this: plugins and marketplaces are highly trusted
+components that execute arbitrary code with your user privileges, and Anthropic does not
+control or verify what third-party plugins contain. That is the same sentence you would
+write about any dependency, which is the point - a plugin is a dependency, and it belongs
+in whatever review your other dependencies get.
+
+The team version of this is `extraKnownMarketplaces` in `.claude/settings.json`: the
+repository names the marketplaces it trusts, everyone who clones gets that list, and
+adding to it is a pull request somebody reviews. Organisations can go further and restrict
+which marketplaces anyone may add at all.
+
+**Tip.** A hook is the component to look at hardest. A skill only runs when something
+matches it; a hook runs on an event, in the background, whether or not you asked.
+
+**Trap.** Auto-update is off by default for third-party marketplaces and on for
+Anthropic's. If you turn it on for someone else's, you are agreeing to run code you have
+not seen yet.
+
+**Reference.** [discover and install plugins](https://code.claude.com/docs/en/discover-plugins) ·
+[plugin marketplaces](https://code.claude.com/docs/en/plugin-marketplaces)
+
+## Task A5 - ADVANCED - Narrow the exposure and re-run
+
+*Deepens tasks 6 and 7.*
 
 Add the GitHub server, then narrow it and see what breaks:
 
@@ -625,9 +776,9 @@ is the argument for narrowing by default rather than after an incident.
 
 **Reference.** [MCP](https://code.claude.com/docs/en/mcp)
 
-## Task A5 - ADVANCED - Bundle into a plugin and hand it over
+## Task A6 - ADVANCED - Bundle into a plugin and hand it over
 
-*Deepens tasks A1 and A2.*
+*Deepens tasks A1, A2 and A4.*
 
 Your skills and agents are the TrackIt house pattern. Bundle them into a plugin and give
 it to a neighbour, who installs it and runs it on their own clone.
@@ -650,9 +801,9 @@ whether they trust it, it is what its agents can reach in *your* repository.
 
 **Reference.** [plugins](https://code.claude.com/docs/en/plugins)
 
-## Task A6 - ADVANCED - A database role the agent cannot write through
+## Task A7 - ADVANCED - A database role the agent cannot write through
 
-*Deepens task 6. This is the answer to the survey question about protecting database
+*Deepens task 7. This is the answer to the survey question about protecting database
 areas from agent access.*
 
 You have a real database now. Give the agent a way in that cannot write:
@@ -691,9 +842,9 @@ that data goes into a context window. Scope the schema too, not only the directi
 
 **Reference.** [PostgreSQL GRANT](https://www.postgresql.org/docs/17/sql-grant.html)
 
-## Task A7 - ADVANCED - Build a minimal MCP server
+## Task A8 - ADVANCED - Build a minimal MCP server
 
-*Deepens task 5.*
+*Deepens task 6.*
 
 Write an MCP server with exactly one tool that returns something from this repo - the list
 of Flyway migrations, say. Connect it at project scope and use it.
@@ -718,21 +869,26 @@ context. The tool descriptions are, and they can differ.
 
 ## Bring to the discussion
 
-Fifteen minutes, and it runs on your answers. Everyone has these two:
+Fifteen minutes, and it runs on your answers. Everyone has these three:
 
 - **Did the skill fire on the first try? If not, what did its description say?**
 - **What did the tests tell you, and what did they not tell you?**
+- **What did the plugin's "Will install" pane say, and would you put that plugin in your
+  team's `.claude/settings.json`?**
 
 If you got into Part 3:
 
 - **Skill or agent - which did you reach for, and on which criterion?**
-- **Which server would you not commit to your team repository, and why?**
+- **Which marketplace would you add to your team repository, and which would you not?**
 
 ## Further reading
 
 - Skills: <https://code.claude.com/docs/en/skills>
 - Subagents: <https://code.claude.com/docs/en/sub-agents>
-- Plugins: <https://code.claude.com/docs/en/plugins>
+- Finding and installing plugins: <https://code.claude.com/docs/en/discover-plugins>
+- Building plugins: <https://code.claude.com/docs/en/plugins>
+- Plugin marketplaces: <https://code.claude.com/docs/en/plugin-marketplaces>
+- The plugin catalogue in a browser: <https://claude.com/plugins>
 - MCP: <https://code.claude.com/docs/en/mcp>
 - This repo's own decisions: `docs/architecture.md`, `docs/adr/0001-*`,
   `docs/mcp-candidates.md`
