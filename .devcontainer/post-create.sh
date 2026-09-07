@@ -3,10 +3,14 @@
 # Devcontainer post-create for lab-trackit-java.
 #
 # Installs the two AI coding CLIs the workshop runs on (Claude Code, OpenCode),
-# makes .env part of the environment of every shell, and warms the Maven cache.
-# Every step verifies itself and prints a loud WARNING when it fails - a broken
-# install must never pass silently, or a participant only finds out at the start
-# of the first lab.
+# makes .env part of the environment of every shell, and warms every toolchain the
+# day needs: Maven for the backend, npm for the frontend, and the Postgres image
+# for the database. Every step verifies itself and prints a loud WARNING when it
+# fails - a broken install must never pass silently, or a participant only finds
+# out at the start of the first lab.
+#
+# The frontend and the database arrive on the lab 1.2 branch. The guards below keep
+# this one script correct on every branch, including the ones that have neither.
 #
 # Baseline: acend-swai/lab-hello-world (same npm packages, same [OK] idiom).
 
@@ -81,6 +85,28 @@ if ( cd backend && ./mvnw -q -B dependency:go-offline ); then
   echo "[OK]      Maven dependencies cached"
 else
   warn "Maven dependencies could not be downloaded. Run './mvnw -B test' in backend/ before the workshop day."
+fi
+
+# The frontend toolchain is installed here, not during the lab. Fifteen minutes of
+# lab time does not survive an npm install on conference wifi.
+if [ -d frontend ]; then
+  echo "--- installing the frontend toolchain"
+  if ( cd frontend && npm ci --no-audit --no-fund ); then
+    echo "[OK]      frontend dependencies installed"
+  else
+    warn "npm ci failed in frontend/. Run it by hand before the workshop day."
+  fi
+fi
+
+# Pulling postgres:17 on the workshop morning is the single slowest thing that can
+# happen in the room. Do it now, while the container builds.
+if [ -f compose.yaml ]; then
+  echo "--- pre-pulling the database image"
+  if docker pull postgres:17 > /dev/null 2>&1; then
+    echo "[OK]      postgres:17 pulled"
+  else
+    warn "postgres:17 could not be pulled. Run 'docker pull postgres:17' before the workshop day."
+  fi
 fi
 
 echo "-------------------------------"
