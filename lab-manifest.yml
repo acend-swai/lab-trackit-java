@@ -239,3 +239,67 @@ branches:
     must_not_exist:
       # the credential never lands in a file, in this repo or any participant's
       - deploy/terraform/terraform.tfvars
+
+  m4-full-agentic:
+    role: standalone branch on top of m3-solution (carries M1.1, M1.2, M2 and M3 in full) - Stufe 4, full-agentic. Spec-first feature work under a named agent roster shared with GitHub Copilot, a Definition-of-Done gate enforced in CI, CODEOWNERS protecting the harness and infrastructure from an agent's own edits, and a merge to main publishing a container image - never applying Terraform (docs/adr/0002, docs/adr/0003). Sits outside the m1-m4 module sequence.
+    must_exist:
+      # inherited from m3-solution - confirms the base, not a lesser one
+      - .claude/settings.json
+      - .claude/hooks/check-infra.sh
+      - .mcp.json
+      - deploy/terraform/main.tf
+      - openspec/specs/task-comments/spec.md
+      # capstone docs
+      - docs/adr/0002-full-agentic-capstone-platform.md
+      - docs/adr/0003-agent-security-boundary.md
+      - SECURITY.md
+      # the live-demo feature, specified end to end, deliberately unimplemented
+      - openspec/changes/add-task-summary/proposal.md
+      - openspec/changes/add-task-summary/tasks.md
+      - openspec/changes/add-task-summary/specs/task-summary/spec.md
+      # harness extensions
+      - .claude/hooks/block-protected-edits.sh
+      - .claude/hooks/run-tests.sh
+      - .claude/hooks/pr-summary.sh
+      - .claude/commands/spec.md
+      - .claude/commands/plan.md
+      - .claude/commands/adr.md
+      - .claude/commands/dod-check.md
+      - .claude/commands/release.md
+      - .claude/agents/planner.md
+      - .claude/agents/implementer.md
+      - .claude/agents/tester.md
+      - .claude/agents/security.md
+      # GitHub Copilot parity
+      - .github/copilot-instructions.md
+      - .github/instructions/backend.instructions.md
+      - .github/instructions/frontend.instructions.md
+      - .github/instructions/infra.instructions.md
+      - .github/agents/planner.agent.md
+      - .github/agents/implementer.agent.md
+      - .github/agents/tester.agent.md
+      - .github/agents/security.agent.md
+      - .github/agents/api-reviewer.agent.md
+      - .github/prompts/spec.prompt.md
+      - .github/prompts/plan.prompt.md
+      - .github/prompts/backend-coder.prompt.md
+      - .github/prompts/test-writer.prompt.md
+      - .github/prompts/dod-check.prompt.md
+      - .github/CODEOWNERS
+      - .github/pull_request_template.md
+      # CI/CD
+      - .github/workflows/dod-check.yml
+      - .github/workflows/agent-parity.yml
+      - .github/workflows/copilot-setup-steps.yml
+      - .github/workflows/deploy.yml
+      - .githooks/pre-push
+      - scripts/dod_check.sh
+      - scripts/check_agent_parity.sh
+    must_not_exist:
+      # docs/adr/0002: this feature stays unimplemented - it is the live-demo
+      # slice a full-agentic run builds, not a pre-baked diff.
+      - backend/src/main/java/ch/acend/trackit/web/TaskSummaryController.java
+      # db-builder/frontend-builder are Claude-Code-only by design (docs/adr/0002)
+      # and are never mirrored for Copilot's single cloud agent.
+      - .github/agents/db-builder.agent.md
+      - .github/agents/frontend-builder.agent.md
