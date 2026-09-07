@@ -16,31 +16,43 @@ and compare what comes back.
 `m1-1-start` ships one endpoint, `GET /api/v1/health`. That is the pattern the agent
 copies, so read it before you generate anything.
 
-**Part 1 is for everyone.** Setup plus four tasks.
+**Part 1 is for everyone.** Setup plus four tasks, about 36 minutes. Task 4 has to happen:
+it fills the comparison sheet the module discussion runs on.
 
-**Part 2 is advanced and optional.** Start it when finished with part 1.
+**Part 2 is advanced and optional.** Start it when Part 1 is green. Nothing later in the
+day depends on it.
 
 ## Where you start
 
 Do this before task 1. It takes about three minutes.
 
-The repo is public, so you need no account and no token:
+Clone the repo and land on the lab branch:
 
 ```bash
 git clone -b m1-1-start https://github.com/acend-swai/lab-trackit-java.git trackit
 cd trackit
 ```
 
-Clone in full. Task 3 compares your work against `origin/m1-1-solution`, and lab 2 falls
-back to `origin/m2-start`.
+Clone in full. A `--depth` clone has no `origin/m1-1-solution` for task 3 to compare against,
+and no `origin/m2-start` for lab 2 to fall back to.
+
+Check that you got the branch and the history:
+
+```bash
+git branch --show-current      # m1-1-start
+git branch -r | wc -l          # more than one
+```
 
 Open the folder in VS Code and choose **Reopen in Container**. The devcontainer brings
 Java 21, both CLIs and the tooling for the rest of the day.
 
+You can also choose the IDE of your choice, if it supports the DevContainer feature - or
+work directly on your machine without the Devcontainer/Docker sandbox.
+
 Copy the `.env` from your mail into the repo root, then check the machine:
 
 ```bash
-cp <the file from your mail> .env
+cp .env.example .env # and fill in the appropriate variables
 set -a; source .env; set +a     # only needed outside the devcontainer
 ./verify.sh
 ```
@@ -57,28 +69,30 @@ git commit --allow-empty -m "chore: start of my workshop repo"
 
 ### Make it yours
 
-**This clone is yours.** Work in it, commit into it, break it. Nothing you do reaches the
-workshop repo. To keep the work after today, add a remote of your own and push there:
+**This clone is yours.** Work in it, commit into it, break it. You have read access and
+nothing you do reaches the workshop repo. To keep the work after today, push it to a repo
+of your own:
 
 ```bash
 git remote add mine <your repo>
 git push -u mine m1-1-start
 ```
 
-**Bringing your own stack?** Everything in this lab except the Maven commands works on any
-repo you bring. Do the same setup in your own project: check that the toolchain is there,
-that the tests run, and commit a clean starting point. You will get more out of the day
-comparing models on code you know.
+**Bringing your own stack?** Everything except the Maven commands works on any repo you
+bring. Do the same setup there: check the toolchain is present, run the tests, commit a
+clean starting point. You get more out of the day comparing models on code you know.
 
-**Note:** Claude Code talks to the Anthropic API directly, with no gateway in front of it.
-If you have your own licence, log in with your account and leave `ANTHROPIC_API_KEY` empty.
-A key set there overrides your subscription.
+**Claude Code talks to the Anthropic API directly**, with no gateway in front of it. On your
+own licence, log in with your account and leave `ANTHROPIC_API_KEY` empty. A key in that
+variable overrides your subscription and bills the key.
 
 ## What you record today
 
-We want to investigate the difference of the models related to the workload. 
-Please fill in the numbers and your experience, so we can compare this later and discuss your experience. 
-Feel free to use other than the suggested models, if you want.
+Two things travel with you out of this lab. Set them up now, before task 1.
+
+We compare how the models handle the same workload, so the numbers only mean something if
+you write them down while you work. The suggested models are a starting point, swap in your
+own if you would rather measure those.
 
 **1. The comparison sheet.** Copy this into a scratch file. You fill one column per model
 you run today, two in task 1 and two in task 4. The five-minute discussion at the end of
@@ -94,8 +108,10 @@ the module runs on it, so bring it filled in.
 | Cost of the run | | | | |
 | Did you feel in control? | | | | |
 
-**2. One moment where the agent got away from you.** Whenever you experience a 
-difference from the expected behavior, please not it down into the table above.
+**2. One moment where the agent got away from you.** A file it touched, a dependency it
+added, a step it skipped, a claim it made without checking. One line, written down when it
+happens. The transfer discussion in M4.2 comes back to it, and it is the most useful thing
+you take back to your own team.
 
 ## Commands you use today
 
@@ -158,6 +174,8 @@ whether it writes a test at all. Write those guesses down, do not correct them.
 
 Then put the context file back and throw the run away. Restore it first: `git clean -fd`
 removes untracked files, and `AGENTS.md.off` is one of them.
+
+Put the file back before you clean, in that order:
 
 ```bash
 mv AGENTS.md.off AGENTS.md            # the context file is back
@@ -472,7 +490,7 @@ speed and costs a review cycle later.
 
 Reference: [costs and usage](https://code.claude.com/docs/en/costs)
 
-## Task 4: Same job, second model (10 min)
+## Task 4: Run the same job on a second model (10 min)
 
 We run task 3 again against a different model through the gateway. Use the same job text,
 the comparison only holds if the input is identical.
@@ -563,7 +581,7 @@ discussion and the afternoon need.
 Optional. Start when Part 1 is green and committed. The tasks are independent, pick what
 interests you.
 
-## Task A1 - ADVANCED: Two harnesses on one repo
+## Task A1 - ADVANCED: Run two harnesses on one repo
 
 *Deepens task 1.* Start OpenCode on the same repo in a second terminal, next to your
 Claude Code session. Both read the same `.env`:
@@ -624,7 +642,7 @@ References: [permissions](https://code.claude.com/docs/en/permissions) ·
 [hooks](https://code.claude.com/docs/en/hooks) ·
 [subagents](https://code.claude.com/docs/en/sub-agents)
 
-## Task A4 - ADVANCED: Three models, and where the small one breaks
+## Task A4 - ADVANCED: Find where the small model breaks
 
 *Deepens task 4.* Run a third model, deliberately under 20 GB. Then name the step in the
 loop where it breaks and tick one:
