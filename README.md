@@ -5,9 +5,6 @@ Lab repository for the workshop **Agentic Coding in Practice**, Workshop-Tage 20
 TrackIt is a small task management tool. A task has a title, a project and a status.
 The application grows over the workshop: one module adds one stage.
 
-This is the Java line of `acend-swai/lab-trackit`. The Python line stays as it is; both
-carry the same domain so the two are comparable.
-
 ## Branches
 
 `main` is the same commit as `m1-1-start`, so a plain clone starts you where the day
@@ -29,8 +26,6 @@ git clone -b m1-1-start https://github.com/acend-swai/lab-trackit-java.git track
 `m1-2-mid` is an extra rejoin point inside lab 2: the state after task 2.3, before any MCP
 work. Use it if you lose the first half of that lab and want to be with the room again for
 the second.
-
-The M1.1 and M1.2 branches exist today. M2 to M4 follow with their modules.
 
 ## Requirements
 
