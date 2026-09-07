@@ -26,6 +26,9 @@ This is the Java line of the TrackIt lab project. The Python line lives in
   - components/ - reusable pieces, no HTTP calls of their own
   - router/index.ts - every route registered here and nowhere else
 - docs/adr/ - one file per architectural decision
+- openspec/specs/ - the live spec, merged from archived changes. Read it before
+  proposing a change; it is the current truth about how TrackIt behaves
+- openspec/changes/ - changes in flight, one directory each
 
 ## Coding Standards
 
@@ -82,5 +85,8 @@ This is the Java line of the TrackIt lab project. The Python line lives in
 ## Entity Model
 
 - Task: id (long), title (String), project (String), status (OPEN or DONE)
+- Comment: id (long), taskId (long), author (String), body (String, max 2000),
+  createdAt (Instant). Belongs to exactly one Task and is deleted with it
 
-Tasks live in memory in `TaskService` until lab 1.2 moves them into PostgreSQL.
+Both are stored in PostgreSQL. The bounds on Comment come from
+`openspec/specs/task-comments/spec.md`, not from a guess - change the spec first.

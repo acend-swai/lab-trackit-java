@@ -47,5 +47,14 @@ rewritten.
 | GET | `/api/v1/health` | `{"status":"ok"}` |
 | POST | `/api/v1/tasks` | 201 and the created task |
 | GET | `/api/v1/tasks` | all tasks |
+| POST | `/api/v1/tasks/{taskId}/comments` | 201 and the created comment |
+| GET | `/api/v1/tasks/{taskId}/comments` | the task's comments, oldest first |
 
-The `/api/v1` prefix is fixed. New resources go under it.
+The `/api/v1` prefix is fixed. New resources go under it. A request naming a task that
+does not exist answers 404, raised by `TaskNotFoundException`.
+
+## Specs
+
+`openspec/specs/` holds the live behaviour spec, merged from each archived change. It is
+the file to read before proposing a change and the file to change before writing code.
+`openspec/changes/` holds whatever is in flight.
