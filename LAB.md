@@ -23,10 +23,12 @@ Code the job, the right skill fires by itself, and your work is to check what ca
 | Plugin | how a skill or agent travels between repos and teams | Part 2, you install one |
 | MCP | a connection to something outside this repo | Part 2, one command |
 
-**Parts 1 and 2 are for everyone.** Part 1 runs before the MCP input, Part 2 after it. You
+## Which parts you do
+
+Parts 1 and 2 are for everyone. Part 1 runs before the MCP input, Part 2 after it. You
 write no skill, agent or configuration file in either.
 
-**Part 3 is advanced and optional.** Nothing later in the day depends on it. If you finish
+Part 3 is advanced and optional. Nothing later in the day depends on it. If you finish
 Part 1 early, go to task A2, it is the most useful one.
 
 ## What you record today
@@ -40,9 +42,11 @@ it happens:
 | Task 2 | Did the skill fire on the first try? If not, what did its description say? |
 | Task 3 | What did the tests tell you, and what did they not tell you? |
 | Task 5 | What the plugin's "Will install" pane listed, and whether you would put that plugin in your team's `.claude/settings.json` |
-| Task 7 | Your three answers per component, plus the verdict line |
+| Task 7 | Your four answers per component, plus the verdict line |
 
 ## Where you start
+
+Fetch the branch that ships the skills, then check the environment:
 
 ```bash
 git fetch origin
@@ -50,16 +54,15 @@ git checkout m1-2-start
 ./verify.sh
 ```
 
-PostgreSQL is part of the devcontainer, so it is already running - `./verify.sh` says
-`database container healthy`. If it does not, rebuild the container from the command
-palette, *Dev Containers: Rebuild Container*. There is deliberately no container for the
-application itself, that is M3. The database is defined in `compose.yaml`, which M3 builds
-around.
-
 Every line of `./verify.sh` reads `[OK]` except the health endpoint, which only answers
-while the application runs.
+while the application runs. PostgreSQL runs inside the devcontainer, so the line
+`database container healthy` reads `[OK]` before you start. If that line fails, rebuild the
+container from the command palette, *Dev Containers: Rebuild Container*.
 
-**Note:** If lab 1.1 did not finish, you are fine. `m1-2-start` is the lab 1.1 solution
+There is deliberately no container for the application itself, that is M3. The database is
+defined in `compose.yaml`, which M3 builds around.
+
+**Note:** You do not need your lab 1.1 result here. `m1-2-start` is the lab 1.1 solution
 with new scaffolding on top.
 
 ## What the branch ships
@@ -97,20 +100,28 @@ keeping that file, we are reading it.
 
 ### Step 2: Compare it with your rules
 
+Put the fresh description next to the rules you wrote:
+
 ```bash
 diff <(sed -n '1,200p' CLAUDE.md) AGENTS.md | head -40
 ```
 
-Look for what `/init` found that `AGENTS.md` does not mention.
+The `<` lines come from `CLAUDE.md`. In them you see what `/init` found and `AGENTS.md`
+never mentions: the task API, the `frontend/` folder, the database and the three skills.
+Those are your gaps.
 
 ### Step 3: Put the pointer back
+
+Throw the generated file away and keep only the gaps you just found:
 
 ```bash
 git checkout -- CLAUDE.md
 ```
 
-`CLAUDE.md` is one line again. Now open `AGENTS.md` and find these three rules. The next
-two tasks are held to them:
+The command prints nothing. `cat CLAUDE.md` shows the single line that points at
+`AGENTS.md` again.
+
+Now open `AGENTS.md` and find these three rules. The next two tasks are held to them:
 
 - The JPA entity is a separate class from the record
 - The schema belongs to a Flyway migration, never to `ddl-auto`
@@ -126,13 +137,15 @@ Reference: [Claude Code commands](https://code.claude.com/docs/en/commands)
 
 ## Task 2: Use the skill and the agent the branch ships (5 min)
 
-### Step 1: The skill
+### Step 1: Fire the skill without naming it
 
-Stage something and ask for a message:
+Stage the working tree:
 
 ```bash
 git add -A
 ```
+
+`git add` prints nothing. Now ask for a message:
 
 ```text
 Write me a commit message for what I just staged.
@@ -145,7 +158,9 @@ it answers to. That field is the whole trigger mechanism.
 Notice what it did not do: it printed a message and stopped. Its frontmatter says
 `disallowed-tools: Write, Edit`, so it could not commit even if it decided to.
 
-### Step 2: The agent
+### Step 2: Run the agent
+
+Send the same repository to a worker with its own context:
 
 ```text
 Use the api-reviewer agent to review the task API.
@@ -206,12 +221,15 @@ The plan is fine and those dependencies are fine. Implement exactly that, and st
 
 ### Verify, in this order
 
+Run the suite first:
+
 ```bash
 cd backend
 ./mvnw -q test
 ```
 
-Ends in `BUILD SUCCESS`. Hand the failing output back if not.
+The run ends in `BUILD SUCCESS`. Hand the failing output back to Claude Code if it does
+not.
 
 Start the application against the database:
 
@@ -219,13 +237,17 @@ Start the application against the database:
 ./mvnw spring-boot:run
 ```
 
-In a second terminal:
+Spring Boot logs a `Started` line once it is up. Leave it running in that terminal.
+
+In a second terminal, create a task:
 
 ```bash
 curl -s -X POST localhost:8080/api/v1/tasks \
   -H 'content-type: application/json' \
   -d '{"title":"Survive a restart","project":"trackit"}'
 ```
+
+The command returns the created task as JSON, with a generated `id` and the title you sent.
 
 Now the check the tests cannot make. Stop the application with `Ctrl+C`, start it again,
 and ask for the list:
@@ -234,11 +256,14 @@ and ask for the list:
 curl -s localhost:8080/api/v1/tasks
 ```
 
-The task is still there. Look in the database yourself:
+You see `Survive a restart` in the list, returned by a process that started with an empty
+memory. Look in the database yourself:
 
 ```bash
 docker exec trackit-db psql -U trackit -d trackit -c 'SELECT * FROM task;'
 ```
+
+`psql` prints one row per stored task, and yours is among them.
 
 A green test suite proved none of that. The controller test mocks the service away, so the
 whole storage path is absent from the run. Persistence is proven by a restart and by
@@ -320,6 +345,8 @@ installing one is two keystrokes, which is exactly why the review matters.
 
 ### Step 1: Open the plugin manager
 
+Run this in your Claude Code session:
+
 ```text
 /plugin
 ```
@@ -348,6 +375,8 @@ your files. This pane is the last moment saying no costs you nothing.
 
 ### Step 3: Install it at user scope
 
+Install it by name, marketplace included:
+
 ```text
 /plugin install commit-commands@claude-plugins-official
 ```
@@ -356,6 +385,8 @@ Choose **User** scope, yourself, across all projects. If the summary says
 `Run /reload-plugins to activate.`, run that.
 
 ### Step 4: Use it
+
+Call the plugin's own command:
 
 ```text
 /commit-commands:commit
@@ -402,16 +433,9 @@ claude mcp add --scope project --transport http context7 https://mcp.context7.co
 `--scope project` writes `.mcp.json` in the repo root. That file is committed, so this is a
 team decision, the same distinction you just met with plugin scopes.
 
-**Where the ones not on our list come from.** Three directories, and you vet before you
-add, not after:
-
-| Directory | What it gives you |
-|---|---|
-| <https://registry.modelcontextprotocol.io> | the official registry, authoritative server metadata |
-| <https://www.pulsemcp.com> | curated and filterable, with an official-provider filter |
-| <https://glama.ai/mcp/servers> | a quality, security and licence grade per server, and an in-browser Inspector to exercise one before you install it |
-
 ### Step 2: Approve it and check it connected
+
+Ask Claude Code what it now holds:
 
 ```bash
 claude mcp list
@@ -422,6 +446,8 @@ session. A server arriving through a `git pull` does not connect silently.
 
 ### Step 3: Use it on a real question
 
+Ask something the model cannot answer from memory:
+
 ```text
 Using the context7 docs, check the PrimeVue 4 API used in the task board. Name
 anything that is deprecated or renamed in the version in package.json, and quote the
@@ -429,8 +455,18 @@ doc line you got it from.
 ```
 
 The server shows connected and the agent called one of its tools. Finding no problem is a
-fine outcome, "the code matches the current docs, and here is the line that says so" is a
+good outcome, "the code matches the current docs, and here is the line that says so" is a
 real answer.
+
+### Where to find the servers that are not on our list
+
+Three directories carry them, and you vet before you add, not after:
+
+| Directory | What it gives you |
+|---|---|
+| <https://registry.modelcontextprotocol.io> | the official registry, authoritative server metadata |
+| <https://www.pulsemcp.com> | curated and filterable, with an official-provider filter |
+| <https://glama.ai/mcp/servers> | a quality, security and licence grade per server, and an in-browser Inspector to exercise one before you install it |
 
 **Take home:** The best MCP cases are current information, not more power. Scope it to the
 project, commit it, review it in a pull request, and keep the approval prompt.
@@ -445,8 +481,13 @@ References: [MCP](https://code.claude.com/docs/en/mcp) · `docs/mcp-candidates.m
 
 ## Task 7: Write down what they can reach (5 min)
 
-No configuration here. You brought in a plugin and a server. Answer four questions for
-**each** of them, in a new file `docs/mcp-scoping.md`:
+No configuration here. You brought in a plugin and a server, and this task is the review
+you run on both.
+
+### Step 1: Answer four questions per component
+
+Answer these for the plugin and again for the MCP server, in a new file
+`docs/mcp-scoping.md`:
 
 - **Slice.** Which part of which system does it touch? Not "GitHub", but which
 repositories and which resource type. For the plugin: which of your files and which tools.
@@ -457,20 +498,26 @@ in a prompt?
 - **Maintainer.** Who publishes it, and when did they last touch it? An abandoned server
 still runs, and it is nobody's job to patch it.
 
-Then one line more. Three things together make a session dangerous:
+### Step 2: Tick the three conditions and write a verdict
+
+Three things together make a session dangerous:
 
 - access to private data
 - content from an untrusted source entering the context
 - a channel to the outside
 
 With all three, content can act as an instruction and data can leave. Removing any one
-breaks the chain. Tick the ones present in your session and write one verdict line.
+breaks the chain. Tick the ones present in your session and write one verdict line under
+your four answers.
 
-**This is not theoretical.** In CamoLeak, hidden instructions in a pull request description
-were read by GitHub Copilot, which then read the victim's private repositories under their
-own permissions and leaked the content through GitHub's own image proxy. The exfiltration
-channel was a domain the organisation already trusted, so monitoring saw ordinary image
-loads. All three conditions, and the exit was the one nobody had thought of as an exit.
+### Step 3: Read what happened when all three lined up
+
+In CamoLeak, hidden instructions in a pull request description were read by GitHub Copilot,
+which then read the victim's private repositories under their own permissions and leaked
+the content through GitHub's own image proxy. The exfiltration channel was a domain the
+organisation already trusted, so monitoring saw ordinary image loads. All three conditions,
+and the exit was the one nobody had thought of as an exit.
+
 Source:
 <https://www.blackfog.com/camoleak-how-github-copilot-became-an-exfiltration-channel/>
 
@@ -489,13 +536,14 @@ References: [MCP](https://code.claude.com/docs/en/mcp) ·
 
 # Part 3 - ADVANCED
 
-Optional. Start when Parts 1 and 2 are green and committed. The tasks are independent.
-**Do A2 first** if you only do one.
+Optional. Start when `./mvnw -q test` passes and `git status` lists nothing uncommitted
+from Parts 1 and 2. The tasks are independent, so do **task A2 first** if you only do one.
 
 ## Task A1 - ADVANCED: Write a skill of your own
 
 *Deepens tasks 3 and 4.* Write `add-endpoint`: generate a new REST endpoint in the house
-pattern, including the service method, the error handling and a MockMvc test.
+pattern, including the service method, the error handling and a MockMvc test. Start from
+this frontmatter:
 
 ```markdown
 ---
@@ -505,6 +553,9 @@ description: Use when adding a REST endpoint to TrackIt, or when the user says "
   service method, error handling and a MockMvc test in the house pattern.
 ---
 ```
+
+Those lines are the frontmatter only. The body below it, the steps the skill follows, is
+what you write.
 
 Then use it to add `GET /api/v1/tasks/{id}`, returning 404 for an unknown id.
 
@@ -532,10 +583,14 @@ jobs, so we do them at the same time.
 
 ### Step 1: Start from the same place
 
+Give the parallel run its own working tree, checked out at the branch you started from:
+
 ```bash
 git worktree add ../trackit-parallel m1-2-start
 cd ../trackit-parallel
 ```
+
+`git worktree list` now shows a second working tree at `../trackit-parallel`.
 
 ### Step 2: Write two agent definitions
 
@@ -616,11 +671,16 @@ git worktree add ../trackit-db -b m1-2-db
 git worktree add ../trackit-fe -b m1-2-fe
 ```
 
-Run one agent in each, then merge:
+`git worktree list` now shows three working trees, one per branch.
+
+Run one agent in each, then merge both branches back in your original tree:
 
 ```bash
 git merge m1-2-db m1-2-fe
 ```
+
+You see either one merge commit across both branches, or `CONFLICT` lines naming every file
+both agents touched.
 
 Answer: which conflicts did git surface that the single-tree run would have silently lost,
 and what did the isolation cost the frontend agent?
@@ -646,6 +706,8 @@ Reference: [git worktree](https://git-scm.com/docs/git-worktree)
 
 ### Step 1: Add the community marketplace
 
+Add it by owner and repository:
+
 ```text
 /plugin marketplace add anthropics/claude-plugins-community
 ```
@@ -662,7 +724,7 @@ Open its homepage from the details pane and answer four things in writing:
 - Does the "Will install" pane list anything the description did not lead you to expect?
 - Does it bring an MCP server or a hook? Those two reach furthest.
 
-### Step 3: The third tier
+### Step 3: Judge the third tier without installing it
 
 Do not install one. Find a plugin marketplace in a repository belonging to neither
 Anthropic nor your employer, and say what would have to be true for you to add it.
@@ -734,6 +796,15 @@ docker exec trackit-db psql -U trackit -d trackit -c "
   GRANT SELECT ON ALL TABLES IN SCHEMA public TO trackit_ro;"
 ```
 
+`psql` prints one tag per statement, so the output should be:
+
+```text
+CREATE ROLE
+GRANT
+GRANT
+GRANT
+```
+
 Prove the limit instead of trusting it:
 
 ```bash
@@ -741,8 +812,13 @@ docker exec trackit-db psql -U trackit_ro -d trackit -c 'SELECT * FROM task;'
 docker exec trackit-db psql -U trackit_ro -d trackit -c "DELETE FROM task;"
 ```
 
-The second fails with a permission error. Now ask the agent to delete all tasks through
-that connection and record what comes back.
+The first command prints the task rows. The second one is refused:
+
+```text
+ERROR:  permission denied for table task
+```
+
+Now ask the agent to delete all tasks through that connection and record what comes back.
 
 **Take home:** This is the shape of the answer whenever someone asks how to keep an agent
 out of a table. Not a prompt, not a tool description, not a promise from the model: a role
