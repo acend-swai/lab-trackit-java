@@ -14,7 +14,7 @@ services:
   app:
     image: mcr.microsoft.com/devcontainers/base:ubuntu-24.04
     volumes:
-      - ..:/workspaces/trackit:cached
+      - .:/workspaces/trackit:cached
     command: sleep infinity
     network_mode: service:db
     depends_on:
