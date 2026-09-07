@@ -14,6 +14,7 @@ branches:
   m1-1-start:
     role: starting point for lab 1, module M1.1 - ships the context file the grounded-prompt half of the lab points at
     must_exist:
+      - LAB.md
       - README.md
       - verify.sh
       - lab-manifest.yml
