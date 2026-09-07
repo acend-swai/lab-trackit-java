@@ -19,6 +19,7 @@ branches:
       - lab-manifest.yml
       - .env.example
       - .devcontainer/devcontainer.json
+      - .devcontainer/post-create.sh
       - docs/architecture.md
       - docs/adr/0001-layered-spring-architecture.md
       - backend/pom.xml
