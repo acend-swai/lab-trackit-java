@@ -105,11 +105,12 @@ memory. Follow the patterns this project already uses, and make sure the tests p
 Watch where it guesses: package layout, the `/api/v1` prefix, constructor injection,
 whether it writes a test at all. Write those guesses down, do not correct them.
 
-Then throw the run away and put the context file back:
+Then put the context file back and throw the run away. Restore it first: `git clean -fd`
+removes untracked files, and `AGENTS.md.off` is one of them.
 
 ```bash
-git checkout -- . && git clean -fd
-mv AGENTS.md.off AGENTS.md
+mv AGENTS.md.off AGENTS.md            # the context file is back
+git checkout -- . && git clean -fd    # the generated code is gone
 ```
 
 `AGENTS.md` holds the stack, the layering, the coding standards, the git rules and the
