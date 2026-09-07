@@ -26,6 +26,9 @@ day depends on it.
 
 Do this before task 1. It takes about three minutes.
 
+**Warning.** Clone in full. A `--depth` clone has no `origin/m1-1-solution` for task 3 to
+compare against, and no `origin/m2-start` for lab 2 to fall back to.
+
 Clone the repo and land on the lab branch:
 
 ```bash
@@ -33,10 +36,8 @@ git clone -b m1-1-start https://github.com/acend-swai/lab-trackit-java.git track
 cd trackit
 ```
 
-Clone in full. A `--depth` clone has no `origin/m1-1-solution` for task 3 to compare against,
-and no `origin/m2-start` for lab 2 to fall back to.
-
-Check that you got the branch and the history:
+You now have a `trackit` folder holding the repo. `git branch --show-current` reads
+`m1-1-start`, and the remote list holds more than one branch:
 
 ```bash
 git branch --show-current      # m1-1-start
@@ -46,13 +47,14 @@ git branch -r | wc -l          # more than one
 Open the folder in VS Code and choose **Reopen in Container**. The devcontainer brings
 Java 21, both CLIs and the tooling for the rest of the day.
 
-You can also choose the IDE of your choice, if it supports the DevContainer feature - or
-work directly on your machine without the Devcontainer/Docker sandbox.
+**Note.** Any IDE with devcontainer support works. You can also work directly on your
+machine, without the devcontainer and without Docker.
 
-Copy the `.env` from your mail into the repo root, then check the machine:
+Create the `.env` in the repo root from the template, fill in the keys from your mail, then
+check the machine:
 
 ```bash
-cp .env.example .env # and fill in the appropriate variables
+cp .env.example .env            # then fill in the keys from your mail
 set -a; source .env; set +a     # only needed outside the devcontainer
 ./verify.sh
 ```
@@ -67,24 +69,34 @@ Mark your starting point, so you can always get back to it:
 git commit --allow-empty -m "chore: start of my workshop repo"
 ```
 
-### Make it yours
+`git log --oneline -1` shows that commit at the top of your history.
 
-**This clone is yours.** Work in it, commit into it, break it. You have read access and
-nothing you do reaches the workshop repo. To keep the work after today, push it to a repo
-of your own:
+### Keep your clone
+
+This clone is yours. Work in it, commit into it, break it. You have read access and nothing
+you do reaches the workshop repo. To keep the work after today, push it to a repo of your
+own:
 
 ```bash
 git remote add mine <your repo>
 git push -u mine m1-1-start
 ```
 
-**Bringing your own stack?** Everything except the Maven commands works on any repo you
-bring. Do the same setup there: check the toolchain is present, run the tests, commit a
-clean starting point. You get more out of the day comparing models on code you know.
+`git remote -v` shows `mine` next to `origin`, and the branch shows up on your own remote.
 
-**Claude Code talks to the Anthropic API directly**, with no gateway in front of it. On your
-own licence, log in with your account and leave `ANTHROPIC_API_KEY` empty. A key in that
-variable overrides your subscription and bills the key.
+### Bring your own stack
+
+Everything except the Maven commands works on any repo you bring. Do the same setup there:
+check the toolchain is present, run the tests, commit a clean starting point. You get more
+out of the day comparing models on code you know.
+
+## Log in to Claude Code
+
+**Warning.** A key in `ANTHROPIC_API_KEY` overrides your subscription and bills that key. On
+your own licence, leave `ANTHROPIC_API_KEY` empty and log in with your Anthropic account.
+
+Claude Code talks to the Anthropic API directly, with no gateway in front of it, so the
+credential it finds is the one it bills. Task 1 starts your first session, so settle this now.
 
 ## What you record today
 
@@ -172,10 +184,8 @@ memory. Follow the patterns this project already uses, and make sure the tests p
 Watch where it guesses: package layout, the `/api/v1` prefix, constructor injection,
 whether it writes a test at all. Write those guesses down, do not correct them.
 
-Then put the context file back and throw the run away. Restore it first: `git clean -fd`
-removes untracked files, and `AGENTS.md.off` is one of them.
-
-Put the file back before you clean, in that order:
+Now throw the run away. `git clean -fd` removes untracked files and `AGENTS.md.off` is one
+of them, so put the context file back before you clean, in that order:
 
 ```bash
 mv AGENTS.md.off AGENTS.md            # the context file is back
@@ -269,6 +279,8 @@ Check it:
 cat CLAUDE.md
 ```
 
+The output should be:
+
 ```text
 @AGENTS.md
 ```
@@ -303,11 +315,14 @@ Now compare with the file you set aside:
 diff AGENTS.reference.md AGENTS.md
 ```
 
-Take anything from it that would change what the agent does, ignore the rest, then drop it:
+`diff` prints the lines that differ, the shipped file's marked `<` and yours marked `>`. Take
+anything from it that would change what the agent does, ignore the rest, then drop the file:
 
 ```bash
 rm AGENTS.reference.md
 ```
+
+`rm` prints nothing, and `ls AGENTS*` now shows `AGENTS.md` alone.
 
 ### Step 5: Check that it took effect
 
@@ -420,10 +435,10 @@ curl -s -X POST localhost:8080/api/v1/tasks \
 curl -s localhost:8080/api/v1/tasks
 ```
 
-The output is:
+The POST answers `201` with the created task, and the GET answers with a list holding it:
 
 ```json
-201 {"id":1,"title":"Write the context file","project":"trackit","status":"OPEN"}
+{"id":1,"title":"Write the context file","project":"trackit","status":"OPEN"}
 [{"id":1,"title":"Write the context file","project":"trackit","status":"OPEN"}]
 ```
 
@@ -440,8 +455,8 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:8080/api/v1/tasks \
 
 ### Step 5: Verify and commit
 
-The output above matches exactly, and you can explain every file that was created. Ask the
-session if you cannot:
+Before you commit, check two things: the output above matched exactly, and you can explain
+every file that was created. Ask the session if you cannot:
 
 ```text
 List every file you created or changed, one line each, and say why each one was needed.
@@ -472,8 +487,9 @@ Then compare against the reference:
 git diff origin/m1-1-solution --stat
 ```
 
-A different file list is fine. Check one thing: does your version follow the rules you wrote
-in `AGENTS.md`? If not, the rule was too vague. That is the finding, not the diff.
+The stat shows one line per file that differs from the reference solution, plus a summary
+line. A different file list is fine. Check one thing: does your version follow the rules
+you wrote in `AGENTS.md`? If not, the rule was too vague. That is the finding, not the diff.
 
 **This is a good moment for the second thing you record.** If the agent did something you
 did not ask for during this loop, write that line down now.
@@ -507,7 +523,8 @@ cp ../trackit/.env . && set -a && source .env && set +a
 opencode
 ```
 
-`AGENTS.md` ships on the branch, so there is nothing to copy over.
+You see the OpenCode prompt in a second clone, `trackit-b`, that holds none of your task 3
+work. `AGENTS.md` ships on the branch, so there is nothing to copy over.
 
 ### Step 2: Pick the model
 
@@ -544,6 +561,8 @@ In a second terminal:
 cd backend && ./mvnw -q test
 ```
 
+The output ends in:
+
 ```text
 BUILD SUCCESS
 ```
@@ -558,6 +577,8 @@ Throw the run away and repeat steps 2 to 4, this time picking an open-weights mo
 git checkout -- . && git clean -fd
 opencode
 ```
+
+`git status` shows a clean tree before the third run starts.
 
 **Take home:** Run this bake-off on your own codebase before you standardise on a model. A
 leaderboard says nothing about your repo. Judge on turns to green and rule adherence, not
@@ -578,8 +599,8 @@ discussion and the afternoon need.
 
 # Part 2 - ADVANCED
 
-Optional. Start when Part 1 is green and committed. The tasks are independent, pick what
-interests you.
+Optional. Start when `./mvnw -q test` ends in `BUILD SUCCESS` and `git status` shows a clean
+tree. The tasks are independent, pick what interests you.
 
 ## Task A1 - ADVANCED: Run two harnesses on one repo
 
