@@ -26,6 +26,16 @@ commands that delete things, and a mistake is not a failing test but a deleted d
 
 **Part 1 is for everyone.** Four tasks. **Part 2 is advanced and optional.**
 
+## What you record today
+
+Keep a scratch file open. The discussion at the end runs on these three:
+
+| From | Write down |
+|---|---|
+| Task 1 | Why a deny rule alone was not enough, in one sentence |
+| Task 2 | What your hook refused, and whether the agent tried to get around it |
+| Task 4 | Your checklist findings, written before the agent corrects anything |
+
 ## Where you start
 
 Continue on your repo from lab 2, or take the reference state:
