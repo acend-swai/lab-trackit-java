@@ -283,6 +283,15 @@ Read it for these five and write down what you find **before** you have anything
 
 ### Step 3: Let it write, then verify yourself
 
+Approve the plan, naming what you are approving:
+
+```text
+The plan is fine. Write those files. Do not run terraform apply or terraform destroy,
+and do not create a terraform.tfvars.
+```
+
+Then verify yourself, in a second terminal:
+
 ```bash
 cd deploy/terraform
 terraform fmt -check
