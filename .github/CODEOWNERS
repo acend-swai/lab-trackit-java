@@ -13,3 +13,4 @@
 .mcp.json                   @acend-swai/lab-maintainers
 deploy/terraform/           @acend-swai/lab-maintainers
 lab-manifest.yml            @acend-swai/lab-maintainers
+.githooks/                  @acend-swai/lab-maintainers

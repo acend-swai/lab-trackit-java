@@ -23,8 +23,27 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.image.outputs.image }}
+      has_azure: ${{ steps.azure.outputs.has_azure }}
     steps:
       - uses: actions/checkout@v4
+
+      # The `secrets` context is NOT available in a job-level `if:` - that
+      # conditional may only read github, needs, vars and inputs. So the
+      # "are we configured for Azure?" question is answered here, in a step,
+      # where secrets ARE readable, and published as a job output the
+      # terraform-plan job can gate on through `needs`.
+      - name: Is this fork configured for Azure?
+        id: azure
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        run: |
+          if [ -n "$AZURE_CLIENT_ID" ]; then
+            echo "has_azure=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_azure=false" >> "$GITHUB_OUTPUT"
+            echo "No AZURE_CLIENT_ID secret - the terraform-plan job will be skipped." \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - uses: actions/setup-java@v4
         with:
@@ -68,7 +87,11 @@ jobs:
     # secrets. In a training fork with none configured, this job is skipped
     # entirely - the workflow still succeeds, because publishing the image is
     # the deliverable this branch actually promises (docs/adr/0002).
-    if: ${{ secrets.AZURE_CLIENT_ID != '' }}
+    #
+    # Gated on a job output, not on `secrets` directly: a job-level `if:` can
+    # only read github, needs, vars and inputs, so `secrets.X != ''` here does
+    # not do what it looks like it does.
+    if: needs.build-and-publish.outputs.has_azure == 'true'
     permissions:
       contents: read
       id-token: write
