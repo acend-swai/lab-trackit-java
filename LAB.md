@@ -47,12 +47,14 @@ it happens:
 ```bash
 git fetch origin
 git checkout m1-2-start
-docker compose up -d
 ./verify.sh
 ```
 
-`docker compose up -d` starts PostgreSQL and nothing else. There is deliberately no
-container for the application, that is M3.
+PostgreSQL is part of the devcontainer, so it is already running - `./verify.sh` says
+`database container healthy`. If it does not, rebuild the container from the command
+palette, *Dev Containers: Rebuild Container*. There is deliberately no container for the
+application itself, that is M3. The database is defined in `compose.yaml`, which M3 builds
+around.
 
 Every line of `./verify.sh` reads `[OK]` except the health endpoint, which only answers
 while the application runs.
@@ -233,7 +235,7 @@ curl -s localhost:8080/api/v1/tasks
 The task is still there. Look in the database yourself:
 
 ```bash
-docker compose exec db psql -U trackit -d trackit -c 'SELECT * FROM task;'
+docker exec trackit-db psql -U trackit -d trackit -c 'SELECT * FROM task;'
 ```
 
 A green test suite proved none of that. The controller test mocks the service away, so the
@@ -719,7 +721,7 @@ Reference: [plugins](https://code.claude.com/docs/en/plugins)
 *Deepens task 7.* Give the agent a way into the database that cannot write:
 
 ```bash
-docker compose exec db psql -U trackit -d trackit -c "
+docker exec trackit-db psql -U trackit -d trackit -c "
   CREATE ROLE trackit_ro LOGIN PASSWORD 'readonly';
   GRANT CONNECT ON DATABASE trackit TO trackit_ro;
   GRANT USAGE ON SCHEMA public TO trackit_ro;
@@ -729,8 +731,8 @@ docker compose exec db psql -U trackit -d trackit -c "
 Prove the limit instead of trusting it:
 
 ```bash
-docker compose exec db psql -U trackit_ro -d trackit -c 'SELECT * FROM task;'
-docker compose exec db psql -U trackit_ro -d trackit -c "DELETE FROM task;"
+docker exec trackit-db psql -U trackit_ro -d trackit -c 'SELECT * FROM task;'
+docker exec trackit-db psql -U trackit_ro -d trackit -c "DELETE FROM task;"
 ```
 
 The second fails with a permission error. Now ask the agent to delete all tasks through
