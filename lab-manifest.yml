@@ -42,6 +42,7 @@ branches:
   m1-1-solution:
     role: reference state after lab 1
     must_exist:
+      - LAB.md
       - AGENTS.md
       - CLAUDE.md
       - backend/src/main/java/ch/incratec/trackit/domain/Task.java

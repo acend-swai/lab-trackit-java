@@ -7,6 +7,8 @@ The application grows over the workshop: one module adds one stage.
 
 ## Branches
 
+The lab instruction for the branch you are on is in **[LAB.md](LAB.md)** in this root.
+
 `main` is the same commit as `m1-1-start`, so a plain clone starts you where the day
 starts. Each module has a `-start` branch and a `-solution` branch; every `-start` branch
 compiles and its tests pass before you touch anything.
