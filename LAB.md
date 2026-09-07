@@ -16,11 +16,65 @@ and compare what comes back.
 `m1-1-start` ships one endpoint, `GET /api/v1/health`. That is the pattern the agent
 copies, so read it before you generate anything.
 
-**Part 1 is for everyone.** Four tasks, about 36 minutes. Task 4 has to happen: it fills
-the comparison sheet the module discussion runs on.
+**Part 1 is for everyone.** Setup plus four tasks, about 36 minutes. Task 4 has to happen:
+it fills the comparison sheet the module discussion runs on.
 
 **Part 2 is advanced and optional.** Start it when Part 1 is green. Nothing later in the
 day depends on it.
+
+## Where you start
+
+Do this before task 1. It takes about three minutes.
+
+The repo is public, so you need no account and no token:
+
+```bash
+git clone -b m1-1-start https://github.com/acend-swai/lab-trackit-java.git trackit
+cd trackit
+```
+
+Clone in full. Task 3 compares your work against `origin/m1-1-solution`, and lab 2 falls
+back to `origin/m2-start`.
+
+Open the folder in VS Code and choose **Reopen in Container**. The devcontainer brings
+Java 21, both CLIs and the tooling for the rest of the day.
+
+Copy the `.env` from your mail into the repo root, then check the machine:
+
+```bash
+cp <the file from your mail> .env
+set -a; source .env; set +a     # only needed outside the devcontainer
+./verify.sh
+```
+
+Every line reads `[OK]`. The health check at the end reads `[MISSING]`, because it only
+answers while the application runs. `OPENROUTER_API_KEY not exported` means you skipped the
+`source` line. In the devcontainer, every new terminal sources `.env` for you.
+
+Mark your starting point, so you can always get back to it:
+
+```bash
+git commit --allow-empty -m "chore: start of my workshop repo"
+```
+
+### Make it yours
+
+**This clone is yours.** Work in it, commit into it, break it. Nothing you do reaches the
+workshop repo. To keep the work after today, add a remote of your own and push there:
+
+```bash
+git remote add mine <your repo>
+git push -u mine m1-1-start
+```
+
+**Bringing your own stack?** Everything in this lab except the Maven commands works on any
+repo you bring. Do the same setup in your own project: check that the toolchain is there,
+that the tests run, and commit a clean starting point. You will get more out of the day
+comparing models on code you know.
+
+**Note:** Claude Code talks to the Anthropic API directly, with no gateway in front of it.
+If you have your own licence, log in with your account and leave `ANTHROPIC_API_KEY` empty.
+A key set there overrides your subscription.
 
 ## What you record today
 
@@ -79,37 +133,13 @@ twice on an empty prompt it exits Claude Code.
 
 # Part 1 - Standard
 
-## Task 1: Run the same job on different setups (10 min)
+## Task 1: Run the same job on different setups (7 min)
 
 We are going to run one job twice: once with no context file at all, and once on an
 open-weight model. Task 3 runs it properly with your context file in place, so by the end
 of the morning you have compared both axes, grounding and model size.
 
-### Step 1: Set up
-
-The repo is public, so you need no account and no token.
-
-```bash
-git clone -b m1-1-start https://github.com/acend-swai/lab-trackit-java.git trackit
-cd trackit
-cp <the file from your mail> .env     # your personal keys
-set -a; source .env; set +a           # OpenCode reads the environment, not the file
-./verify.sh
-git commit --allow-empty -m "chore: start of my workshop repo"
-```
-
-Every line must read `[OK]`. The health check at the end reads `[MISSING]`, because it
-only answers while the application runs. `OPENROUTER_API_KEY not exported` means you
-skipped the `source` line.
-
-**Note:** This clone is yours. Nothing you do reaches the workshop repo. To keep your work,
-add your own remote with `git remote add mine <your repo>`.
-
-**Note:** Claude Code talks to the Anthropic API directly. If you have your own licence,
-log in with your account and leave `ANTHROPIC_API_KEY` empty. A key set there overrides
-your subscription.
-
-### Step 2: Run it without grounding
+### Step 1: Run it without grounding
 
 Move the context file aside so the agent works from the code alone:
 
@@ -141,7 +171,7 @@ entity model. `CLAUDE.md` is one line, `@AGENTS.md`, so Claude Code and OpenCode
 same file. Task 3 runs the same job with all of that in place, and the difference against
 what you just wrote down is the point.
 
-### Step 3: Run it on an open-weight model
+### Step 2: Run it on an open-weight model
 
 Same job through OpenCode against OpenRouter, once per model:
 
