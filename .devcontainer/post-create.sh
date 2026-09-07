@@ -119,14 +119,29 @@ if [ -f compose.yaml ]; then
   fi
 fi
 
-# Lab 3 connects the Terraform MCP server over stdio in Docker, and verifies its own
-# output with the Terraform CLI. Both are pulled here rather than during the lab.
-if [ -f deploy/terraform/versions.tf ] || grep -q "terraform" .mcp.json 2> /dev/null; then
+# Lab 3 connects the Terraform MCP server over stdio in Docker and verifies its own
+# output with the Terraform CLI. Only the m3 and m4 branches need either, and they are
+# the branches whose devcontainer.json declares the terraform feature - so that
+# declaration is the signal both steps key off.
+#
+# Do NOT guard this on deploy/terraform/ or on a "terraform" entry in .mcp.json: the
+# participant CREATES both during lab 3 (task 3 adds the server, task 4 writes the
+# Terraform), so on m3-start neither exists when this script runs. m3-start is in fact
+# file-identical to m2-solution, so no content guard can tell them apart.
+if grep -q "features/terraform" .devcontainer/devcontainer.json 2> /dev/null; then
   echo "--- pre-pulling the Terraform MCP server image"
   if docker pull hashicorp/terraform-mcp-server:1.3.0 > /dev/null 2>&1; then
     echo "[OK]      hashicorp/terraform-mcp-server:1.3.0 pulled"
   else
     warn "the Terraform MCP server image could not be pulled. Run 'docker pull hashicorp/terraform-mcp-server:1.3.0' before the workshop day."
+  fi
+
+  # The CLI comes from the devcontainer feature, not from here. Verify it landed: lab 3
+  # task 4 runs fmt/init/validate, and a missing binary only surfaces there, mid-lab.
+  if command -v terraform > /dev/null 2>&1; then
+    echo "[OK]      terraform ($(terraform version 2>&1 | head -n1))"
+  else
+    warn "terraform is not on PATH though the feature is declared. Rebuild the container (Dev Containers: Rebuild Container)."
   fi
 fi
 
