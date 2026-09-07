@@ -46,7 +46,22 @@ it happens:
 
 ## Where you start
 
-Fetch the branch that ships the skills, then check the environment:
+Task 4 of lab 1.1 left you in the second clone, `trackit-b`. Go back to your own clone
+first, and check that nothing is uncommitted:
+
+```bash
+cd ../trackit          # skip this if you never left
+git status --porcelain
+```
+
+`pwd` ends in `/trackit`, and `git status --porcelain` prints nothing. If it prints a line,
+commit it or throw it away, `git checkout` refuses to switch over uncommitted work:
+
+```bash
+git add -A && git commit -m "chore: end of lab 1.1"
+```
+
+Now fetch the branch that ships the skills, and check the environment:
 
 ```bash
 git fetch origin
