@@ -56,6 +56,11 @@ Answers `{"status":"ok"}`. On `m1-1-start` that is the only endpoint - that is c
 Your personal `.env` arrives by mail on the morning of the workshop. Put it in the repo
 root, next to this README. It is in `.gitignore`.
 
+Claude Code runs against the Anthropic API directly, no gateway. With your own licence,
+log in with your account and leave `ANTHROPIC_API_KEY` empty - a key set there overrides
+your subscription. Without a licence, use the key from your mail. The `GATEWAY_*` values
+belong to OpenCode alone.
+
 ## Context file
 
 `AGENTS.md` holds the project context: stack, layering, coding standards, the git rules
@@ -66,8 +71,15 @@ grounding for the second half of the comparison. Lab 1.2 writes one from scratch
 ## OpenCode against the gateway
 
 Lab 1.1 runs the same task once more through OpenCode against an open-weight model. Your
-key and the base URL come with the `.env` you receive by mail. Put a provider block in
-`opencode.json` in the repo root:
+key and the base URL come with the `.env` you receive by mail.
+
+OpenCode does not read `.env`, so export it in the shell you start OpenCode from:
+
+```bash
+set -a; source .env; set +a
+```
+
+Then put a provider block in `opencode.json` in the repo root:
 
 ```json
 {
