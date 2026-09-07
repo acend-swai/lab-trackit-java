@@ -186,11 +186,21 @@ Show me your plan before you change any file.
 ```
 
 You did not name the skill. Check that it fired: the plan mentions an entity *beside* the
-record, a Flyway migration, and `ddl-auto: validate`. If it does not, say so and let it
-start again. A plan that ignores the skill produces code that ignores it too.
+record, a Flyway migration, and `ddl-auto: validate`. If it does not, type this and let it
+start again, because a plan that ignores the skill produces code that ignores it too:
+
+```text
+That plan does not follow the add-persistence skill in .claude/skills. Read it and plan
+again.
+```
 
 It will ask you about dependencies, because `AGENTS.md` forbids adding one silently. Read
-what it wants and why before you approve.
+what it wants and why, then approve by naming what you are approving:
+
+```text
+The plan is fine and those dependencies are fine. Implement exactly that, and stop when
+./mvnw test passes.
+```
 
 ### Verify, in this order
 
@@ -254,7 +264,13 @@ Use the existing REST API. Show me your plan before you change any file.
 ```
 
 Check the skill fired: the plan mentions a typed API module under `src/api/`, one view per
-route, and the route going into `router/index.ts`.
+route, and the route going into `router/index.ts`. Then approve:
+
+```text
+The plan is fine. Implement exactly that, and stop when npx vue-tsc -b exits 0.
+```
+
+In a second terminal:
 
 ```bash
 cd frontend
