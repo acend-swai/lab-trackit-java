@@ -189,9 +189,13 @@ file and point at the test that proves each scenario.** Every scenario needs one
 scenario with no test is a requirement nobody implemented, and a green suite will not tell
 you.
 
+Start the application so you can exercise the new endpoint:
+
 ```bash
 ./mvnw spring-boot:run
 ```
+
+In a second terminal, post a comment and read it back:
 
 ```bash
 curl -s -X POST localhost:8080/api/v1/tasks/1/comments \
@@ -224,6 +228,8 @@ That merged file is the point of the whole tool: **the current truth about how T
 behaves**, in a form your agent reads on the next change. A spec that only describes last
 sprint is documentation. This one is context.
 
+Commit the change together with the spec that produced it:
+
 ```bash
 git add -A && git commit -m "feat: comment on a task, specified first"
 ```
@@ -250,7 +256,7 @@ in `AGENTS.md`, not a correction every time.
 **Take home:** The point is not that the agent is wrong. It is that you cannot tell which
 defaults are safe until you have written yours down once.
 
-## Task A2 - ADVANCED: A skill that enforces the cycle
+## Task A2 - ADVANCED: Write a skill that enforces the cycle
 
 *Builds on lab 1.2 task A1.* Write `.claude/skills/spec-review/SKILL.md`: given a change
 directory, it checks every scenario against testable, unambiguous and complete, and reports
@@ -272,7 +278,7 @@ miss?
 **Take home:** A change that touches four files is where drift starts, and it is the
 argument for the spec being the source rather than one of the four.
 
-## Task A4 - ADVANCED: The next change, in half the time
+## Task A4 - ADVANCED: Run the next change in half the time
 
 Run the whole cycle again for a second feature of your choosing and time it against your
 first run. The merged spec from task 6 is now context the agent reads for free.
