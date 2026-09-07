@@ -1,4 +1,4 @@
-package ch.incratec.trackit.dto;
+package ch.acend.trackit.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

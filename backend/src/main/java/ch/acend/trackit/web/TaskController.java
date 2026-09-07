@@ -1,8 +1,8 @@
-package ch.incratec.trackit.web;
+package ch.acend.trackit.web;
 
-import ch.incratec.trackit.domain.Task;
-import ch.incratec.trackit.dto.CreateTaskRequest;
-import ch.incratec.trackit.service.TaskService;
+import ch.acend.trackit.domain.Task;
+import ch.acend.trackit.dto.CreateTaskRequest;
+import ch.acend.trackit.service.TaskService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
