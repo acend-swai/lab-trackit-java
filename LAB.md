@@ -20,12 +20,11 @@ the four decisions hiding inside it:
 - What order do comments come back in?
 - What happens to comments when the task is deleted?
 
-**An agent answers all four without asking you.** The spec is where you answer them first.
+An agent answers all four of these **without asking you**. The spec is where you answer
+them first.
 
-**Part 1 is for everyone.** Six tasks. You write the spec, the agent writes the code, and
-that split is the whole module.
-
-**Part 2 is advanced and optional.** Start it when Part 1 is green.
+Part 1 is six tasks for everyone: you write the spec, the agent writes the code, and that
+split is the whole module. Part 2 is advanced and optional.
 
 ## What you record today
 
@@ -47,19 +46,25 @@ cd backend && ./mvnw -q test && cd ..
 git status --porcelain
 ```
 
-Tests green, nothing uncommitted. If either fails, take the reference state:
+Both commands should print nothing: `-q` silences Maven unless a test fails, and
+`git status --porcelain` prints one line per uncommitted file. If either prints something,
+take the reference state instead:
 
 ```bash
 git fetch origin && git checkout m2-start
 ```
 
-Either way you have tasks in PostgreSQL and a task board in the browser.
+`git branch --show-current` must read `m2-start`. Either way you now have tasks in
+PostgreSQL and a task board in the browser.
 
 ---
 
 # Part 1 - Standard, 30 minutes
 
 ## Task 1: Install OpenSpec and initialise it (3 min)
+
+OpenSpec runs from `npx` and needs Node 20.19 or newer. Check the version, then initialise
+OpenSpec in the repo root:
 
 ```bash
 node --version          # must be 20.19 or newer
@@ -76,8 +81,8 @@ Check the skills arrived:
 /help
 ```
 
-You see `/opsx:explore`, `/opsx:propose`, `/opsx:apply` and `/opsx:archive`. Those four are
-the cycle.
+The list must contain `/opsx:explore`, `/opsx:propose`, `/opsx:apply` and `/opsx:archive`.
+Those four are the cycle.
 
 **Take home:** Specs live in `openspec/`, committed and reviewed like code. A spec in a
 ticket is not a spec your agent can read.
@@ -106,6 +111,9 @@ it read.
 
 ## Task 3: Propose the change (7 min)
 
+Now ask for the change itself. A proposal turns your one-line request into requirements you
+can argue with:
+
 ```text
 /opsx:propose add task comments
 ```
@@ -125,7 +133,7 @@ stops the change growing while you are not looking.
 
 ## Task 4: Review the spec, this is your part (5 min)
 
-**This is the task the module exists for.** Everything else today can be delegated.
+This is the task the module exists for, and the one thing today you cannot delegate.
 
 Open `specs/task-comments/spec.md` and answer these four. For each one: did the agent
 decide it, and did it tell you?
@@ -146,8 +154,9 @@ Then check the scenarios against three tests:
 Fix the spec, not the code. Edit `spec.md` directly, or tell the agent what to change and
 why. Whatever you leave in here is what gets built.
 
-You end with at least one scenario you changed and one decision you overrode. Nobody gets
-zero.
+You end with at least one scenario you changed and one decision you overrode. If you
+changed nothing, read the four questions against the spec again: the agent decided all four
+somewhere.
 
 **Take home:** Move review earlier. A wrong decision costs one line in a spec and a
 refactor after the code exists. Agents specify the happy path, so every missing unhappy
@@ -160,6 +169,8 @@ did not expect? If yes, it is not specified, it is described.
 wrote it. Check what it decided, not how it sounds.
 
 ## Task 5: Implement against the approved spec (9 min)
+
+The spec says what to build, so hand the building over:
 
 ```text
 /opsx:apply add-task-comments
@@ -184,6 +195,8 @@ Then run the suite yourself, in a second terminal:
 cd backend && ./mvnw -q test
 ```
 
+A failure is the only thing `-q` prints, so no output means the suite passed.
+
 Now the check that matters, and it is not the test count: **open `spec.md` next to the test
 file and point at the test that proves each scenario.** Every scenario needs one. A
 scenario with no test is a requirement nobody implemented, and a green suite will not tell
@@ -194,6 +207,9 @@ Start the application so you can exercise the new endpoint:
 ```bash
 ./mvnw spring-boot:run
 ```
+
+Wait for the startup line that reports the application has started. Until it appears,
+`localhost:8080` refuses the connection.
 
 In a second terminal, post a comment and read it back:
 
@@ -206,7 +222,8 @@ curl -s localhost:8080/api/v1/tasks/1/comments
 curl -s -o /dev/null -w '%{http_code}\n' localhost:8080/api/v1/tasks/404/comments
 ```
 
-The last one prints `404`.
+The second command must print the comment you just posted, and the third prints `404`
+because that task does not exist.
 
 **Take home:** Make "every scenario points at a test" the merge gate, not a coverage
 percentage. Line coverage does not tell you a requirement is missing, scenario coverage
@@ -216,6 +233,8 @@ does.
 task is built to catch.
 
 ## Task 6: Archive the change (2 min)
+
+The code is in and the tests pass, so fold the change into the standing spec:
 
 ```text
 /opsx:archive add-task-comments
@@ -234,7 +253,8 @@ Commit the change together with the spec that produced it:
 git add -A && git commit -m "feat: comment on a task, specified first"
 ```
 
-`openspec/changes/` is empty, `openspec/specs/` is populated, and you have a commit.
+`git status --porcelain` then prints nothing, `openspec/changes/` holds only `archive/`,
+and `openspec/specs/task-comments/spec.md` exists.
 
 **Take home:** A change exists like a branch: propose, review, apply, then merge into the
 truth. Archiving is the compounding part, every change makes the next one better specified.
