@@ -34,6 +34,23 @@ keep your work, add a remote of your own and push there.
 database and the frontend built, before any MCP work. Use it if you lose the first half of
 that lab and want to be with the room again for the second.
 
+`m4-full-agentic` is a standalone branch on top of `m3-solution` - it carries M1.1, M1.2,
+M2 and M3 in full, not a fresh checkout. Stufe 4, full-agentic: the same OpenSpec workflow
+and `check-infra.sh` guardrails M2/M3 already ship, extended with a named agent roster
+(planner/implementer/tester/security) shared byte-for-byte between Claude Code and GitHub
+Copilot, a Definition-of-Done gate enforced in CI, CODEOWNERS protecting the harness and
+infrastructure code from an agent's own edits, and a merge to `main` that publishes a
+container image to GHCR - never applying the Terraform underneath it. It sits outside the
+`m1`-`m4` module sequence (the M4 module itself is not built yet, see the table above) -
+see `docs/adr/0002-full-agentic-capstone-platform.md` for what it is and deliberately is
+not, `docs/adr/0003-agent-security-boundary.md` for the security boundary, and
+`openspec/changes/add-task-summary/` for the unimplemented feature it ships ready for a
+live run.
+
+```bash
+git clone -b m4-full-agentic https://github.com/acend-swai/lab-trackit-java.git trackit-capstone
+```
+
 ## Requirements
 
 Java 21 and the Maven wrapper in `backend/`, Node 22 for `frontend/`, and Docker for the
