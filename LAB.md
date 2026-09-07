@@ -42,7 +42,6 @@ Continue on your repo from lab 2, or take the reference state:
 
 ```bash
 git fetch origin && git checkout m3-start
-docker compose up -d
 ./verify.sh
 ```
 
