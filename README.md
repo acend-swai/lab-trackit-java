@@ -28,28 +28,27 @@ keep your work, add a remote of your own and push there.
 | M1.2 Extending and scoping | `m1-2-start` | `m1-2-solution` | tasks in PostgreSQL and a task board in the browser, built with the skills the repo ships |
 | M2 Spec first | `m2-start` | `m2-solution` | comments on tasks, specified before written |
 | M3 Infrastructure | `m3-start` | `m3-solution` | deny rules, a blocking hook, and Terraform that validates |
-| M4 Capstone | not built yet | not built yet | reporting end to end, shown as a demo |
 
 `m1-2-mid` is an extra rejoin point inside lab 1.2: the state after task 4, with the
-database and the frontend built, before any MCP work. Use it if you lose the first half of
-that lab and want to be with the room again for the second.
+database and the frontend built, before any MCP work. Check out that branch to continue
+the second half of the lab from a known-good state.
 
 `m4-full-agentic` is a standalone branch on top of `m3-solution` - it carries M1.1, M1.2,
-M2 and M3 in full, not a fresh checkout. Stufe 4, full-agentic: the same OpenSpec workflow
-and `check-infra.sh` guardrails M2/M3 already ship, extended with a named agent roster
+M2 and M3 in full, not a fresh checkout. It extends the OpenSpec workflow and the
+`check-infra.sh` guardrails from M2 and M3 with a named agent roster
 (planner/implementer/tester/security) shared byte-for-byte between Claude Code and GitHub
 Copilot, a Definition-of-Done gate enforced in CI, CODEOWNERS protecting the harness and
 infrastructure code from an agent's own edits, and a merge to `main` that publishes a
-container image to GHCR - never applying the Terraform underneath it. It sits outside the
-`m1`-`m4` module sequence (the M4 module itself is not built yet, see the table above) -
-see `docs/adr/0002-full-agentic-capstone-platform.md` for what it is and deliberately is
-not, `docs/adr/0003-agent-security-boundary.md` for the security boundary, and
-`openspec/changes/add-task-summary/` for the unimplemented feature it ships ready for a
-live run.
+container image to GHCR - never applying the Terraform underneath it.
 
 ```bash
 git clone -b m4-full-agentic https://github.com/acend-swai/lab-trackit-java.git trackit-capstone
 ```
+
+On that branch, `docs/adr/0002-full-agentic-capstone-platform.md` records what the setup
+is and deliberately is not, `docs/adr/0003-agent-security-boundary.md` the security
+boundary, and `openspec/changes/add-task-summary/` holds an unimplemented feature the
+branch ships ready to build.
 
 ## Requirements
 
@@ -79,10 +78,8 @@ it without applying anything.
 
 ## Lab handouts
 
-`LAB.md` in the repo root is the handout for the branch you are on. It is **generated**:
-the source lives in `workshops/2026-09-08_workshop_tage/labs/instructions/` in the
-`inc-edu-sweai` repository and is shipped here by `ship.sh`. Edit it there, not on the
-branch - the next ship overwrites whatever is here.
+`LAB.md` in the repo root is the handout for the branch you are on. Each branch carries
+its own, so switching branches switches the handout with it.
 
 ## Verify before the lab
 
