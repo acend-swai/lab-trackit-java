@@ -74,15 +74,14 @@ git commit --allow-empty -m "chore: start of my workshop repo"
 ### Keep your clone
 
 This clone is yours. Work in it, commit into it, break it. You have read access and nothing
-you do reaches the workshop repo. To keep the work after today, push it to a repo of your
-own:
+you do reaches the workshop repo. To keep the work after today, push it to an empty repo of your own, under a branch name of your own:
 
 ```bash
 git remote add mine <your repo>
-git push -u mine m1-1-start
+git push -u mine m1-1-start:my-workshop
 ```
 
-`git remote -v` shows `mine` next to `origin`, and the branch shows up on your own remote.
+`git remote -v` shows `mine` next to `origin`, and the branch `my-workshop` shows up on your own remote.
 
 ### Bring your own stack
 
@@ -120,10 +119,22 @@ the module runs on it, so bring it filled in.
 | Cost of the run | | | | |
 | Did you feel in control? | | | | |
 
-**2. One moment where the agent got away from you.** A file it touched, a dependency it
-added, a step it skipped, a claim it made without checking. One line, written down when it
-happens. The transfer discussion in M4.2 comes back to it, and it is the most useful thing
-you take back to your own team.
+**2. The moments the agent got away from you.** Write one line in the same scratch file
+every time you catch one: a file it touched that you did not name, a dependency it added, a
+step it skipped, a claim it made without checking. Write it when it happens, not afterwards.
+Use the shape:
+
+```text
+<task> - <what the agent did> - <how you noticed>
+```
+
+For example:
+
+```text
+task 1 - added org.json to pom.xml - saw it in the diff before committing
+```
+
+You bring these lines to the transfer discussion in M4.2.
 
 ## Commands you use today
 
@@ -209,12 +220,15 @@ Type `/models` and pick:
 
 | Model id | What it is | 4-bit footprint |
 |---|---|---|
-| `qwen/qwen3-coder-30b-a3b-instruct` | 30B MoE, the small one | 16 GB, measured on our hardware |
+| `moonshotai/kimi-k3` | frontier MoE, open weights | far beyond a workstation |
 | `qwen/qwen3-coder-next` | 80B MoE, 3B active, 262k context | about 46 GB |
+
+Both are open weights, but only one of them runs on hardware you might own, so the variable is
+how much model the loop can afford when the repository may not leave the building.
 
 `opencode.json` in the repo root lists both and reads your key from the environment.
 
-Do not judge which answer is prettier. Find where the small model breaks:
+Do not judge which answer is prettier. Find where the smaller model breaks:
 
 - Tool selection: did it pick the right tool for the step?
 - `AGENTS.md`: did it stick to the standards or drift?
