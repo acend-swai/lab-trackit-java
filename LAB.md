@@ -5,7 +5,7 @@
 | Module | M2 - Spec-first: research, the OpenSpec cycle, tests from the spec |
 | Duration | 30 minutes, plus the discussion |
 | Harness | Claude Code |
-| Tooling | OpenSpec, `@fission-ai/openspec`, installed in task 1. Needs Node 20.19 or newer |
+| Tooling | OpenSpec, `@fission-ai/openspec`, you install it in task 1. Needs Node 20.19 or newer |
 | Repo | `lab-trackit-java`, your clone from lab 1.2, or branch `m2-start` |
 | Target state | task comments, specified before written (branch `m2-solution`) |
 
@@ -48,9 +48,11 @@ git status --porcelain
 Both commands print nothing when you are ready: `-q` silences Maven unless a test fails,
 and `git status --porcelain` prints one line per uncommitted file.
 
-If either prints something, take the reference state instead:
+If either prints something, take the reference state instead. Commit what you have first,
+because `git checkout` refuses to switch branches over uncommitted work:
 
 ```bash
+git add -A && git commit -m "chore: end of lab 1.2"
 git fetch origin && git checkout -B m2-start origin/m2-start
 ```
 
@@ -66,7 +68,8 @@ The output is your own branch, or:
 m2-start
 ```
 
-You now have tasks in PostgreSQL and a task board in the browser.
+Either branch gives you tasks in PostgreSQL and a task board in the browser, which is what
+this lab builds on.
 
 ---
 
@@ -76,7 +79,7 @@ You now have tasks in PostgreSQL and a task board in the browser.
 
 ### Step 1: Check the Node version
 
-OpenSpec runs from `npx` and its `engines` field requires Node 20.19 or newer:
+OpenSpec is an npm package and its `engines` field requires Node 20.19 or newer:
 
 ```bash
 node --version
@@ -88,12 +91,35 @@ The output must be 20.19 or higher:
 v24.19.0
 ```
 
-### Step 2: Initialise OpenSpec in the repo root
+### Step 2: Install the OpenSpec CLI
+
+Install it globally, so `openspec` is a command in every terminal you open today:
+
+```bash
+npm install -g @fission-ai/openspec@latest
+```
+
+Check that the command is on your PATH:
+
+```bash
+openspec --version
+```
+
+The output is the version you just installed:
+
+```text
+1.12.0
+```
+
+**Note.** `npx @fission-ai/openspec` runs the package once out of the npx cache and installs
+no command. Every later task types `openspec` directly, which is why you install it here.
+
+### Step 3: Initialise OpenSpec in the repo root
 
 `--tools claude` names the harness, so the command does not stop on an interactive picker:
 
 ```bash
-npx -y @fission-ai/openspec@latest init --tools claude
+openspec init --tools claude
 ```
 
 The output ends with what it created:
@@ -110,7 +136,7 @@ It creates the `openspec/` directory and writes the OpenSpec commands and skills
 `.claude/`. It runs on your machine, needs no API key and no MCP server: it manages spec
 files, and your agent writes the code.
 
-### Step 3: Check the commands arrived
+### Step 4: Check the commands arrived
 
 The commands are files, so list them rather than trusting the summary:
 
@@ -125,14 +151,48 @@ apply.md  archive.md  explore.md  propose.md  sync.md  update.md
 ```
 
 Four of those six are the cycle you run today: `explore`, `propose`, `apply`, `archive`.
-Restart your Claude Code session so it picks them up, then type `/` and confirm
-`/opsx:propose` is offered.
+
+### Step 5: Load the commands into your session
+
+Claude Code reads `.claude/commands/` when a session starts, so the session you already
+have open does not know about these six files yet. Restart it, then type a single slash:
+
+```text
+/
+```
+
+`/opsx:propose` and the other five appear in the list. If they do not, you restarted a
+session whose working directory is not the repo root: check with `pwd` and restart from
+there.
+
+### Step 6: Commit the scaffold
+
+`openspec init` wrote files into your working tree. They belong in the repo, so commit them
+before the first agent run, and every later `git status` shows only what the agent changed:
+
+```bash
+git add openspec/ .claude/
+git commit -m "chore: add OpenSpec scaffold"
+```
+
+`git commit` prints the branch and the file count. The scaffold is 15 files, the six
+commands, the six skills, `config.yaml` and two `.gitkeep`:
+
+```text
+[m2-start 4f2a1c9] chore: add OpenSpec scaffold
+ 15 files changed, 892 insertions(+)
+```
+
+The hash and the insertion count are yours, not these. Check that nothing was left behind:
+
+```bash
+git status --porcelain
+```
+
+The output is empty.
 
 **Take home:** Specs live in `openspec/`, committed and reviewed like code. A spec in a
 ticket is not a spec your agent can read.
-
-**Trap:** Running `init` without `--tools`. It then asks which harness to configure and
-waits, which looks like a hang in a terminal you have stopped watching.
 
 Reference: [OpenSpec on GitHub](https://github.com/Fission-AI/OpenSpec)
 
@@ -140,33 +200,23 @@ Reference: [OpenSpec on GitHub](https://github.com/Fission-AI/OpenSpec)
 
 ### Step 1: Have the agent read the repo
 
-Do not describe the repo to the agent. Type this in the Claude session:
+Do not describe the repo to the agent, it is about to read it. Type this in the Claude
+session:
 
 ```text
 /opsx:explore comments on tasks
 ```
 
-It reads the code and reports what it found: the layering, the persistence pattern from
-lab 1.2, the migration convention, how tests are written here. Explore mode reads and
-thinks, it writes no code.
+It reports what it found in the code: the layering, the persistence pattern from lab 1.2,
+the migration convention, how tests are written here. It writes no files, so your working
+tree is unchanged since the commit in task 1:
 
-### Step 2: Find the one thing it got wrong
-
-Read the report and find one thing it got wrong or missed, then write that line into your
-scratch file. There is usually one, and it is cheaper to find now than in a spec built on
-top of it.
-
-If the report reads plausibly but names no file, ask:
-
-```text
-Which files did you actually open? List them.
+```bash
+git status --porcelain
 ```
 
-**Take home:** Facts come from the code, read by the agent, never from your memory of the
-code. Yours is out of date too.
-
-**Trap:** A confident research summary about a file the agent never opened. The file list
-is how you tell the difference.
+The output is empty. If it lists `openspec/` or `.claude/`, you skipped the commit in task
+1 step 6: run it now, then continue.
 
 ## Task 3: Propose the change (7 min)
 
@@ -182,36 +232,49 @@ It creates the change directory and writes the artefacts the `spec-driven` schem
 
 ### Step 2: Check what it produced
 
-The CLI reports artefact completion, so ask it rather than reading four files to find out:
+The CLI reports artefact completion, so ask it rather than opening files to find out:
 
 ```bash
-npx -y @fission-ai/openspec@latest status --change add-task-comments
+openspec status --change add-task-comments
 ```
 
-Every artefact reads complete when the proposal is finished:
+The output names the change, the schema, the directory and one line per artefact:
 
 ```text
 Change: add-task-comments
 Schema: spec-driven
-Progress: 4/4 artifacts complete
+Change root: /workspaces/trackit/openspec/changes/add-task-comments
+Progress: 3/4 artifacts complete
 
 [x] proposal
 [x] specs
-[x] design
+[ ] design
 [x] tasks
 ```
 
-An artefact still marked `[ ]` or `[-]` means the proposal stopped early. Ask the agent to
-finish that artefact before you go on.
+Your `Change root:` is your own path, not this one.
 
-Those four artefacts live in `openspec/changes/add-task-comments/`:
+**Expect `3/4` here, with `[ ] design`.** The `spec-driven` schema writes `design.md` only
+for a cross-cutting change, a new dependency or a hard migration, and task comments is none
+of those. Three artefacts is the finished state for this change:
 
 | File | What it holds |
 |---|---|
 | `proposal.md` | why, what changes, what is out of scope |
 | `specs/task-comments/spec.md` | requirements, each with Given/When/Then scenarios |
-| `design.md` | how it is built |
 | `tasks.md` | the ordered implementation checklist |
+
+Read the marker before you judge the number:
+
+| Marker | What it means |
+|---|---|
+| `[x]` | written |
+| `[ ]` | not written, and nothing is stopping it |
+| `[-]` | blocked, the line names the artefact it waits for |
+| `[~]` | skipped, the change sets `skip_specs` in `.openspec.yaml` |
+
+A `[-]` on `specs` or `tasks` means the proposal stopped early. Ask the agent to finish that
+artefact before you go on.
 
 Do not approve it yet. Task 4 reviews it first.
 
@@ -264,22 +327,51 @@ Whatever you leave in here is what gets built.
 
 ### Step 4: Check the spec is still valid
 
-The CLI parses the spec structure, so a broken heading or a scenario it cannot read shows
-up here rather than in task 5:
+The CLI parses the spec structure, so a heading it cannot read surfaces now rather than
+halfway through the implementation in task 5:
 
 ```bash
-npx -y @fission-ai/openspec@latest validate add-task-comments
+openspec validate add-task-comments
 ```
 
-The first line is the verdict, and warnings below it are style advice, not failures:
+The first line is the verdict, and after your edits it usually reads:
 
 ```text
 Change 'add-task-comments' is valid
-⚠ [WARNING] task-comments/spec.md: ADDED "Add a comment to a task" should contain SHALL or MUST (RFC 2119 best practice for English specs)
 ```
 
-If it reports `has issues` with `No deltas found`, the requirement headings are missing
-their `## ADDED Requirements` delta header. Tell the agent to add it and validate again.
+**Note.** `is valid` can still be followed by `⚠ [WARNING]` lines, most often
+`should contain SHALL or MUST`. Warnings do not fail the change. Read the marker, not the
+line count: `✗ [ERROR]` fails, `⚠ [WARNING]` does not.
+
+### Step 5: Read a failure when you get one
+
+Editing `spec.md` by hand is what breaks the structure, so run the validate again after
+every hand edit. Two errors account for nearly all of them:
+
+| Error line | What you did | Fix |
+|---|---|---|
+| `is missing requirement text` | a `### Requirement:` heading runs straight into `#### Scenario:` | write one sentence between them |
+| `No delta sections found` | the requirements sit under no delta header | add `## ADDED Requirements` above the first requirement |
+
+The first one looks like this, naming the requirement it means:
+
+```text
+Change 'add-task-comments' has issues
+✗ [ERROR] task-comments/spec.md: ADDED "List the comments on a task" is missing requirement text
+```
+
+Fix it by writing that sentence directly above the first scenario of the requirement it
+names:
+
+```text
+The comments on a task come back in the order they were written.
+```
+
+Validate again and the verdict returns to `is valid`.
+
+**Note.** `openspec validate add-task-comments --strict` fails the change on warnings too.
+Use it when you want the RFC 2119 wording enforced, not while you are still editing.
 
 You end with at least one scenario you changed and one decision you overrode. If you
 changed nothing, read the four questions against the spec again: the agent decided all four
@@ -308,35 +400,36 @@ The spec says what to build, so let the agent build it:
 It works the checklist in `tasks.md`: **tests first, from the acceptance scenarios**, then
 the code until they pass.
 
-### Step 2: Watch the order
+### Step 2: Watch the order it writes in
 
-If it writes the implementation before the tests, press `Esc` to interrupt and type:
+Read the file names as they scroll past. `CommentControllerTest.java` must be written
+before `CommentController.java`. If the implementation goes first, press `Esc` to interrupt
+and type:
 
 ```text
 Stop. Write the tests from the acceptance scenarios in spec.md first, then the code until
 they pass.
 ```
 
-A test written after the code tests the code, a test written from the spec tests the spec.
+A test written after the code is shaped by the code it found, so it passes without ever
+checking the scenario. Order it the other way and the test fails until the code satisfies
+the spec.
 
 ### Step 3: Run the suite yourself
 
-In a second terminal:
+Do not take the agent's word for a green suite. In a second terminal:
 
 ```bash
 cd backend && ./mvnw -q test
 ```
 
 `-q` prints only failures, so a passing suite prints nothing at all and returns you to the
-prompt. Hand any failing output back to the Claude session.
+prompt. Anything else is a failure: copy the output back into the Claude session and let it
+fix the code.
 
 ### Step 4: Point at the test for every scenario
 
-Now the check that matters, and it is not the test count. Open `spec.md` next to
-`backend/src/test/java/ch/acend/trackit/web/CommentControllerTest.java` and point at the
-test that proves each scenario.
-
-Count both sides:
+Now the check that matters, and it is not the test count. Count both sides:
 
 ```bash
 grep -c '^#### Scenario:' openspec/changes/add-task-comments/specs/task-comments/spec.md
@@ -350,22 +443,49 @@ On the reference solution the two numbers do not match:
 7
 ```
 
-That gap is the point of this step. List the test names next to the scenario names:
+Your own numbers differ from these, because your spec is the one you edited in task 4. Two
+numbers that match are not proof either: it is the names that have to line up. List both:
 
 ```bash
 grep '^#### Scenario:' openspec/changes/add-task-comments/specs/task-comments/spec.md
-grep -o 'void [a-zA-Z]*' backend/src/test/java/ch/acend/trackit/web/CommentControllerTest.java
+grep -oE 'void [a-zA-Z_]+' backend/src/test/java/ch/acend/trackit/web/CommentControllerTest.java
 ```
 
-Two scenarios in the reference have no MockMvc test: "A task with no comments" and
-"Deleting a task removes its comments". The second one cannot have one, because the spec
-puts the cascade in the database rather than in the application, and a controller test
-never reaches it. Nothing about a green suite told you that.
+On the reference the seven test names cover seven of the nine scenarios:
 
-Do the same match on your own spec, by hand, and write what you find into your scratch
-file. A scenario with no test is a requirement nobody implemented.
+```text
+void postCommentReturnsCreated
+void postCommentWithoutAuthorReturnsBadRequest
+void postCommentWithEmptyBodyReturnsBadRequest
+void postCommentLongerThanTheLimitReturnsBadRequest
+void postCommentOnUnknownTaskReturnsNotFound
+void getCommentsReturnsThemOldestFirst
+void getCommentsForUnknownTaskReturnsNotFound
+```
+
+Two scenarios have no test: "A task with no comments" and "Deleting a task removes its
+comments". Read why the second one cannot have one:
+
+```bash
+grep 'REFERENCES' backend/src/main/resources/db/migration/V2__create_comment.sql
+```
+
+The output shows the cascade is in the database, not in the application:
+
+```text
+    task_id    BIGINT       NOT NULL REFERENCES task (id) ON DELETE CASCADE,
+```
+
+A MockMvc test drives the controller, so it never reaches that line. Nothing about a green
+suite told you the requirement was untested.
+
+Do the same match on your own spec, by hand, and write into your scratch file every
+scenario with no test name against it. A scenario with no test is a requirement nobody
+implemented.
 
 ### Step 5: Start the application
+
+Reuse the terminal you ran the suite in, and start the backend from `backend/`:
 
 ```bash
 ./mvnw spring-boot:run
@@ -411,6 +531,42 @@ status code:
 
 That 404 is a scenario from your spec, answered by the running application.
 
+### Step 7: Start the frontend and look at the board
+
+The backend is one half. Start the other half in a fourth terminal, with the application
+from step 5 still running:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Vite prints the address it serves on:
+
+```text
+  ➜  Local:   http://localhost:5173/
+```
+
+Open <http://localhost:5173>. The board lists the tasks from the database, including task
+1, the one you just commented on. Add a task in the form and it appears in the list.
+
+**Note.** The board shows tasks, not comments. Nobody specified a comment view, so the
+agent built none: the spec covered two endpoints and that is exactly what exists. Your
+comment is in the database and answers on `/api/v1/tasks/1/comments`, and there is no
+screen that shows it.
+
+Prove that from the browser rather than from `curl`. Open
+<http://localhost:5173/api/v1/tasks/1/comments> in a second tab:
+
+```json
+[{"id":1,"taskId":1,"author":"you","body":"Specified before it was written.","createdAt":"2026-09-08T09:14:22.481Z"}]
+```
+
+That URL works on port 5173 because `frontend/vite.config.ts` proxies `/api` to
+`localhost:8080`, so the browser talks to one origin and no CORS rule has to be written.
+
+Leave both running. Stop them with `Ctrl+C` in their own terminals when the lab is done.
+
 **Take home:** Make "every scenario points at a test" the merge gate, not a coverage
 percentage. Line coverage does not tell you a requirement is missing, scenario coverage
 does.
@@ -428,30 +584,47 @@ The code is in and the tests pass, so archive it:
 /opsx:archive add-task-comments
 ```
 
-The change moves to `openspec/changes/archive/<date>-add-task-comments/`, and its
-requirements merge into `openspec/specs/task-comments/spec.md`.
+Two things happen: the change directory moves under `openspec/changes/archive/` behind a
+`YYYY-MM-DD-` prefix, and its requirements merge into `openspec/specs/task-comments/spec.md`.
 
 ### Step 2: Check the archive happened
 
-`list` shows changes still in flight, so an archived change is gone from it:
+`list` shows only changes still in flight, so an archived change is gone from it:
 
 ```bash
-npx -y @fission-ai/openspec@latest list
-ls openspec/specs/task-comments/spec.md
+openspec list
+ls openspec/changes/archive/
 ```
 
-The output should be:
+You see the change is no longer active, and the dated directory holds it instead:
 
 ```text
 No active changes found.
-openspec/specs/task-comments/spec.md
+2026-09-08-add-task-comments
 ```
 
-That merged file is the point of the whole tool: **the current truth about how TrackIt
-behaves**, in a form your agent reads on the next change. A spec that only describes last
-sprint is documentation. This one is context.
+Your date prefix is the day you run it, not this one.
 
-### Step 3: Commit the code and the spec together
+### Step 3: Read what the merge produced
+
+The merged spec is the file the whole cycle exists to produce, so count what landed in it:
+
+```bash
+grep -c '^#### Scenario:' openspec/specs/task-comments/spec.md
+```
+
+Every scenario your change specified is now in the standing spec, nine on the reference
+solution:
+
+```text
+9
+```
+
+That file is **the current truth about how TrackIt behaves**, in a form your agent reads on
+the next change. A spec that only describes last sprint is documentation. This one is
+context.
+
+### Step 4: Commit the code and the spec together
 
 ```bash
 git add -A && git commit -m "feat: comment on a task, specified first"
@@ -479,41 +652,100 @@ nothing.
 
 ## Task A1 - ADVANCED: Decide before the agent does
 
-*Deepens task 4.* Start over on a fresh branch. Before running `/opsx:propose`, write the
-four decisions down yourself. Then propose, and compare.
+*Deepens task 4.* Branch away from your finished work so the reference stays intact:
 
-Where you agreed, the agent's default was fine. Where you differed is where you need a rule
-in `AGENTS.md`, not a correction every time.
+```bash
+git checkout -b m2-my-decisions
+```
+
+Write your four answers into a scratch file before you run anything. Then propose the same
+change again:
+
+```text
+/opsx:propose add task comments
+```
+
+Diff its four decisions against yours. Every difference is a rule that belongs in
+`AGENTS.md`, where it applies to every future change, instead of a correction you type
+again each time.
 
 **Take home:** The point is not that the agent is wrong. It is that you cannot tell which
 defaults are safe until you have written yours down once.
 
 ## Task A2 - ADVANCED: Write a skill that enforces the cycle
 
-*Builds on lab 1.2 task A1.* Write `.claude/skills/spec-review/SKILL.md`: given a change
-directory, it checks every scenario against testable, unambiguous and complete, and reports
-one line per failure.
+*Builds on lab 1.2 task A1.* Ask Claude Code to write the skill:
 
-Run it on the spec you approved in task 4. It finds something you missed.
+```text
+Write .claude/skills/spec-review/SKILL.md. Given a change directory, it checks every
+#### Scenario: against testable, unambiguous and complete, and prints one line per
+failure with the scenario name. It reports per criterion even when it finds nothing.
+```
 
-**Trap:** A skill that says "the spec looks good" has no value. Make it report findings, or
-say explicitly per criterion that it checked and found none.
+Run it against the spec you approved in task 4:
+
+```text
+Use the spec-review skill on openspec/changes/add-task-comments/
+```
+
+It prints one line per finding. Read them against the spec: at least one is something you
+passed over in task 4.
+
+**Trap:** A skill that answers "the spec looks good" has no value. If that is what you get,
+the description is too vague, so name the three criteria in it explicitly.
 
 ## Task A3 - ADVANCED: Break the spec on purpose
 
-*Deepens task 5.* Change one scenario in the archived spec: make the body limit 200
-characters instead of 2000. Run `/opsx:propose` for the change and let it apply.
+*Deepens task 5.* The body limit of 2000 is written in more places than one. Find them:
 
-Then answer: did it update the migration, the DTO, the test and the spec? Which did it
-miss?
+```bash
+grep -rn '2000' backend/src/main openspec/specs/task-comments/spec.md
+```
 
-**Take home:** A change that touches four files is where drift starts, and it is the
-argument for the spec being the source rather than one of the four.
+The output should be four lines on the reference solution: the column width, the scenario,
+and the DTO twice, once in a comment and once in the annotation that enforces it.
+
+```text
+backend/src/main/resources/db/migration/V2__create_comment.sql:5:    body       VARCHAR(2000) NOT NULL,
+openspec/specs/task-comments/spec.md:34:#### Scenario: A comment body is capped at 2000 characters
+backend/src/main/java/ch/acend/trackit/dto/CreateCommentRequest.java:8: * of 1 to 2000 characters.
+backend/src/main/java/ch/acend/trackit/dto/CreateCommentRequest.java:12:        @NotBlank @Size(max = 2000) String body) {
+```
+
+That prose line in the DTO is the one to watch: nothing enforces it, so it is the copy that
+goes stale first.
+
+Now change the limit to 200 through the cycle, not by hand:
+
+```text
+/opsx:propose cap comment bodies at 200 characters
+```
+
+Let it apply, then look for whatever still says 2000. A word-boundary match keeps `200`
+from matching inside `2000`:
+
+```bash
+grep -rnw '2000' backend/src/main openspec/specs/task-comments/spec.md
+```
+
+Every line this still prints is a copy the change missed. Check the migration first: adding
+a second migration that alters the column is the step most often skipped, and while the
+column is still `VARCHAR(2000)` the database accepts values your new rule rejects.
+
+**Take home:** A limit written in four places drifts. That is the argument for the spec
+being the source the others are generated from.
 
 ## Task A4 - ADVANCED: Run the next change in half the time
 
-Run the whole cycle again for a second feature of your choosing and time it against your
-first run. The merged spec from task 6 is now context the agent reads for free.
+Note the clock, then run the whole cycle for a second feature, for example a due date on a
+task:
+
+```text
+/opsx:propose add a due date to a task
+```
+
+Time it against your first run. The merged spec from task 6 is context the agent now reads
+for free, so the explore step has less to discover.
 
 **Take home:** That difference is the return on the whole practice, and it only shows up on
 the second change.
