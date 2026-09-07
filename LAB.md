@@ -4,7 +4,7 @@
 |---|---|
 | Module | M1.1 - Agentic loop, harness, models |
 | Duration | 40 minutes |
-| Harness | Claude Code, and OpenCode against OpenRouter in task 4 |
+| Harness | Claude Code on Opus, and OpenCode against OpenRouter in task 5 |
 | Stack | Java 21, Spring Boot 3.5, Maven wrapper. Your own stack works too |
 | Repo | `lab-trackit-java`, branch `m1-1-start` |
 | Target state | create and list a task, in memory (branch `m1-1-solution`) |
@@ -16,17 +16,18 @@ and compare what comes back.
 `m1-1-start` ships one endpoint, `GET /api/v1/health`. That is the pattern the agent
 copies, so read it before you generate anything.
 
-**Part 1 is for everyone.** Setup plus four tasks, about 36 minutes. Task 4 has to happen:
-it fills the comparison sheet the module discussion runs on.
+**Part 1 is for everyone.** Setup plus six tasks, about 40 minutes. Tasks 1 and 2 are the
+core: one controlled loop, then reading what it produced. Task 5 has to happen too, it fills
+the comparison sheet the module discussion runs on.
 
 **Part 2 is advanced and optional.** Start it when Part 1 is green. Nothing later in the
 day depends on it.
 
 ## Where you start
 
-Do this before task 1. It takes about three minutes.
+Do this before task 0. It takes about three minutes.
 
-**Warning.** Clone in full. A `--depth` clone has no `origin/m1-1-solution` for task 3 to
+**Warning.** Clone in full. A `--depth` clone has no `origin/m1-1-solution` for task 2 to
 compare against, and no `origin/m2-start` for lab 2 to fall back to.
 
 Clone the repo and land on the lab branch:
@@ -95,23 +96,26 @@ out of the day comparing models on code you know.
 your own licence, leave `ANTHROPIC_API_KEY` empty and log in with your Anthropic account.
 
 Claude Code talks to the Anthropic API directly, with no gateway in front of it, so the
-credential it finds is the one it bills. Task 1 starts your first session, so settle this now.
+credential it finds is the one it bills. Task 0 starts your first session, so settle this now.
 
-## What you record today
 
-Two things travel with you out of this lab. Set them up now, before task 1.
+
+## What you record today (Advanced)
+
+Two things travel with you out of this lab. Set them up now, before task 0.
 
 We compare how the models handle the same workload, so the numbers only mean something if
 you write them down while you work. The suggested models are a starting point, swap in your
 own if you would rather measure those.
 
 **1. The comparison sheet.** Copy this into a scratch file. You fill one column per model
-you run today, two in task 1 and two in task 4. The five-minute discussion at the end of
-the module runs on it, so bring it filled in.
+you run today, Opus in task 1 and two more in task 5. The five-minute discussion at the end
+of the module runs on it, so bring it filled in.
 
 | Criterion | Model 1 | Model 2 | Model 3 | Model 4 |
 |---|---|---|---|---|
 | Model name | | | | |
+| Corrections the plan needed | | | | |
 | Turns until the tests passed | | | | |
 | Followed `AGENTS.md`? | | | | |
 | Invented dependencies | | | | |
@@ -170,88 +174,395 @@ twice on an empty prompt it exits Claude Code.
 
 # Part 1 - Standard
 
-## Task 1: Run the same job on different setups (7 min)
+## Task 0: Let the agent onboard you to the repo (3 min)
 
-We are going to run one job twice: once with no context file at all, and once on an
-open-weight model. Task 3 runs it properly with your context file in place, so by the end
-of the morning you have compared both axes, grounding and model size.
-
-### Step 1: Run it without grounding
-
-Move the context file aside so the agent works from the code alone:
+You have never seen this codebase. That is the position a new developer is in on their first
+day, and it is the cheapest thing an agent does well. Start a session in the repo root:
 
 ```bash
-mv AGENTS.md AGENTS.md.off
 claude
 ```
 
-Paste this job. Use the same text in every run, otherwise the comparison is worthless:
+Ask it to brief you the way a colleague would:
 
 ```text
-Add two endpoints to the task API: create a task, and list all tasks. Keep the tasks in
-memory. Follow the patterns this project already uses, and make sure the tests pass.
+I am new to this repository. Explain the structure, what the application does, where the
+HTTP endpoints live, and how I build and test it. Point me at the files by name.
 ```
 
-Watch where it guesses: package layout, the `/api/v1` prefix, constructor injection,
-whether it writes a test at all. Write those guesses down, do not correct them.
+It names `HealthController` and the `/api/v1` prefix, the layering under `backend/`, and
+`./mvnw test` as the test command. Open one file it named and check the answer against the
+code. An onboarding answer you have not verified is a guess you now believe.
 
-Now throw the run away. `git clean -fd` removes untracked files and `AGENTS.md.off` is one
-of them, so put the context file back before you clean, in that order:
+**Take home:** Point an agent at an unfamiliar repository before you read it yourself. Ten
+minutes of orientation costs a few cents and gives you the file names to read first.
+
+## Task 1: Run the inner loop end to end (12 min)
+
+We build the task API: create a task and list all tasks, in memory. The context file that
+ships on this branch stays in place and the model is the strongest one you have, so this run
+is the best case. Everything later in the lab is measured against it.
+
+Work the loop one stage at a time: **plan, build, test, run, verify**. An agent that is never
+made to close the loop reports done on red.
+
+### Step 1: Plan
+
+Start a session in the repo root:
 
 ```bash
-mv AGENTS.md.off AGENTS.md            # the context file is back
-git checkout -- . && git clean -fd    # the generated code is gone
+claude
 ```
 
-`AGENTS.md` holds the stack, the layering, the coding standards, the git rules and the
-entity model. `CLAUDE.md` is one line, `@AGENTS.md`, so Claude Code and OpenCode read the
-same file. Task 3 runs the same job with all of that in place, and the difference against
-what you just wrote down is the point.
+Check which model you are on, and switch to Opus if you are not:
 
-### Step 2: Run it on an open-weight model
+```text
+/model
+```
 
-Same job through OpenCode against OpenRouter, once per model:
+The picker marks the active model. Pick Opus for this run. It is the default on the
+subscription plans, and the run you compare everything else against has to be the strong one.
+
+Type this at the prompt. It names the scope, the non-scope, and asks for a plan first:
+
+```text
+Add two endpoints to trackit, following the pattern in HealthController:
+- POST /api/v1/tasks takes title and project, stores the task, returns 201 and the task
+- GET /api/v1/tasks returns all stored tasks
+
+A task has id, title, project and status. New tasks are OPEN.
+
+In scope: an in-memory store in the service layer, a record for the task, a request DTO
+with validation, one MockMvc test per endpoint.
+Not in scope: a database, a frontend, authentication, updating or deleting tasks.
+
+Show me your plan before you change any file.
+```
+
+Check the plan for three things: does it stay in scope, does it add a dependency, does it
+follow the layering in `AGENTS.md`?
+
+### Step 2: Correct the plan before it runs
+
+The plan is the cheapest place to change the result. Fixing it here costs one turn, fixing
+the code afterwards costs a review cycle. So do not accept a plan you would not approve in a
+pull request.
+
+Look for the four things that go wrong most often:
+
+| What you find | What you send back |
+|---|---|
+| A step you did not ask for, a field, an endpoint, a config change | Name it and say to drop it |
+| A new entry in `pom.xml` | Ask what it is for and whether the existing dependencies do it |
+| A layer missing or merged, storage in the controller | Name the layer it belongs in |
+| No test, or one test for both endpoints | Ask for one MockMvc test per endpoint |
+
+Check the result and let Claude fix any problems using this structure:
+
+Select **Tell Claude what to change** 
+
+Enter your corrections into the input field as a prompt. Use a numbered, so Claude applies the list and rewrites the plan. 
+This example shows how it should look like - adapt depending on your code base.
+
+```text
+Change three things in the plan, then show it again:
+1. Drop the update endpoint, it is out of scope
+2. Do not add a dependency, spring-boot-starter-validation is already in pom.xml
+3. The in-memory list belongs in TaskService, not in TaskController
+
+Do not change any file yet.
+```
+
+The agent answers with a revised plan and changes no file. Read it again, and repeat until
+nothing is left to correct. Write the number of rounds it took into the comparison sheet,
+then move to step 3.
+
+**Note.** A plan that is already right needs no correction. Record zero rounds and move on,
+this step takes thirty seconds when the plan is clean.
+
+### Step 3: Build
+
+Approve the plan by typing this. For now - do not just press enter, name what you are approving:
+
+```text
+The plan is fine. Implement exactly that, and stop when ./mvnw test passes.
+```
+
+Beware: Do not change anything in the file system or hand-patch while it works. A correction mid-run costs you the ability to judge the
+result. That is what step 2 was for - hope you fixed the plan properly. ;-)
+
+### Step 4: Confirm it yourself, do not take the agent's word
+
+The agent ran the tests already, that was its stop condition in step 3. Run them once
+yourself anyway: an agent that checks its own work tends to confirm itself, and today you
+are the independent check. Open a second terminal and leave the Claude session where it is:
 
 ```bash
-opencode
+cd backend
+./mvnw -q test
 ```
 
-Type `/models` and pick:
+The output ends in:
 
-| Model id | What it is | 4-bit footprint |
+```text
+BUILD SUCCESS
+```
+
+If it is red, copy the failing output back into the Claude session:
+
+```text
+./mvnw -q test fails. Here is the output, fix it:
+
+<paste the failure here>
+```
+
+### Step 5: Run
+
+A green test suite is not a running application. In the second terminal:
+
+```bash
+./mvnw spring-boot:run
+```
+
+In a third terminal:
+
+```bash
+curl -s -X POST localhost:8080/api/v1/tasks \
+  -H 'content-type: application/json' \
+  -d '{"title":"Write the context file","project":"trackit"}'
+
+curl -s localhost:8080/api/v1/tasks
+```
+
+The POST answers `201` with the created task, and the GET answers with a list holding it:
+
+```json
+{"id":1,"title":"Write the context file","project":"trackit","status":"OPEN"}
+[{"id":1,"title":"Write the context file","project":"trackit","status":"OPEN"}]
+```
+
+Check the validation too. An empty title must answer `400`:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:8080/api/v1/tasks \
+  -H 'content-type: application/json' -d '{"title":"","project":"trackit"}'
+```
+
+The output should be:
+
+```text
+400
+```
+
+A `201` here means the validation annotation is missing, and that is a finding for task 2.
+
+Stop the application with `Ctrl+C`.
+
+**Take home:** Make "show me your plan before you change any file" the default for anything
+non-trivial, put "tests run and pass" into the context file, and commit as soon as a slice
+is green.
+
+**Trap:** Approving plans unread is the most common failure in every room. It feels like
+speed and costs a review cycle later.
+
+Reference: [costs and usage](https://code.claude.com/docs/en/costs)
+
+## Task 2: Read the code the agent wrote (7 min)
+
+Green tests tell you the code runs. They do not tell you what you now own. This is the task
+where you find out, because you review this code in a pull request tomorrow.
+
+### Step 1: List what changed
+
+The second terminal is still in `backend/` from task 1, so go back to the repo root first:
+
+```bash
+cd .. && git status --short
+```
+
+Six new files, all under `backend/src`:
+
+```text
+?? backend/src/main/java/ch/acend/trackit/domain/Task.java
+?? backend/src/main/java/ch/acend/trackit/domain/TaskStatus.java
+?? backend/src/main/java/ch/acend/trackit/dto/CreateTaskRequest.java
+?? backend/src/main/java/ch/acend/trackit/service/TaskService.java
+?? backend/src/main/java/ch/acend/trackit/web/TaskController.java
+?? backend/src/test/java/ch/acend/trackit/web/TaskControllerTest.java
+```
+
+A different file list is not a failure. A missing layer is. `pom.xml` in that list is a new
+dependency the agent did not announce, and that is a finding for your scratch file.
+
+### Step 2: Know what each file is for
+
+The four layers come from `AGENTS.md`, and the agent followed them because they were written
+down. This is what a correct result looks like:
+
+| File | Layer | What it must contain |
 |---|---|---|
-| `moonshotai/kimi-k3` | frontier MoE, open weights | far beyond a workstation |
-| `qwen/qwen3-coder-next` | 80B MoE, 3B active, 262k context | about 46 GB |
+| `domain/Task.java` | domain | A record with id, title, project, status. No Spring annotations |
+| `domain/TaskStatus.java` | domain | An enum, `OPEN` and `DONE` |
+| `dto/CreateTaskRequest.java` | dto | A record with title and project, `@NotBlank` on both |
+| `service/TaskService.java` | service | `@Service`, the in-memory list, id counter, `create` and `findAll`. No HTTP types |
+| `web/TaskController.java` | web | `@RestController`, `/api/v1/tasks`, constructor injection, no logic |
+| `web/TaskControllerTest.java` | test | `@WebMvcTest(TaskController.class)` with `MockMvc`, one test per endpoint |
 
-Both are open weights, but only one of them runs on hardware you might own, so the variable is
-how much model the loop can afford when the repository may not leave the building.
+### Step 3: Read the controller against the rules
 
-`opencode.json` in the repo root lists both and reads your key from the environment.
+Open `backend/src/main/java/ch/acend/trackit/web/TaskController.java`. Four things decide
+whether it is right, and each one is a rule in `AGENTS.md`:
 
-Do not judge which answer is prettier. Find where the smaller model breaks:
+- The dependency arrives through the constructor, not through `@Autowired` on a field
+- The POST method carries `@Valid` on the request body, or the empty title never answers 400
+- The method returns the domain `Task`, never `CreateTaskRequest`
+- There is no storage and no business logic in the file, only delegation to the service
 
-- Tool selection: did it pick the right tool for the step?
-- `AGENTS.md`: did it stick to the standards or drift?
-- Error output: did it act on the failure or repeat itself?
-- Stopping: did it stop while red, or never stop?
+Two things you may notice are not defects. The POST returns no `Location` header, because
+nothing was in scope for it to point at, and the 400 carries Spring's default error body,
+because no error shape was asked for. Both are the agent staying inside the scope you set.
+Write down anything else you cannot place.
 
-Fill in a column on the comparison sheet for each of the two models.
+Ask the session about anything you cannot place:
 
-**Take home:** Run grounded against ungrounded on your own repo before you judge any
-model. Most "the model is bad" verdicts are missing context, not missing capability.
+```text
+Why does TaskController return Task and not CreateTaskRequest, and where is the rule that
+says so?
+```
+
+It points at the `dto` rule in `AGENTS.md`. An answer that cites nothing is a guess.
+
+### Step 4: Explain the test yourself
+
+Open `backend/src/test/java/ch/acend/trackit/web/TaskControllerTest.java` and answer one
+question out loud: how does the test give the controller a `TaskService`? `@WebMvcTest`
+loads the web layer alone, so the service is either mocked or imported explicitly. Both are
+correct, and they test different things. Find which one your run chose.
+
+### Step 5: Commit and read the cost
+
+You have read the code, so commit it:
+
+```bash
+git add . && git commit -m "feat: create and list tasks in memory"
+```
+
+The output names the branch and counts the files:
+
+```text
+[m1-1-start 1a2b3c4] feat: create and list tasks in memory
+ 6 files changed, 180 insertions(+)
+```
+
+The hash and the insertion count are yours, not these. Check the file count.
+
+That commit is your rollback point for the rest of the day. Now read what the loop cost, in
+the Claude session:
+
+```text
+/cost
+```
+
+Write the figure into the comparison sheet. That is the cost of one full loop on your own
+repo, and the module asks you for it.
+
+Then compare against the reference:
+
+```bash
+git diff origin/m1-1-solution --stat
+```
+
+The stat shows one line per file that differs from the reference solution, plus a summary
+line. Check one thing: does your version follow the rules in `AGENTS.md`? If not, the rule
+was too vague. That is the finding, not the diff.
+
+**This is a good moment for the second thing you record.** If the agent did something you
+did not ask for during this loop, write that line down now.
+
+**Take home:** Review generated code by layer, not line by line. Ask which file is missing
+and which file should not be there. That catches the mistakes that matter in a review.
+
+**Trap:** Code you cannot explain is code you cannot maintain. Green tests are not a reason
+to skip reading it, they are a reason you have time to.
+
+## Task 3: Take the context file away (5 min)
+
+Task 1 ran with `AGENTS.md` in place and the strongest model available. Now we remove the
+grounding and keep everything else, so the only variable is the context file.
+
+### Step 1: Get back to the starting point
+
+```bash
+git checkout -- . && git clean -fd
+```
+
+`git status` shows a clean tree, and your commit from task 2 is still in the log.
+
+### Step 2: Move the context file aside
+
+```bash
+mv AGENTS.md AGENTS.md.off
+mv CLAUDE.md CLAUDE.md.off
+claude
+```
+
+`CLAUDE.md` is one line, `@AGENTS.md`, so both have to go or Claude Code still reads the
+rules.
+
+### Step 3: Run the same job
+
+Paste this. Same job, no context:
+
+```text
+Add two endpoints to trackit, following the pattern in HealthController:
+- POST /api/v1/tasks takes title and project, stores the task, returns 201 and the task
+- GET /api/v1/tasks returns all stored tasks
+
+A task has id, title, project and status. New tasks are OPEN.
+
+In scope: an in-memory store in the service layer, a record for the task, a request DTO
+with validation, one MockMvc test per endpoint.
+Not in scope: a database, a frontend, authentication, updating or deleting tasks.
+
+Show me your plan before you change any file.
+```
+
+**Warning.** Do not correct this plan the way you did in task 1, step 2. A corrected plan
+measures your review, not the missing context file. Approve whatever it proposes and let it
+run.
+
+### Step 4: Compare against what you read in task 2
+
+Run `git status --short` again and hold it against the six files from task 2. Look for the
+things `AGENTS.md` decided and the code alone does not say:
+
+- Are the four layers still there, or did domain, dto and service collapse into one file?
+- Field injection or constructor injection?
+- Is there a test at all, and is it named as a sentence?
+- Did a dependency appear in `pom.xml`?
+
+Write the differences down, do not correct them. Then put the context file back and throw
+the run away, in that order, because `git clean -fd` removes `AGENTS.md.off`:
+
+```bash
+mv AGENTS.md.off AGENTS.md && mv CLAUDE.md.off CLAUDE.md
+git checkout -- . && git clean -fd
+```
+
+`ls AGENTS* CLAUDE*` shows the two files back without the `.off` suffix.
+
+**Take home:** Run grounded against ungrounded on your own repo before you judge any model.
+Most "the model is bad" verdicts are missing context, not missing capability.
 
 **Tip:** A pre-check like `verify.sh` that names which line failed turns a 20-minute
 debugging conversation into one sentence. Write one for your repo and check the agent
 prerequisites, not just the app.
 
-References: [OpenCode configuration](https://opencode.ai/docs/config/) ·
-[OpenRouter with OpenCode](https://openrouter.ai/docs/cookbook/coding-agents/opencode-integration)
+## Task 4: Write the context file yourself (6 min)
 
-## Task 2: Write the context file yourself (6 min)
-
-Task 1 used the `AGENTS.md` that ships on this branch. **Nobody hands you that file in your
-own repo**, so this is the task where you produce one: generate a draft with `/init`, put it
-where every tool will find it, and turn the description into rules.
+Tasks 1 and 3 showed what the shipped `AGENTS.md` is worth. **Nobody hands you that file in
+your own repo**, so this is the task where you produce one: generate a draft with `/init`, put
+it where every tool will find it, and turn the description into rules.
 
 ### Step 1: Put the shipped file aside
 
@@ -363,167 +674,10 @@ long and unread.
 
 Reference: [skills and context](https://code.claude.com/docs/en/skills)
 
-## Task 3: Run the inner loop end to end (10 min)
+## Task 5: Run the same job on other models (9 min)
 
-Now we build the task API: create a task and list all tasks, in memory. Work the loop one
-stage at a time: **plan, build, test, run, verify**. An agent that is never made to close the
-loop reports done on red.
-
-### Step 1: Plan
-
-Start a session in the repo root:
-
-```bash
-claude
-```
-
-Type this at the prompt. It names the scope, the non-scope, and asks for a plan first:
-
-```text
-Add two endpoints to trackit, following the pattern in HealthController:
-- POST /api/v1/tasks takes title and project, stores the task, returns 201 and the task
-- GET /api/v1/tasks returns all stored tasks
-
-A task has id, title, project and status. New tasks are OPEN.
-
-In scope: an in-memory store in the service layer, a record for the task, a request DTO
-with validation, one MockMvc test per endpoint.
-Not in scope: a database, a frontend, authentication, updating or deleting tasks.
-
-Show me your plan before you change any file.
-```
-
-Read the plan for three things: does it stay in scope, does it add a dependency, does it
-follow the layering in your context file?
-
-### Step 2: Build
-
-Approve the plan by typing this. Do not just press enter, name what you are approving:
-
-```text
-The plan is fine. Implement exactly that, and stop when ./mvnw test passes.
-```
-
-Do not hand-patch while it works. A correction mid-run costs you the ability to judge the
-result.
-
-### Step 3: Test
-
-**You run the tests, not the agent.** Open a second terminal and leave the Claude session
-where it is:
-
-```bash
-cd backend
-./mvnw -q test
-```
-
-The output ends in:
-
-```text
-BUILD SUCCESS
-```
-
-If it is red, copy the failing output back into the Claude session:
-
-```text
-./mvnw -q test fails. Here is the output, fix it:
-
-<paste the failure here>
-```
-
-### Step 4: Run
-
-A green test suite is not a running application. In the second terminal:
-
-```bash
-./mvnw spring-boot:run
-```
-
-In a third terminal:
-
-```bash
-curl -s -X POST localhost:8080/api/v1/tasks \
-  -H 'content-type: application/json' \
-  -d '{"title":"Write the context file","project":"trackit"}'
-
-curl -s localhost:8080/api/v1/tasks
-```
-
-The POST answers `201` with the created task, and the GET answers with a list holding it:
-
-```json
-{"id":1,"title":"Write the context file","project":"trackit","status":"OPEN"}
-[{"id":1,"title":"Write the context file","project":"trackit","status":"OPEN"}]
-```
-
-Check the validation too. An empty title must answer `400`:
-
-```bash
-curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:8080/api/v1/tasks \
-  -H 'content-type: application/json' -d '{"title":"","project":"trackit"}'
-```
-
-```text
-400
-```
-
-### Step 5: Verify and commit
-
-Before you commit, check two things: the output above matched exactly, and you can explain
-every file that was created. Ask the session if you cannot:
-
-```text
-List every file you created or changed, one line each, and say why each one was needed.
-```
-
-Stop the application with `Ctrl+C`, then commit:
-
-```bash
-cd .. && git add . && git commit -m "feat: create and list tasks in memory"
-```
-
-That commit is your rollback point for the rest of the day.
-
-### Step 6: Read the cost and compare
-
-In the Claude session:
-
-```text
-/cost
-```
-
-Write the figure into the comparison sheet. That is the cost of one full loop on your own
-repo, and the module asks you for it.
-
-Then compare against the reference:
-
-```bash
-git diff origin/m1-1-solution --stat
-```
-
-The stat shows one line per file that differs from the reference solution, plus a summary
-line. A different file list is fine. Check one thing: does your version follow the rules
-you wrote in `AGENTS.md`? If not, the rule was too vague. That is the finding, not the diff.
-
-**This is a good moment for the second thing you record.** If the agent did something you
-did not ask for during this loop, write that line down now.
-
-**Take home:** Make "show me your plan before you change any file" the default for anything
-non-trivial, put "tests run and pass" into the context file, and commit as soon as a slice
-is green.
-
-**Tip:** Read the plan for one thing: what does it touch that you did not ask about? That is
-where scope creep lives, and it is visible in ten seconds.
-
-**Trap:** Approving plans unread is the most common failure in every room. It feels like
-speed and costs a review cycle later.
-
-Reference: [costs and usage](https://code.claude.com/docs/en/costs)
-
-## Task 4: Run the same job on a second model (10 min)
-
-We run task 3 again against a different model through the gateway. Use the same job text,
-the comparison only holds if the input is identical.
+We run task 1 again against different models through the gateway. Use the same job text, the
+comparison only holds if the input is identical.
 
 ### Step 1: Start from a clean clone
 
@@ -537,7 +691,7 @@ cp ../trackit/.env . && set -a && source .env && set +a
 opencode
 ```
 
-You see the OpenCode prompt in a second clone, `trackit-b`, that holds none of your task 3
+You see the OpenCode prompt in a second clone, `trackit-b`, that holds none of your task 1
 work. `AGENTS.md` ships on the branch, so there is nothing to copy over.
 
 ### Step 2: Pick the model
@@ -551,7 +705,7 @@ for this run.
 
 ### Step 3: Run the same job
 
-Paste this, unchanged from task 3:
+Paste this, unchanged from task 1:
 
 ```text
 Add two endpoints to trackit, following the pattern in HealthController:
@@ -566,6 +720,10 @@ Not in scope: a database, a frontend, authentication, updating or deleting tasks
 
 Show me your plan before you change any file.
 ```
+
+**Warning.** Correct this plan only as much as you corrected the one in task 1, and note how
+many corrections each model needed. Corrections you make on one model and not the other are
+the fastest way to a comparison that means nothing.
 
 ### Step 4: Check the result yourself
 
@@ -581,7 +739,8 @@ The output ends in:
 BUILD SUCCESS
 ```
 
-Count the turns it took to get there and fill in the column.
+Count the turns it took to get there and fill in the column. Then hold the result against
+the six files you read in task 2. The layers are the check, not the prose.
 
 ### Step 5: Do it again on an open-weights model
 
@@ -592,7 +751,23 @@ git checkout -- . && git clean -fd
 opencode
 ```
 
-`git status` shows a clean tree before the third run starts.
+`git status` shows a clean tree before the third run starts. Type `/models` and pick:
+
+| Model id | What it is | 4-bit footprint |
+|---|---|---|
+| `moonshotai/kimi-k3` | frontier MoE, open weights | far beyond a workstation |
+| `qwen/qwen3-coder-next` | 80B MoE, 3B active, 262k context | about 46 GB |
+
+Both are open weights, but only one of them runs on hardware you might own, so the variable
+is how much model the loop can afford when the repository may not leave the building.
+`opencode.json` in the repo root lists both and reads your key from the environment.
+
+Do not judge which answer is prettier. Find where the smaller model breaks:
+
+- Tool selection: did it pick the right tool for the step?
+- `AGENTS.md`: did it stick to the standards or drift?
+- Error output: did it act on the failure or repeat itself?
+- Stopping: did it stop while red, or never stop?
 
 **Take home:** Run this bake-off on your own codebase before you standardise on a model. A
 leaderboard says nothing about your repo. Judge on turns to green and rule adherence, not
@@ -618,7 +793,7 @@ tree. The tasks are independent, pick what interests you.
 
 ## Task A1 - ADVANCED: Run two harnesses on one repo
 
-*Deepens task 1.* Start OpenCode on the same repo in a second terminal, next to your
+*Deepens task 5.* Start OpenCode on the same repo in a second terminal, next to your
 Claude Code session. Both read the same `.env`:
 
 ```bash
@@ -636,7 +811,7 @@ first, and never point two sessions at the same working tree.
 
 ## Task A2 - ADVANCED: Derive the context file from the code
 
-*Deepens task 2.* Throw away the template from task 2 and write `AGENTS.md` from what is
+*Deepens task 4.* Throw away the template from task 4 and write `AGENTS.md` from what is
 actually in the repo. Read `HealthController`, `docs/architecture.md` and
 `docs/adr/0001-layered-spring-architecture.md` first.
 
@@ -656,7 +831,7 @@ and an unreadable one.
 
 ## Task A3 - ADVANCED: Plan and execute, strictly separated
 
-*Deepens task 3.* Do the feature again on a fresh clone:
+*Deepens task 1.* Do the feature again on a fresh clone:
 
 1. Write the job text yourself, without the template.
 2. Have it plan in one turn. Do not let it execute. Judge the plan.
@@ -679,7 +854,7 @@ References: [permissions](https://code.claude.com/docs/en/permissions) ·
 
 ## Task A4 - ADVANCED: Find where the small model breaks
 
-*Deepens task 4.* Run a third model, deliberately under 20 GB. Then name the step in the
+*Deepens task 5.* Run a third model, deliberately under 20 GB. Then name the step in the
 loop where it breaks and tick one:
 
 - Tool choice: picked the wrong tool, or none
