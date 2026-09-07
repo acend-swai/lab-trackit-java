@@ -25,19 +25,34 @@ keep your work, add a remote of your own and push there.
 | Module | Start | Solution | Stage |
 |---|---|---|---|
 | M1.1 Agentic loop | `m1-1-start` | `m1-1-solution` | create and list a task, in memory |
-| M1.2 Extending and scoping | `m1-2-start` | `m1-2-solution` | second endpoint from your own skill, plus one scoped MCP server |
-| M2 Spec first | `m2-start` | `m2-solution` | persistence and validation, spec-driven |
+| M1.2 Extending and scoping | `m1-2-start` | `m1-2-solution` | tasks stored in PostgreSQL and a task board in the browser, built by two agents at once |
+| M2 Spec first | `m2-start` | `m2-solution` | the next feature, spec-driven, tests first |
 | M3 Infrastructure | `m3-start` | `m3-solution` | container setup, verified locally |
 | M4 Capstone | `m4-start` | `m4-solution` | reporting end to end |
 
-`m1-2-mid` is an extra rejoin point inside lab 2: the state after task 2.3, before any MCP
-work. Use it if you lose the first half of that lab and want to be with the room again for
-the second.
+`m1-2-mid` is an extra rejoin point inside lab 1.2: the state after task 4, with the
+database and the frontend built, before any MCP work. Use it if you lose the first half of
+that lab and want to be with the room again for the second.
 
 ## Requirements
 
-Java 21 and the Maven wrapper in `backend/`, or the devcontainer in `.devcontainer/`.
-Nothing else. No database, no frontend - both arrive in later modules.
+Java 21 and the Maven wrapper in `backend/`, Node 22 for `frontend/`, and Docker for the
+database - or the devcontainer in `.devcontainer/`, which brings all three.
+
+`m1-1-*` needs none of it beyond Java: the database and the frontend arrive on the lab 1.2
+branches, and `verify.sh` only checks for them where they exist.
+
+## The database
+
+From `m1-2-start` onward the repo carries `compose.yaml` with a single Postgres service:
+
+```bash
+docker compose up -d
+docker compose ps          # STATUS must read "healthy"
+```
+
+That is the database only. The application has no container of its own yet - building
+that, with secrets and resource limits, is M3.
 
 ## Verify before the lab
 
@@ -58,6 +73,15 @@ curl -s localhost:8080/api/v1/health
 
 Answers `{"status":"ok"}`. On `m1-1-start` that is the only endpoint - that is correct.
 
+From `m1-2-solution` onward the frontend runs alongside it:
+
+```bash
+cd frontend
+npm run dev            # http://localhost:5173
+```
+
+The Vite dev server proxies `/api` to port 8080, so the browser sees one origin.
+
 ## Your `.env`
 
 Your personal `.env` arrives by mail on the morning of the workshop. Put it in the repo
@@ -75,6 +99,9 @@ and the entity model. `CLAUDE.md` is one line, `@AGENTS.md`, so Claude Code and 
 read the same file and there is only one place to change it. Task 1 of lab 1.1 compares a
 run without that context against a run with it; task 2 has `/init` generate one and asks
 what it could not know.
+
+It matters twice over from lab 1.2: every agent you start inherits this file, so a gap in
+it becomes the same gap in every agent at once.
 
 ## OpenCode against OpenRouter
 

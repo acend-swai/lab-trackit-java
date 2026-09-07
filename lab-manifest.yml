@@ -54,37 +54,114 @@ branches:
       - backend/src/main/java/ch/incratec/trackit/web/HealthController.java
 
   m1-2-start:
-    role: starting point for lab 2, module M1.2 - the M1.1 solution, the given skill and agent, and the MCP server shortlist
+    role: starting point for lab 1.2 - the M1.1 solution, plus the scaffolding lab 1.2 builds on - the frontend toolchain, the database compose file, one given skill, one given agent, and the MCP server shortlist. The database schema, the persistence code and every screen are what the participant has built for them.
     must_exist:
+      - LAB.md
+      - README.md
+      - verify.sh
+      - lab-manifest.yml
+      - compose.yaml
+      - .env.example
+      - .devcontainer/devcontainer.json
+      - .devcontainer/post-create.sh
       - AGENTS.md
       - CLAUDE.md
-      - .claude/skills/commit-message/SKILL.md
-      - .claude/agents/api-reviewer.md
+      - opencode.json
+      - docs/architecture.md
+      - docs/adr/0001-layered-spring-architecture.md
       - docs/mcp-candidates.md
       - sandbox/.gitkeep
+      - .claude/skills/commit-message/SKILL.md
+      - .claude/agents/api-reviewer.md
+      - backend/pom.xml
+      - backend/src/main/java/ch/incratec/trackit/domain/Task.java
+      - backend/src/main/java/ch/incratec/trackit/domain/TaskStatus.java
+      - backend/src/main/java/ch/incratec/trackit/dto/CreateTaskRequest.java
+      - backend/src/main/java/ch/incratec/trackit/service/TaskService.java
       - backend/src/main/java/ch/incratec/trackit/web/TaskController.java
+      - backend/src/main/java/ch/incratec/trackit/web/HealthController.java
+      - backend/src/test/java/ch/incratec/trackit/web/TaskControllerTest.java
+      - frontend/package.json
+      - frontend/package-lock.json
+      - frontend/vite.config.ts
+      - frontend/tsconfig.json
+      - frontend/index.html
+      - frontend/src/main.ts
+      - frontend/src/App.vue
+      - frontend/src/api/client.ts
+      - frontend/src/router/index.ts
+      - frontend/src/views/HomeView.vue
     must_not_exist:
-      - .claude/skills/add-endpoint/SKILL.md
-      - backend/src/main/java/ch/incratec/trackit/web/TaskNotFoundException.java
+      # task 3 writes these two skills
+      - .claude/skills/add-persistence/SKILL.md
+      - .claude/skills/add-view/SKILL.md
+      # task 4 writes these two agents
+      - .claude/agents/db-builder.md
+      - .claude/agents/frontend-builder.md
+      # task 4: what db-builder produces
+      - backend/src/main/java/ch/incratec/trackit/domain/TaskEntity.java
+      - backend/src/main/java/ch/incratec/trackit/repository/TaskRepository.java
+      - backend/src/main/resources/db/migration/V1__create_task.sql
+      # task 4: what frontend-builder produces
+      - frontend/src/api/tasks.ts
+      - frontend/src/views/TaskBoardView.vue
+      # tasks 5 and 6
       - .mcp.json
       - docs/mcp-scoping.md
 
   m1-2-mid:
-    role: rejoin point between the two lab halves - after task 2.3, before any MCP work
+    role: rejoin point inside lab 1.2 - the state after task 4, with both skills, both agents, the database and the task board in place, before any MCP work.
     must_exist:
-      - .claude/skills/add-endpoint/SKILL.md
-      - backend/src/main/java/ch/incratec/trackit/web/TaskNotFoundException.java
-      - docs/mcp-candidates.md
+      - .claude/skills/add-persistence/SKILL.md
+      - .claude/skills/add-view/SKILL.md
+      - .claude/skills/commit-message/SKILL.md
+      - .claude/agents/db-builder.md
+      - .claude/agents/frontend-builder.md
+      - .claude/agents/api-reviewer.md
+      - compose.yaml
+      - backend/src/main/java/ch/incratec/trackit/domain/TaskEntity.java
+      - backend/src/main/java/ch/incratec/trackit/repository/TaskRepository.java
+      - backend/src/main/resources/db/migration/V1__create_task.sql
+      - frontend/src/api/tasks.ts
+      - frontend/src/views/TaskBoardView.vue
     must_not_exist:
       - .mcp.json
       - docs/mcp-scoping.md
+      - frontend/src/views/HomeView.vue
 
   m1-2-solution:
-    role: reference state after lab 2 - features F2 and F3, own skill, second endpoint, one scoped server
+    role: reference state after lab 1.2 - features F2 and F3 - tasks in PostgreSQL, a task board in the browser, two own skills, two own agents, one scoped MCP server.
     must_exist:
-      - .claude/skills/add-endpoint/SKILL.md
+      - .claude/skills/add-persistence/SKILL.md
+      - .claude/skills/add-view/SKILL.md
       - .claude/skills/commit-message/SKILL.md
+      - .claude/agents/db-builder.md
+      - .claude/agents/frontend-builder.md
       - .claude/agents/api-reviewer.md
-      - backend/src/main/java/ch/incratec/trackit/web/TaskNotFoundException.java
       - .mcp.json
       - docs/mcp-scoping.md
+      - compose.yaml
+      - backend/src/main/java/ch/incratec/trackit/domain/TaskEntity.java
+      - backend/src/main/java/ch/incratec/trackit/repository/TaskRepository.java
+      - backend/src/main/resources/db/migration/V1__create_task.sql
+      - frontend/src/api/tasks.ts
+      - frontend/src/views/TaskBoardView.vue
+    must_not_exist:
+      - frontend/src/views/HomeView.vue
+
+  m2-start:
+    role: starting point for lab 2, module M2 - the lab 1.2 solution without its handout. Lab 2 ships its own LAB.md when it is built.
+    must_exist:
+      - .claude/skills/add-persistence/SKILL.md
+      - .claude/skills/add-view/SKILL.md
+      - .claude/agents/db-builder.md
+      - .claude/agents/frontend-builder.md
+      - .mcp.json
+      - docs/mcp-scoping.md
+      - compose.yaml
+      - backend/src/main/java/ch/incratec/trackit/domain/TaskEntity.java
+      - backend/src/main/resources/db/migration/V1__create_task.sql
+      - frontend/src/api/tasks.ts
+      - frontend/src/views/TaskBoardView.vue
+    must_not_exist:
+      - LAB.md
