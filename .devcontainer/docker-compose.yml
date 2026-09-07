@@ -1,0 +1,22 @@
+# The devcontainer is a two-service stack, the same shape lab-trackit uses.
+#
+# WHY: the application runs inside this container and talks to Postgres on
+# localhost:5432. That only works when both containers share one network
+# namespace, which is what network_mode: service:db does. A single-container
+# devcontainer plus `docker compose up` starts Postgres as a sibling on the
+# host, and localhost inside here then reaches nothing - which is the bug this
+# file fixes.
+#
+# The db service is not defined here. It comes from ../compose.yaml, the file
+# lab 1.2 reads and M3 builds around, so there is exactly one definition of the
+# database in the repo.
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/base:ubuntu-24.04
+    volumes:
+      - ..:/workspaces/trackit:cached
+    command: sleep infinity
+    network_mode: service:db
+    depends_on:
+      db:
+        condition: service_healthy
