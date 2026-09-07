@@ -177,34 +177,57 @@ prerequisites, not just the app.
 References: [OpenCode configuration](https://opencode.ai/docs/config/) ·
 [OpenRouter with OpenCode](https://openrouter.ai/docs/cookbook/coding-agents/opencode-integration)
 
-## Task 2: Generate the context file, then sharpen it (6 min)
+## Task 2: Write the context file yourself (6 min)
 
-The context file is the strongest control you have over the loop. Do not write it from
-scratch. Let Claude Code write the draft, then turn it into rules.
+Task 1 used the `AGENTS.md` that ships on this branch. **Nobody hands you that file in your
+own repo**, so this is the task where you produce one: generate a draft with `/init`, put it
+where every tool will find it, and turn the description into rules.
 
-### Step 1: Generate it
+### Step 1: Put the shipped file aside
+
+You compare against it in step 4, so keep it. `CLAUDE.md` goes too, it is only a pointer at
+the file you just moved:
+
+```bash
+mv AGENTS.md AGENTS.reference.md
+rm CLAUDE.md
+```
+
+The repo now has no context file, which is the state your own repo is in today.
+
+### Step 2: Generate the draft
 
 ```text
 /init
 ```
 
-`/init` reads the repo and writes a `CLAUDE.md` with the stack, the layout, how to build
-and test. That is a description, not a set of rules.
+`/init` reads the repo and writes a `CLAUDE.md` with the stack, the layout, and how to build
+and test. That is a description of what it found, not a set of rules.
 
-### Step 2: Adopt the repo convention
+### Step 3: Move it to AGENTS.md and leave a pointer
 
-This project keeps rules in `AGENTS.md` and leaves `CLAUDE.md` as a pointer, so every tool
-in the room reads the same file:
+Claude Code reads `CLAUDE.md`, Copilot reads `copilot-instructions.md`, OpenCode reads
+`AGENTS.md`. They are the same idea under three names, and keeping three copies means three
+files drifting apart. This project keeps the rules in `AGENTS.md` and makes `CLAUDE.md` a
+one-line pointer at it, so every tool in the room reads the same file and there is one file
+to review:
 
 ```bash
 mv CLAUDE.md AGENTS.md
 printf '@AGENTS.md\n' > CLAUDE.md
 ```
 
-`copilot-instructions.md`, `CLAUDE.md` and `AGENTS.md` are the same idea in three tools.
-Pick one per repo and point the others at it.
+Check it:
 
-### Step 3: Turn the description into rules
+```bash
+cat CLAUDE.md
+```
+
+```text
+@AGENTS.md
+```
+
+### Step 4: Turn the description into rules
 
 Add what `/init` cannot know. These three blocks are the minimum, because each one changes
 what the agent does:
@@ -228,7 +251,19 @@ what the agent does:
 - No force-push
 ```
 
-### Step 4: Check that it took effect
+Now compare with the file you set aside:
+
+```bash
+diff AGENTS.reference.md AGENTS.md
+```
+
+Take anything from it that would change what the agent does, ignore the rest, then drop it:
+
+```bash
+rm AGENTS.reference.md
+```
+
+### Step 5: Check that it took effect
 
 Ask something the agent can only answer from the file:
 
@@ -237,29 +272,37 @@ Which test naming convention does this project use, and what do you have to ask 
 about before you do it?
 ```
 
-It names the sentence-style test names and the dependency rule. If it does not, the file
-is in the wrong place or the session started before you wrote it. Restart and ask again.
+It names the sentence-style test names and the dependency rule. If it does not, the file is
+in the wrong place or the session started before you wrote it. Restart and ask again.
 
-**Take home:** Only write rules the agent cannot infer: your conventions, forbidden paths,
-the dependency rule, your git rules. The context file is configuration, so commit it and
-review it in pull requests like code.
+**Take home:** Run `/init` once per repo to get the draft, then curate it by hand. Only keep
+rules the agent cannot infer: your conventions, forbidden paths, the dependency rule, your
+git rules. It is configuration, so commit it and review it in pull requests like code.
 
 **Tip:** Test every line with one question: what would the agent do differently because of
 it? A line that fails that test costs you tokens on every turn. Check the size with
 `/context`.
 
-**Trap:** A 400-line context file feels organised and gets ignored. Short and enforced
-beats long and unread.
+**Trap:** A 400-line context file feels organised and gets ignored. Short and enforced beats
+long and unread.
 
 Reference: [skills and context](https://code.claude.com/docs/en/skills)
 
 ## Task 3: Run the inner loop end to end (10 min)
 
 Now we build the task API: create a task and list all tasks, in memory. Work the loop one
-stage at a time: **plan, build, test, run, verify**. An agent that is never made to close
-the loop reports done on red.
+stage at a time: **plan, build, test, run, verify**. An agent that is never made to close the
+loop reports done on red.
 
 ### Step 1: Plan
+
+Start a session in the repo root:
+
+```bash
+claude
+```
+
+Type this at the prompt. It names the scope, the non-scope, and asks for a plan first:
 
 ```text
 Add two endpoints to trackit, following the pattern in HealthController:
@@ -280,10 +323,19 @@ follow the layering in your context file?
 
 ### Step 2: Build
 
-Approve the run. Do not hand-patch while it works, a correction mid-run costs you the
-ability to judge the result.
+Approve the plan by typing this. Do not just press enter, name what you are approving:
+
+```text
+The plan is fine. Implement exactly that, and stop when ./mvnw test passes.
+```
+
+Do not hand-patch while it works. A correction mid-run costs you the ability to judge the
+result.
 
 ### Step 3: Test
+
+**You run the tests, not the agent.** Open a second terminal and leave the Claude session
+where it is:
 
 ```bash
 cd backend
@@ -296,17 +348,23 @@ The output ends in:
 BUILD SUCCESS
 ```
 
-If it is red, hand the failing output back to the agent and let it fix on red.
+If it is red, copy the failing output back into the Claude session:
+
+```text
+./mvnw -q test fails. Here is the output, fix it:
+
+<paste the failure here>
+```
 
 ### Step 4: Run
 
-A green test suite is not a running application:
+A green test suite is not a running application. In the second terminal:
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-In a second terminal:
+In a third terminal:
 
 ```bash
 curl -s -X POST localhost:8080/api/v1/tasks \
@@ -323,10 +381,27 @@ The output is:
 [{"id":1,"title":"Write the context file","project":"trackit","status":"OPEN"}]
 ```
 
+Check the validation too. An empty title must answer `400`:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:8080/api/v1/tasks \
+  -H 'content-type: application/json' -d '{"title":"","project":"trackit"}'
+```
+
+```text
+400
+```
+
 ### Step 5: Verify and commit
 
-The output above matches exactly, an empty title answers `400`, and you can explain every
-file that was created. Then commit:
+The output above matches exactly, and you can explain every file that was created. Ask the
+session if you cannot:
+
+```text
+List every file you created or changed, one line each, and say why each one was needed.
+```
+
+Stop the application with `Ctrl+C`, then commit:
 
 ```bash
 cd .. && git add . && git commit -m "feat: create and list tasks in memory"
@@ -334,32 +409,35 @@ cd .. && git add . && git commit -m "feat: create and list tasks in memory"
 
 That commit is your rollback point for the rest of the day.
 
-Now check what it cost:
+### Step 6: Read the cost and compare
+
+In the Claude session:
 
 ```text
 /cost
 ```
 
-Write the figure down. That is the cost of one full loop on your own repo, and the module
-asks you for it.
+Write the figure into the comparison sheet. That is the cost of one full loop on your own
+repo, and the module asks you for it.
 
-Compare against the reference:
+Then compare against the reference:
 
 ```bash
 git diff origin/m1-1-solution --stat
 ```
 
-A different file list is fine. Check one thing: does your version follow the rules you
-wrote in `AGENTS.md`? If not, the rule was too vague. That is the finding, not the diff.
+A different file list is fine. Check one thing: does your version follow the rules you wrote
+in `AGENTS.md`? If not, the rule was too vague. That is the finding, not the diff.
 
 **This is a good moment for the second thing you record.** If the agent did something you
 did not ask for during this loop, write that line down now.
 
-**Take home:** Make "show me your plan first" the default for anything non-trivial, put
-"tests run and pass" in the context file, and commit as soon as a slice is green.
+**Take home:** Make "show me your plan before you change any file" the default for anything
+non-trivial, put "tests run and pass" into the context file, and commit as soon as a slice
+is green.
 
-**Tip:** Read the plan for one thing: what does it touch that you did not ask about? That
-is where scope creep lives, and it is visible in ten seconds.
+**Tip:** Read the plan for one thing: what does it touch that you did not ask about? That is
+where scope creep lives, and it is visible in ten seconds.
 
 **Trap:** Approving plans unread is the most common failure in every room. It feels like
 speed and costs a review cycle later.
@@ -371,6 +449,8 @@ Reference: [costs and usage](https://code.claude.com/docs/en/costs)
 We run task 3 again against a different model through the gateway. Use the same job text,
 the comparison only holds if the input is identical.
 
+### Step 1: Start from a clean clone
+
 Clone the branch again so the second run starts where the first one did:
 
 ```bash
@@ -381,15 +461,57 @@ cp ../trackit/.env . && set -a && source .env && set +a
 opencode
 ```
 
-`AGENTS.md` ships on the branch, so there is nothing to copy over. Switch the model:
+`AGENTS.md` ships on the branch, so there is nothing to copy over.
+
+### Step 2: Pick the model
 
 ```text
 /models
 ```
 
-The models on offer are the ones in `GATEWAY_MODELS` in your `.env`. Do one run against a
-commercial model and one against an open-weights model, then fill in the two remaining
-columns of the comparison sheet.
+The models on offer are the ones in `GATEWAY_MODELS` in your `.env`. Take a commercial one
+for this run.
+
+### Step 3: Run the same job
+
+Paste this, unchanged from task 3:
+
+```text
+Add two endpoints to trackit, following the pattern in HealthController:
+- POST /api/v1/tasks takes title and project, stores the task, returns 201 and the task
+- GET /api/v1/tasks returns all stored tasks
+
+A task has id, title, project and status. New tasks are OPEN.
+
+In scope: an in-memory store in the service layer, a record for the task, a request DTO
+with validation, one MockMvc test per endpoint.
+Not in scope: a database, a frontend, authentication, updating or deleting tasks.
+
+Show me your plan before you change any file.
+```
+
+### Step 4: Check the result yourself
+
+In a second terminal:
+
+```bash
+cd backend && ./mvnw -q test
+```
+
+```text
+BUILD SUCCESS
+```
+
+Count the turns it took to get there and fill in the column.
+
+### Step 5: Do it again on an open-weights model
+
+Throw the run away and repeat steps 2 to 4, this time picking an open-weights model:
+
+```bash
+git checkout -- . && git clean -fd
+opencode
+```
 
 **Take home:** Run this bake-off on your own codebase before you standardise on a model. A
 leaderboard says nothing about your repo. Judge on turns to green and rule adherence, not
