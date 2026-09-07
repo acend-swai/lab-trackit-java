@@ -73,26 +73,25 @@ grounding for the second half of the comparison. Lab 1.2 writes one from scratch
 Lab 1.1 runs the same task once more through OpenCode against an open-weight model. The
 gateway is OpenRouter and your key arrives by mail in `.env`; it starts with `sk-or-v1-`.
 
-`opencode.json` in the repo root reads that key from the environment and lists the three
-models the lab compares:
+`opencode.json` in the repo root reads that key from the environment and lists the models
+the lab compares. Three are hosted frontier models, four are open-weight models you could
+run on your own hardware - the second group is the point of the comparison, so the
+footprint is what decides whether a model is an option for a repository that may not leave
+the building.
 
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "openrouter": {
-      "options": {
-        "apiKey": "{env:OPENROUTER_API_KEY}"
-      },
-      "models": {
-        "qwen/qwen3.8-max-0902": {},
-        "moonshotai/kimi-k3": {},
-        "deepseek/deepseek-v4-flash": {}
-      }
-    }
-  }
-}
-```
+| Model id | What it is | 4-bit footprint |
+|---|---|---|
+| `qwen/qwen3.8-max-0902` | Qwen flagship, hosted only | - |
+| `moonshotai/kimi-k3` | frontier MoE, open weights but datacentre scale | far beyond a workstation |
+| `deepseek/deepseek-v4-flash` | frontier MoE, same | far beyond a workstation |
+| `qwen/qwen3-coder-next` | 80B MoE, 3B active, 262k context | about 46 GB |
+| `qwen/qwen3-coder-30b-a3b-instruct` | 30B MoE, the pragmatic local choice | 16 GB, measured |
+| `mistralai/devstral-2512` | Devstral 2, 123B dense | about 62 GB |
+| `nvidia/nemotron-3-super-120b-a12b` | 120B MoE, 12B active, 1M context | about 60 GB |
+
+Switch between them in the session with `/models`. The 16 GB figure is measured on our own
+hardware; the others are the published 4-bit requirements and are worth re-checking against
+the model card before you quote them.
 
 OpenCode reads the environment, not the file, so export `.env` in the shell you start it
 from:
@@ -102,7 +101,6 @@ set -a; source .env; set +a
 opencode
 ```
 
-In the devcontainer every new terminal does this for you. Switch models in the session
-with `/models`.
+In the devcontainer every new terminal does this for you.
 
 Docs: <https://openrouter.ai/docs/cookbook/coding-agents/opencode-integration>
