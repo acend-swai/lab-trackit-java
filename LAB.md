@@ -29,6 +29,19 @@ write no skill, agent or configuration file in either.
 **Part 3 is advanced and optional.** Nothing later in the day depends on it. If you finish
 Part 1 early, go to task A2, it is the most useful one.
 
+## What you record today
+
+The fifteen-minute discussion at the end runs on your answers, and every one of them is
+something you can only see while you work. Keep a scratch file open and write the line when
+it happens:
+
+| From | Write down |
+|---|---|
+| Task 2 | Did the skill fire on the first try? If not, what did its description say? |
+| Task 3 | What did the tests tell you, and what did they not tell you? |
+| Task 5 | What the plugin's "Will install" pane listed, and whether you would put that plugin in your team's `.claude/settings.json` |
+| Task 7 | Your three answers per component, plus the verdict line |
+
 ## Where you start
 
 ```bash
