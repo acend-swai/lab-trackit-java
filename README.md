@@ -74,24 +74,33 @@ Lab 1.1 runs the same task once more through OpenCode against an open-weight mod
 gateway is OpenRouter and your key arrives by mail in `.env`; it starts with `sk-or-v1-`.
 
 `opencode.json` in the repo root reads that key from the environment and lists the models
-the lab compares. Three are hosted frontier models, four are open-weight models you could
-run on your own hardware - the second group is the point of the comparison, so the
-footprint is what decides whether a model is an option for a repository that may not leave
-the building.
+for the lab.
+
+**Run these two.** Same family, two sizes, so the only variable is how much model is
+behind the loop:
+
+| Model id | Size | 4-bit footprint |
+|---|---|---|
+| `qwen/qwen3-coder-30b-a3b-instruct` | 30B MoE, the small one | 16 GB, measured |
+| `qwen/qwen3-coder-next` | 80B MoE, 3B active, 262k context | about 46 GB |
+
+Give both the same task and the same prompt. The question is not which answer is prettier,
+it is **where the small model breaks**: tool selection, sticking to `AGENTS.md`, reading
+its own error output, or knowing when it is done.
+
+**Then take any others you have time for.** The first three still fit on a workstation, the
+last three do not - which is the whole point when the repository may not leave the building:
 
 | Model id | What it is | 4-bit footprint |
 |---|---|---|
-| `qwen/qwen3.8-max-0902` | Qwen flagship, hosted only | - |
-| `moonshotai/kimi-k3` | frontier MoE, open weights but datacentre scale | far beyond a workstation |
-| `deepseek/deepseek-v4-flash` | frontier MoE, same | far beyond a workstation |
-| `qwen/qwen3-coder-next` | 80B MoE, 3B active, 262k context | about 46 GB |
-| `qwen/qwen3-coder-30b-a3b-instruct` | 30B MoE, the pragmatic local choice | 16 GB, measured |
 | `mistralai/devstral-2512` | Devstral 2, 123B dense | about 62 GB |
 | `nvidia/nemotron-3-super-120b-a12b` | 120B MoE, 12B active, 1M context | about 60 GB |
+| `moonshotai/kimi-k3` | frontier MoE, open weights | far beyond a workstation |
+| `deepseek/deepseek-v4-flash` | frontier MoE, open weights | far beyond a workstation |
+| `qwen/qwen3.8-max-0902` | Qwen flagship, hosted only | not open weights |
 
 Switch between them in the session with `/models`. The 16 GB figure is measured on our own
-hardware; the others are the published 4-bit requirements and are worth re-checking against
-the model card before you quote them.
+hardware; the others are the published 4-bit requirements.
 
 OpenCode reads the environment, not the file, so export `.env` in the shell you start it
 from:
