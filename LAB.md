@@ -191,8 +191,8 @@ terraform validate
 ```
 
 **The failure mode to understand.** Look at the `jq` check at the top. Without it, a
-missing `jq` makes the command variable empty, every pattern misses, and the hook exits 0
-- it **allows everything, silently**. A guardrail that fails open is worse than none,
+missing `jq` makes the command variable empty, every pattern misses, and the hook exits
+0, which **allows everything, silently**. A guardrail that fails open is worse than none,
 because you stop looking. Guards fail closed.
 
 **Expected result.** A refused command with your reason, `terraform validate` still
