@@ -10,19 +10,17 @@
 | Target state | deny rules, a blocking hook, and validated Terraform (branch `m3-solution`) |
 
 Nothing is deployed today: we write infrastructure code and validate it. The agent never
-gets credentials and never applies anything, and by the end of task 2 it could not even if
-it decided to.
+gets credentials and never applies anything.
 
-We harden first, then we generate. An agent writing infrastructure is the
-highest-consequence thing it does all day: it reaches for real credentials, it runs
-commands that delete things, and a mistake is not a failing test but a deleted database.
+We harden first, then we generate, because a mistake here is not a failing test but a
+deleted database:
 
 | Task | What it protects against |
 |---|---|
 | 1 Deny rules | the agent reading a secret into its context |
 | 2 A hook | the agent running a command that destroys something |
 | 3 MCP server | the agent inventing provider syntax from stale memory |
-| 4 Generate | - |
+| 4 Generate | the three above, now that they are in place |
 
 Part 1 is four tasks for everyone. Part 2 is advanced and optional.
 
@@ -38,7 +36,7 @@ Keep a scratch file open. The discussion at the end runs on these three:
 
 ## Where you start
 
-Continue on your repo from lab 2. Check that nothing is uncommitted:
+Check that nothing is uncommitted on your repo from lab 2:
 
 ```bash
 git status --porcelain
@@ -300,14 +298,31 @@ Run ./mvnw -q test in the backend directory.
 
 That runs. The guard refuses five commands and leaves everything else alone.
 
-### Step 5: Understand the failure mode
+### Step 5: See what the missing jq check would cost
 
-Look at the `jq` check at the top. Without it, a missing `jq` makes the command variable
-empty, every pattern misses, and the hook exits 0, which **allows everything, silently**. A
-guardrail that fails open is worse than none, because you stop looking. Guards fail closed.
+The `jq` check at the top is what makes this guard fail closed. Watch what happens without
+it. Put a broken `jq` in front of the real one, so `jq` still runs but returns nothing:
+
+```bash
+mkdir -p /tmp/nojq
+printf '#!/bin/sh\nexit 127\n' > /tmp/nojq/jq && chmod +x /tmp/nojq/jq
+PATH=/tmp/nojq:$PATH .claude/hooks/check-infra.sh <<< '{"tool_input":{"command":"terraform destroy"}}'
+echo "exit=$?"
+```
+
+`command -v jq` still finds a `jq`, so the guard runs on. `cmd` comes back empty, every
+pattern misses, and `terraform destroy` is allowed with nothing printed at all:
+
+```text
+exit=0
+```
+
+That is what a guardrail failing open looks like from the outside: silence, which is also
+what success looks like. Clean up with `rm -rf /tmp/nojq`.
 
 **Take home:** `AGENTS.md` asks, the hook decides. "The agent should not" is a request, "the
-agent cannot" is a hook. Build the blocklist from real incidents, not imagination.
+agent cannot" is a hook. A guard that fails open is worse than none, because you stop
+looking, so make the unreadable-input path exit 2.
 
 **Tip:** Blocklists leak. This one catches `terraform destroy` and misses
 `terraform  destroy` with two spaces. Task A3 is where you make it precise, today the
@@ -320,9 +335,11 @@ Reference: [hooks](https://code.claude.com/docs/en/hooks)
 
 ## Task 3: Connect the Terraform MCP server (5 min)
 
-The agent's memory of the `azurerm` provider is as old as its training data, and provider
-schemas change every few weeks. HashiCorp publishes an official MCP server that reads the
-Terraform registry live.
+The agent's memory of the `azurerm` provider is as old as its training data, and that
+provider ships a new minor version most weeks: v4.80.0, v4.81.0, then v5.0.0 through
+v5.4.0 all landed between 2 July and 3 September 2026
+([releases](https://github.com/hashicorp/terraform-provider-azurerm/releases)). HashiCorp
+publishes an official MCP server that reads the Terraform registry live.
 
 ### Step 1: Add the server, pinned to a version
 
@@ -377,8 +394,6 @@ Reference: [Terraform MCP server](https://developer.hashicorp.com/terraform/mcp-
 
 ## Task 4: Generate the infrastructure code (10 min)
 
-Now the agent writes. Everything before this was making it safe to let it.
-
 ### Step 1: Ask for a plan, with the non-scope written down
 
 Give the agent the job and its boundary in the same prompt:
@@ -412,7 +427,8 @@ Read it for these five and write down what you find **before** you have anything
 | Resource limits | no CPU or memory set, or a size nobody costed |
 | Persistence and backup | no backup retention, or storage that disappears with the container |
 
-Write down at least two findings. **Finding none means you did not apply the checklist.**
+Write down what you find, one line per row. If a row comes back empty, read the generated
+plan against that row again before you move on.
 
 ### Step 3: Let it write
 
