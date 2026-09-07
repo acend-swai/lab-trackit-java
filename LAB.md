@@ -12,8 +12,7 @@
 We are going to add **comments on tasks**: one new entity, two endpoints, one migration. A
 task records what has to happen, it does not record what you found out on the way.
 
-The feature is small on purpose, because the module is not about the feature. It is about
-the four decisions hiding inside it:
+Four decisions are hiding inside it:
 
 - Who wrote a comment, when TrackIt has no user table?
 - How long may a comment be?
@@ -23,8 +22,8 @@ the four decisions hiding inside it:
 An agent answers all four of these **without asking you**. The spec is where you answer
 them first.
 
-Part 1 is six tasks for everyone: you write the spec, the agent writes the code, and that
-split is the whole module. Part 2 is advanced and optional.
+Part 1 is six tasks for everyone: you write the spec, the agent writes the code. Part 2 is
+advanced and optional.
 
 ## What you record today
 
@@ -39,8 +38,7 @@ end runs on them:
 
 ## Where you start
 
-Continue on your own repo from lab 1.2. Check that the suite is green and nothing is
-uncommitted:
+Check that the suite on your repo from lab 1.2 is green and nothing is uncommitted:
 
 ```bash
 cd backend && ./mvnw -q test && cd ..
@@ -215,14 +213,12 @@ Those four artefacts live in `openspec/changes/add-task-comments/`:
 | `design.md` | how it is built |
 | `tasks.md` | the ordered implementation checklist |
 
-Do not approve it yet. Task 4 is where you earn the module.
+Do not approve it yet. Task 4 reviews it first.
 
 **Tip:** A proposal with no "out of scope" section is not finished. That section is what
 stops the change growing while you are not looking.
 
 ## Task 4: Review the spec, this is your part (5 min)
-
-This is the task the module exists for, and the one thing today you cannot delegate.
 
 ### Step 1: Answer the four questions against the spec
 
