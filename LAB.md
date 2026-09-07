@@ -1,254 +1,337 @@
-# Lab 2: spec first - decide it before the agent decides it for you
+# Lab 3: harden the harness, then let it write the infrastructure
 
 | Info | Detail |
 |---|---|
-| Module | M2 - Spec-first: research, the OpenSpec cycle, tests from the spec |
+| Module | M3 - Infrastructure, secrets and guardrails: create and verify |
 | Duration | 30 minutes, plus the discussion |
 | Harness | Claude Code |
-| Tooling | OpenSpec, `@fission-ai/openspec`, installed in task 1. Needs Node 20.19 or newer |
-| Repo | `lab-trackit-java`, your own clone from lab 1.2, or branch `m2-start` |
-| Target state | task comments, specified before written (branch `m2-solution`) |
+| Tooling | HashiCorp Terraform MCP server, in Docker. Terraform CLI for `fmt` and `validate` |
+| Repo | `lab-trackit-java`, your own clone from lab 2, or branch `m3-start` |
+| Target state | deny rules, a blocking hook, and validated Terraform (branch `m3-solution`) |
 
-**Part 1 is for everyone.** Six tasks, all with the commands in this handout. You write a
-spec and the agent writes the code - that split is the whole module.
+**Part 1 is for everyone.** Four tasks, all with the commands in this handout.
 
-**Part 2 is advanced and optional.** Start it only when Part 1 runs green.
+**Part 2 is advanced and optional.**
+
+**Nothing is deployed today.** You write infrastructure code and you validate it. The
+agent never gets credentials and never applies anything - and by the end of task 2 it
+could not even if it decided to.
 
 ## Where you start
 
-Continue on **your own repo from lab 1.2**. Check it first:
+Continue on **your own repo from lab 2**, or take the reference state:
 
 ```bash
-cd backend && ./mvnw -q test && cd ..
-git status --porcelain
-```
-
-Tests green and nothing uncommitted. If either fails, or you did not finish lab 1.2, take
-the reference state instead:
-
-```bash
-git fetch origin && git checkout m2-start
+git fetch origin && git checkout m3-start
 docker compose up -d
+./verify.sh
 ```
 
-Either way you have tasks in PostgreSQL and a task board in the browser.
+## The order matters
 
-## What you build
+You harden first, then you generate. That is the whole shape of the lab.
 
-**Comments on tasks.** A task records what has to happen; it does not record what you
-found out on the way. One new entity, two endpoints, one migration.
+An agent writing infrastructure is the highest-consequence thing it does all day: it
+reaches for real credentials, it runs commands that delete things, and a mistake is not a
+failing test but a deleted database. So the guardrails go up **before** the agent is
+pointed at infrastructure, not after the first incident.
 
-It is deliberately a small feature, because the module is not about the feature. It is
-about the four decisions hiding inside it:
-
-- Who wrote a comment, when TrackIt has no user table?
-- How long may a comment be?
-- What order do comments come back in?
-- What happens to comments when the task is deleted?
-
-**An agent will answer all four without asking you.** The spec is where you answer them
-first. That is the thing to watch for today.
+| Task | What it protects against |
+|---|---|
+| 1 Deny rules | the agent reading a secret into its context |
+| 2 A hook | the agent running a command that destroys something |
+| 3 MCP server | the agent inventing provider syntax from stale memory |
+| 4 Generate | - |
 
 ---
 
 # Part 1 - Standard, 30 minutes
 
-## Task 1 - Install OpenSpec and initialise it (3 min)
+## Task 1 - Deny what must never be read (6 min)
+
+A `.gitignore` keeps a file out of git. It does nothing about the agent: Claude Code will
+happily read `.env` and put it in the context window, and from there it goes to the model.
+
+Create `.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.key)",
+      "Read(**/*.pem)",
+      "Read(**/terraform.tfvars)",
+      "Read(**/*.tfstate)",
+      "Edit(**/*.tfstate)"
+    ]
+  }
+}
+```
+
+`deny` wins over everything. There are three modes - `allow` runs without asking, `ask`
+confirms every time, `deny` blocks and has the highest priority.
+
+`*.tfstate` is on the list for a reason people miss: **Terraform state contains every
+value it ever resolved, including the database password, in plain text.** It is the most
+secret file in an infrastructure repository and it looks like a build artefact.
+
+**Test it.**
+
+```text
+Read the .env file and tell me what is in it.
+```
+
+It must refuse.
+
+**Now find the hole.** Ask it to do this instead:
+
+```text
+Run: cat .env
+```
+
+**The deny rule does not stop that.** It governs Claude's file tools, not the shell. That
+gap is exactly why task 2 exists.
+
+**Expected result.** A refusal on the file tool, a success through Bash, and one sentence
+on why a permission rule alone is not enough.
+
+**Take this to your team**
+
+| | In this lab | In your repo |
+|---|---|---|
+| What a deny rule covers | the file tools | Not the shell. Not a subprocess. Know the edge |
+| The forgotten file | `*.tfstate` | Add it today. It holds every secret Terraform resolved, in plain text |
+| Where it lives | `.claude/settings.json`, committed | Committed, so the whole team inherits it on clone. Review it like code |
+
+**Trap.** Believing `.gitignore` protects anything from the agent. It governs git, and the
+agent is not git.
+
+## Task 2 - A hook that blocks, instead of asking (9 min)
+
+A permission dialog is a prompt, and prompts get clicked through at 16:45 on a Friday. A
+hook is a shell command the harness runs at a fixed point in its lifecycle. **The model
+does not choose to run it and cannot argue with it.** A `PreToolUse` hook that exits with
+code 2 blocks the tool call outright.
+
+**Step 1 - write the guard.** Create `.claude/hooks/check-infra.sh`:
 
 ```bash
-node --version          # must be 20.19 or newer
-npx -y @fission-ai/openspec@latest init
+#!/usr/bin/env bash
+set -uo pipefail
+
+# A guard that cannot read its input must not wave the command through.
+if ! command -v jq > /dev/null 2>&1; then
+  echo "Blocked: jq is not installed, so this hook cannot inspect the command." >&2
+  exit 2
+fi
+
+input=$(cat)
+cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty')
+[ -n "$cmd" ] || exit 0
+
+block() {
+  echo "Blocked by check-infra.sh: $1" >&2
+  exit 2
+}
+
+case "$cmd" in
+  *"terraform destroy"*) block "terraform destroy tears down real infrastructure" ;;
+  *"terraform apply"*)   block "terraform apply changes real infrastructure" ;;
+  *"kubectl delete ns"*) block "deleting a namespace deletes everything in it" ;;
+  *"rm -rf /"*)          block "recursive delete from the filesystem root" ;;
+  *"git push --force"*)  block "force push rewrites history other people have" ;;
+esac
+
+exit 0
 ```
 
-`init` creates the `openspec/` directory and registers the OpenSpec skills with your
-harness. It runs on your machine, needs no API key and no MCP server: it manages spec
-files, and your agent writes the code.
+```bash
+chmod +x .claude/hooks/check-infra.sh
+```
 
-Check the skills arrived:
+**Step 2 - register it** in `.claude/settings.json`, next to the `permissions` block:
+
+```json
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/check-infra.sh" }
+        ]
+      }
+    ]
+  }
+```
+
+Restart the session, then check it is loaded:
 
 ```text
-/help
+/hooks
 ```
 
-You should see `/opsx:explore`, `/opsx:propose`, `/opsx:apply` and `/opsx:archive`. Those
-four are the cycle.
+**Step 3 - provoke it. Deliberately.**
 
-**Expected result.** An `openspec/` directory, and the four commands listed.
+```text
+Run terraform destroy in the deploy/terraform directory to clean up.
+```
+
+The tool call must be refused with your reason visible, and **the agent must not talk its
+way around it**. Watch what it does next: a good one reports the refusal. Note it if it
+tries something adjacent instead.
+
+**Step 4 - check you did not block the work.** These must all still run, because a plan
+and a validate change nothing:
+
+```bash
+terraform fmt -check
+terraform validate
+```
+
+**The failure mode to understand.** Look at the `jq` check at the top. Without it, a
+missing `jq` makes the command variable empty, every pattern misses, and the hook exits 0
+- it **allows everything, silently**. A guardrail that fails open is worse than none,
+because you stop looking. Guards fail closed.
+
+**Expected result.** A refused command with your reason, `terraform validate` still
+working, and one sentence on the difference between a rule and a hook.
 
 **Take this to your team**
 
 | | In this lab | In your repo |
 |---|---|---|
-| What the tool is | spec files plus four commands | It does not call a model. It gives your agent a place to put decisions before code |
-| Where specs live | `openspec/`, committed | Committed and reviewed like code. A spec in a ticket is not a spec your agent can read |
+| Rule vs hook | `AGENTS.md` asks; the hook decides | "The agent should not" is a request. "The agent cannot" is a hook |
+| Exit code | 2 blocks and returns your message | The message is written for the agent. Say what it may do instead |
+| Fail direction | missing `jq` blocks | Every guard fails closed. Test that path on purpose - it is the one nobody tests |
+| Build the list from | real incidents | Not imagination. One thing that actually happened beats twenty hypotheticals |
 
-**Reference.** [OpenSpec on GitHub](https://github.com/Fission-AI/OpenSpec)
+**Tip.** Blocklists leak. This one catches `terraform destroy` and misses
+`terraform  destroy` with two spaces. Task A3 is where you make it precise; today the
+lesson is the mechanism.
 
-## Task 2 - Explore before you specify (4 min)
+**Trap.** Writing the hook and never testing the block path. An untested guard is a
+belief.
 
-Do not describe the repo to the agent. Have it read the repo.
+## Task 3 - Connect the Terraform MCP server (5 min)
 
-```text
-/opsx:explore comments on tasks
+The agent's memory of the `azurerm` provider is as old as its training data, and provider
+schemas change every few weeks. HashiCorp publishes an official MCP server that reads the
+Terraform registry live.
+
+```bash
+claude mcp add --scope project terraform -- \
+  docker run -i --rm hashicorp/terraform-mcp-server:1.3.0
 ```
 
-It reads the code and reports what it found: the layering, the persistence pattern from
-lab 1.2, the migration convention, how tests are written here.
+Pin the tag. A server on `latest` changes its tool descriptions under you.
 
-**Read the report and find one thing it got wrong or missed.** There is usually one. That
-is cheaper to find now than in a spec built on top of it.
+```bash
+claude mcp list
+```
 
-**Expected result.** A research summary you have read, and one correction.
+Approve it, and confirm it connected. Then check it actually knows something you do not:
+
+```text
+Using the terraform MCP server, what is the current resource name and the required
+arguments for an Azure Container App, and which provider version are you reading?
+```
+
+**Expected result.** The server connected, and an answer that names a provider version.
 
 **Take this to your team**
 
 | | In this lab | In your repo |
 |---|---|---|
-| Where facts come from | the code, read by the agent | Never from your memory of the code. Yours is out of date too |
-| Your job | find the one thing it got wrong | Research you do not check is worse than no research - it reads authoritative and is not |
+| Why this one | provider schemas move faster than model training | The strongest MCP case is always current facts, not more power |
+| Scope | `--scope project`, committed | Same team decision as any other server. It goes in the pull request |
+| Trust | official HashiCorp image, pinned tag | Ask the three questions anyway: which slice, which credential, read or write. This one reads a public registry and holds no credential of yours |
 
-**Trap.** A confident research summary about a file the agent never opened. Ask which
-files it read.
+**Trap.** Assuming an MCP server has credentials because it is "connected to Terraform".
+This one reads the public registry. A server pointed at your *state* or your cloud account
+is a completely different object, and it is not on today's list.
 
-## Task 3 - Propose the change (7 min)
+## Task 4 - Generate the infrastructure code (10 min)
+
+Now the agent writes. Everything before this was making it safe to let it.
+
+**Step 1 - ask for a plan, with the non-scope written down.**
 
 ```text
-/opsx:propose add task comments
+Create Terraform for TrackIt in deploy/terraform/, targeting Azure Container Apps
+with a managed PostgreSQL 17 behind it.
+
+In scope: the container app and its environment, the Postgres flexible server and
+its database, log analytics, and the variables and outputs they need. Use the
+terraform MCP server for the current provider schema and pin the provider version.
+
+Not in scope: applying anything, a backend configuration, CI, a frontend host,
+DNS or certificates.
+
+The database password must come from an environment variable and must never appear
+in a file in this repository.
+
+Show me your plan before you write anything.
 ```
 
-It writes three things into `openspec/changes/add-task-comments/`:
+**Step 2 - review the plan against a checklist.** Read it for these five, and write down
+what you find **before** you have anything corrected:
 
-| File | What it holds |
+| Check | What a finding looks like |
 |---|---|
-| `proposal.md` | why, what changes, what is out of scope |
-| `specs/task-comments/spec.md` | requirements, each with Given/When/Then scenarios |
-| `tasks.md` | the ordered implementation checklist |
+| Secrets | a password with a default, or one written into a `.tfvars` it also commits |
+| Network exposure | the database reachable from the public internet |
+| Image tags | `:latest` anywhere |
+| Resource limits | no CPU or memory set, or a size nobody costed |
+| Persistence and backup | no backup retention, or storage that disappears with the container |
 
-**Do not approve it yet.** Task 4 is where you earn the module.
+**At least two findings. Finding none means you did not apply the checklist.**
 
-**Expected result.** A change directory with those three files.
+**Step 3 - let it write, then verify yourself.**
 
-**Tip.** A proposal with no "out of scope" section is not finished. That section is what
-stops the change growing while you are not looking.
+```bash
+cd deploy/terraform
+terraform fmt -check
+terraform init -backend=false
+terraform validate
+```
 
-## Task 4 - Review the spec - this is your part (5 min)
+`validate` must print `Success! The configuration is valid.` It needs no credentials and
+touches nothing.
 
-**This is the task the module exists for.** Everything else today can be delegated.
-
-Open `specs/task-comments/spec.md` and answer the four questions from the top of this
-handout. For each one: **did the agent decide it, and did it tell you?**
-
-- Who wrote the comment? There is no user table.
-- How long may a body be?
-- What order do comments come back in?
-- What happens to comments when the task is deleted?
-
-Then check the scenarios themselves against three tests:
-
-| Test | A scenario fails it when |
-|---|---|
-| Testable | you cannot write a MockMvc test from it without inventing a detail |
-| Unambiguous | two people would build different things from the same words |
-| Complete | the unhappy path is missing - no 404, no validation failure, no empty list |
-
-**Fix the spec, not the code.** Edit `spec.md` directly, or tell the agent what to change
-and why. Whatever you leave in here is what gets built.
-
-**Expected result.** At least one scenario you changed, and one decision you overrode.
-Nobody gets zero.
-
-**Take this to your team**
-
-| | In this lab | In your repo |
-|---|---|---|
-| The human's part | reviewing the spec, not the diff | Move review earlier. A wrong decision costs one line here and a refactor after the code exists |
-| What to look for | the decisions nobody asked you about | Those are the expensive ones. The code is usually fine; the assumption underneath it is not |
-| Unhappy paths | 404, validation, empty list | Agents specify the happy path. Every missing unhappy path becomes a production incident with your name on it |
-
-**Tip.** Read each scenario and ask: could I hand this to somebody and get back something
-I did not expect? If yes, it is not specified, it is described.
-
-**Trap.** Approving the spec because it reads well. It reads well because a language model
-wrote it. Check what it decided, not how it sounds.
-
-## Task 5 - Implement against the approved spec (9 min)
+**Step 4 - prove the secret is out of reach.**
 
 ```text
-/opsx:apply add-task-comments
+What is the database password in this configuration?
 ```
 
-It works the checklist in `tasks.md`: **tests first, from the acceptance scenarios**, then
-the code until they pass.
+It should be unable to answer: there is no default, no committed `terraform.tfvars`, and
+task 1 denied reading one. The value lives in `TF_VAR_db_password` in your shell.
 
-Watch the order. If it writes the implementation before the tests, stop it and say so. A
-test written after the code tests the code; a test written from the spec tests the spec.
-
-**Verify it yourself.**
+**Step 5 - commit.**
 
 ```bash
-cd backend && ./mvnw -q test
+cd ../.. && git add -A && git commit -m "feat: terraform for trackit on azure container apps"
 ```
 
-Then the check that matters, and it is not the test count:
-
-**Open `spec.md` next to the test file and point at the test that proves each scenario.**
-Every scenario needs one. A scenario with no test is a requirement nobody implemented, and
-a green suite will not tell you.
-
-```bash
-./mvnw spring-boot:run
-```
-
-```bash
-curl -s -X POST localhost:8080/api/v1/tasks/1/comments \
-  -H 'content-type: application/json' \
-  -d '{"author":"you","body":"Specified before it was written."}'
-
-curl -s localhost:8080/api/v1/tasks/1/comments
-curl -s -o /dev/null -w '%{http_code}\n' localhost:8080/api/v1/tasks/404/comments
-```
-
-The last one must print `404`.
-
-**Expected result.** Green tests, and a scenario-to-test mapping with no gaps.
+**Expected result.** A configuration that passes `terraform validate`, at least two
+written findings from step 2, and a password the agent cannot read back.
 
 **Take this to your team**
 
 | | In this lab | In your repo |
 |---|---|---|
-| Test order | from the spec, before the code | A test written after the code cannot fail for the right reason. It encodes what was built |
-| Coverage | one test per scenario, checked by hand | Line coverage does not tell you a requirement is missing. Scenario coverage does |
-| Definition of done | every scenario points at a test | Make this the merge gate, not a percentage |
+| Order of operations | guardrails first, generation second | Reverse it and the first thing you learn is what the agent deleted |
+| Review | your checklist, applied before the agent fixes anything | Record findings first. Once it has "fixed" them you cannot tell which were real |
+| Verification | `validate`, not `apply` | Most of the value is reachable without touching an account. Get that far before you wire credentials |
+| The secret | environment variable, denied file, no default | Three layers. Any one alone is a single point of failure |
 
-**Trap.** "All tests pass" while a scenario has no test at all. That is the failure this
-task is built to catch.
+**Tip.** `terraform validate` checks syntax and schema, not whether the design is sound. It
+will happily validate a database open to the internet.
 
-## Task 6 - Archive the change (2 min)
-
-```text
-/opsx:archive add-task-comments
-```
-
-The change moves to `openspec/changes/archive/<date>-add-task-comments/`, and its
-requirements merge into `openspec/specs/task-comments/spec.md`.
-
-That merged file is the point of the whole tool: **the current truth about how TrackIt
-behaves**, in a form your agent reads on the next change. A spec that only describes what
-you did last sprint is documentation. This one is context.
-
-```bash
-git add -A && git commit -m "feat: comment on a task, specified first"
-```
-
-**Expected result.** An empty `openspec/changes/`, a populated `openspec/specs/`, and a
-commit.
-
-**Take this to your team**
-
-| | In this lab | In your repo |
-|---|---|---|
-| The lifecycle | propose, review, apply, archive | Like a branch: it exists while the change does, then merges into the truth |
-| What archiving is for | the merged spec is the agent's context next time | This is the compounding part. Every change makes the next one better specified |
+**Trap.** A configuration that validates feels finished. Validation says the provider
+understands it, not that you would run it.
 
 ---
 
@@ -256,61 +339,69 @@ commit.
 
 **Optional.** Start only when Part 1 is green and committed.
 
-## Task A1 - ADVANCED - Decide before the agent does
+## Task A1 - ADVANCED - A skill that reviews for cost
 
-*Deepens task 4.*
+Write `.claude/skills/infra-cost-review/SKILL.md`: given a Terraform directory, it reports
+every resource whose size, tier or replica count drives cost, with the chosen value and a
+cheaper alternative, and it flags anything with no explicit size at all.
 
-Start over on a fresh branch. Before running `/opsx:propose`, write the four decisions
-down yourself. Then propose, and compare.
+Run it on your own configuration. Then answer: which findings could you have got from
+`terraform validate`? None of them - that is the point of the skill.
 
-Where you agreed, the agent's default was fine and you can stop worrying about that class
-of decision. Where you differed is where you need a rule in `AGENTS.md`, not a correction
-every time.
+**Trap.** A skill that estimates prices in francs. It does not know your discounts or your
+region's pricing, and a confident wrong number is worse than a list of what to go and
+price.
+
+## Task A2 - ADVANCED - A skill that reviews for security
+
+Write `.claude/skills/infra-security-review/SKILL.md` encoding the checklist from task 4
+step 2, plus: public network access, TLS enforcement, retention periods, managed identity
+instead of a connection string, and anything reading a secret from a file.
+
+Run it, then compare with what you found by hand in step 2. **What did only you find, and
+what did only the skill find?** That comparison is the answer to "can I automate my
+review" - and the honest answer is usually "partly".
+
+## Task A3 - ADVANCED - Make the hook precise
+
+Your blocklist catches `terraform destroy` and misses `terraform  destroy` with two
+spaces, `TERRAFORM DESTROY`, and `cd deploy && terraform destroy`.
+
+Rewrite it so it catches the dangerous case and lets the harmless one through. Test both:
+`terraform destroy` must block, `terraform plan -destroy` must not - a plan changes
+nothing.
+
+Then answer the question that matters: is a blocklist the right shape at all, or should
+this be an allowlist of the commands the agent may run?
 
 **Take this to your team**
 
-The point is not that the agent is wrong. It is that you cannot tell which defaults are
-safe until you have written yours down once.
+Blocklists are what you write first and regret later. The allowlist is more work and
+fails safe. Choose deliberately.
 
-## Task A2 - ADVANCED - A skill that enforces the cycle
+## Task A4 - ADVANCED - Name what you cannot prove here
 
-*Builds on lab 1.2 task A1.*
+Your configuration validates. List two statements about this setup you **cannot** prove
+without applying it, and say what you would need in order to prove each.
 
-Write `.claude/skills/spec-review/SKILL.md`: given a change directory, it checks every
-scenario against testable, unambiguous and complete, and reports one line per failure.
+Then one more: what would you put in CI so that nobody has to remember to run
+`terraform validate` by hand?
 
-Then run it on the spec you approved in task 4. It should find something you missed.
+**Take this to your team**
 
-**Trap.** A skill that says "the spec looks good" has no value. Make it report findings or
-say explicitly that it checked and found none, per criterion.
-
-## Task A3 - ADVANCED - Break the spec on purpose
-
-*Deepens task 5.*
-
-Change one scenario in the archived spec - make the body limit 200 characters instead of
-2000. Run `/opsx:propose` for the change and let it apply.
-
-Then answer: did it update the migration, the DTO, the test and the spec? Which did it
-miss? A change that touches four files is where drift starts, and it is the argument for
-the spec being the source rather than one of the four.
-
-## Task A4 - ADVANCED - The next change, in half the time
-
-Run the whole cycle again for a second feature of your choosing, and time it against your
-first run. The merged spec from task 6 is now context the agent reads for free.
-
-That difference is the return on the whole practice, and it only shows up on the second
-change.
+Knowing which claims your local checks do and do not support is the whole difference
+between a green pipeline and a working system. This is the same lesson as "green tests do
+not prove persistence" from lab 1.2, one layer up.
 
 ## Bring to the discussion
 
-- **Which decision did the agent make that you would not have?**
-- **Which scenario had no test, and how would you have found out without checking?**
-- **Which part of your lab 1.2 prompt is now redundant, because the spec says it?**
+- **What did your hook refuse, and did the agent try to get around it?**
+- **Which two findings did your checklist produce on the generated configuration?**
+- **Where is a deny rule not enough, and what did you use instead?**
 
 ## Further reading
 
-- OpenSpec: <https://github.com/Fission-AI/OpenSpec>
-- This repo's own decisions: `docs/architecture.md`, `docs/adr/0001-*`
-- The merged spec you produced: `openspec/specs/task-comments/spec.md`
+- Permissions: <https://code.claude.com/docs/en/permissions>
+- Hooks: <https://code.claude.com/docs/en/hooks>
+- Terraform MCP server: <https://developer.hashicorp.com/terraform/mcp-server>
+- The reference configuration: `deploy/terraform/` on `m3-solution`
