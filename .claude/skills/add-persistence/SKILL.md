@@ -51,9 +51,11 @@ Adding a dependency needs the user's agreement first. Say which ones you need an
    `@Import(<Thing>Service.class)` with a `@MockitoBean` field and stub the calls the
    test needs.
 
-8. **Verify.** `cd backend && ./mvnw -q test` must end in `BUILD SUCCESS`. Then say
-   plainly that green tests do not prove persistence, and that the proof is a restart
-   of the application with the row still present.
+8. **Verify.** Run `cd backend && ./mvnw test` and expect `BUILD SUCCESS`. Do not add
+   `-q`: it hides everything at INFO level, and the build result is an INFO line, so a
+   quiet run prints no `BUILD SUCCESS` to report. Then say plainly that green tests do
+   not prove persistence, and that the proof is a restart of the application with the
+   row still present.
 
 ## Rules
 
