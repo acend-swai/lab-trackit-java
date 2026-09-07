@@ -1,223 +1,266 @@
-# Lab 1.1: your first controlled loop
+# Lab 1.1: Your first controlled loop
 
 | Info | Detail |
 |---|---|
 | Module | M1.1 - Agentic loop, harness, models |
-| Duration | 40 minutes, plus 5 minutes of discussion before the break |
-| Harness | Claude Code. For task 4 also OpenCode against OpenRouter |
-| Stack | Java 21, Spring Boot 3.5, Maven wrapper. Your own stack works too - every reference artefact is Java |
+| Duration | 40 minutes |
+| Harness | Claude Code, and OpenCode against OpenRouter in task 4 |
+| Stack | Java 21, Spring Boot 3.5, Maven wrapper. Your own stack works too |
 | Repo | `lab-trackit-java`, branch `m1-1-start` |
 | Target state | create and list a task, in memory (branch `m1-1-solution`) |
 
-**The lab has two parts.**
+TrackIt is a small task management tool. A task has a title, a project and a status. In
+this lab we are going to build the task API, run the same job against different setups,
+and compare what comes back.
 
-**Part 1 is for everyone.** Four tasks, guided, with the commands in this handout. Work
-through it in order.
+`m1-1-start` ships one endpoint, `GET /api/v1/health`. That is the pattern the agent
+copies, so read it before you generate anything.
 
-**Part 2 is advanced.** Start it only when Part 1 runs green. It is marked
-**ADVANCED** on every task and it is optional - nothing in the afternoon depends on it.
+**Part 1 is for everyone.** Setup plus four tasks, about 36 minutes. Task 4 has to happen:
+it fills the comparison sheet the module discussion runs on.
 
-Task 4 in Part 1 has to happen. The discussion after the lab is five minutes long and
-runs on your comparison rows, so bring them filled in.
+**Part 2 is advanced and optional.** Start it when Part 1 is green. Nothing later in the
+day depends on it.
 
-## What you build
+## Where you start
 
-TrackIt is a small task management tool. A task has a title, a project and a status.
-Today it holds tasks in memory. Persistence comes in M2, the container in M3.
+Do this before task 1. It takes about three minutes.
 
-`m1-1-start` has one endpoint, `GET /api/v1/health`. That is your reference pattern -
-read it before you have anything generated. The branch also ships `AGENTS.md` and its
-one-line `CLAUDE.md`: task 1 compares a run without that context against a run with it,
-task 2 writes one from scratch.
+The repo is public, so you need no account and no token:
 
-## Standard commands you use today
+```bash
+git clone -b m1-1-start https://github.com/acend-swai/lab-trackit-java.git trackit
+cd trackit
+```
 
-Use the built-in commands rather than doing things by hand. Each one is a feature worth
-knowing on its own.
+Clone in full. Task 3 compares your work against `origin/m1-1-solution`, and lab 2 falls
+back to `origin/m2-start`.
 
-| Command | What it does | Details |
-|---|---|---|
-| `/init` | Scans the repo and writes a `CLAUDE.md` describing it. Used in task 2 | [init](https://code.claude.com/docs/en/commands) |
-| `/cost` | Shows what the session has cost so far. Alias for `/usage` | [costs](https://code.claude.com/docs/en/costs) |
-| `/context` | Shows what fills the context window right now | [commands](https://code.claude.com/docs/en/commands) |
-| `/compact` | Summarises the session and frees the window | [commands](https://code.claude.com/docs/en/commands) |
-| `/permissions` | Allow, ask and deny rules per tool, in a dialog | [permissions](https://code.claude.com/docs/en/permissions) |
-| `/model` | Switches the Claude Code model mid-session. Task 1 | [model config](https://code.claude.com/docs/en/model-config) |
-| `/models` | In OpenCode: switch the model at runtime. Task 1 | [opencode config](https://opencode.ai/docs/config/) |
+Open the folder in VS Code and choose **Reopen in Container**. The devcontainer brings
+Java 21, both CLIs and the tooling for the rest of the day.
 
-A slash command is typed into the same prompt as your task text. Most of them queue behind
-the turn Claude is working on; `/model`, `/effort` and `/fast` run immediately and take
-effect from the next request.
+Copy the `.env` from your mail into the repo root, then check the machine:
 
-`/help` lists everything your version has. Versions differ - trust `/help` over any
-handout, including this one.
+```bash
+cp <the file from your mail> .env
+set -a; source .env; set +a     # only needed outside the devcontainer
+./verify.sh
+```
 
-## Driving the session
+Every line reads `[OK]`. The health check at the end reads `[MISSING]`, because it only
+answers while the application runs. `OPENROUTER_API_KEY not exported` means you skipped the
+`source` line. In the devcontainer, every new terminal sources `.env` for you.
 
-Four keys carry most of the day. The first one is the important one: you are meant to
-interrupt a run that is going somewhere you did not ask for, not sit and watch it finish.
+Mark your starting point, so you can always get back to it:
+
+```bash
+git commit --allow-empty -m "chore: start of my workshop repo"
+```
+
+### Make it yours
+
+**This clone is yours.** Work in it, commit into it, break it. Nothing you do reaches the
+workshop repo. To keep the work after today, add a remote of your own and push there:
+
+```bash
+git remote add mine <your repo>
+git push -u mine m1-1-start
+```
+
+**Bringing your own stack?** Everything in this lab except the Maven commands works on any
+repo you bring. Do the same setup in your own project: check that the toolchain is there,
+that the tests run, and commit a clean starting point. You will get more out of the day
+comparing models on code you know.
+
+**Note:** Claude Code talks to the Anthropic API directly, with no gateway in front of it.
+If you have your own licence, log in with your account and leave `ANTHROPIC_API_KEY` empty.
+A key set there overrides your subscription.
+
+## What you record today
+
+Two things travel with you out of this lab. Set them up now, before you start task 1.
+
+**1. The comparison sheet.** Copy this into a scratch file. You fill one column per model
+you run today, two in task 1 and two in task 4. The five-minute discussion at the end of
+the module runs on it, so bring it filled in.
+
+| Criterion | Model 1 | Model 2 | Model 3 | Model 4 |
+|---|---|---|---|---|
+| Model name | | | | |
+| Turns until the tests passed | | | | |
+| Followed `AGENTS.md`? | | | | |
+| Invented dependencies | | | | |
+| Where it broke: tool choice, context, error reading, stopping | | | | |
+| Cost of the run | | | | |
+| Did you feel in control? | | | | |
+
+**2. One moment where the agent got away from you.** A file it touched, a dependency it
+added, a step it skipped, a claim it made without checking. One line, written down when it
+happens. The transfer discussion in M4.2 comes back to it, and it is the most useful thing
+you take back to your own team.
+
+## Commands you use today
+
+| Command | What it does |
+|---|---|
+| `/init` | Scans the repo and writes a `CLAUDE.md` describing it |
+| `/cost` | What the session has cost so far. Alias for `/usage` |
+| `/context` | What fills the context window right now |
+| `/compact` | Summarises the session and frees the window |
+| `/permissions` | Allow, ask and deny rules per tool |
+| `/model` | Switches the Claude Code model mid-session |
+| `/models` | Switches the model in OpenCode |
+
+Type a slash command into the normal prompt. Most queue behind the running turn;
+`/model`, `/effort` and `/fast` take effect on the next request.
+
+**Tip:** `/help` lists what your version has. Versions differ, so trust `/help` over this
+handout. Reference: [Claude Code commands](https://code.claude.com/docs/en/commands)
+
+## Keys you need
 
 | Key | What it does |
 |---|---|
-| `Esc` | Interrupts Claude mid-turn and keeps the work done so far. On a dialog it closes it, on a permission prompt it declines |
-| `Esc` `Esc` | On an empty prompt, opens the rewind menu to restore an earlier point. With text in the prompt, clears the draft |
+| `Esc` | Interrupts Claude mid-turn and keeps the work so far. Closes a dialog, declines a permission prompt |
+| `Esc` `Esc` | On an empty prompt, opens the rewind menu. With text, clears the draft |
 | `Shift+Tab` | Cycles the permission mode: manual, accept edits, plan |
 | `Ctrl+R` | Searches your command history |
 
-`Ctrl+C` also interrupts; pressed twice on an empty prompt it exits Claude Code.
+Interrupt a run that goes somewhere you did not ask for. `Ctrl+C` also interrupts, and
+twice on an empty prompt it exits Claude Code.
 
 ---
 
 # Part 1 - Standard
 
-Everyone works through this part. About 36 of the 40 minutes.
+## Task 1: Run the same job on different setups (7 min)
 
-## Task 1 - The same task, three times (10 min)
+We are going to run one job twice: once with no context file at all, and once on an
+open-weight model. Task 3 runs it properly with your context file in place, so by the end
+of the morning you have compared both axes, grounding and model size.
 
-One task, run three times, so that only one thing changes per run: how much context the
-agent has, and how much model is behind the loop.
+### Step 1: Run it without grounding
 
-**Step 1 - set up and check.** The repo is public, so the clone needs no account and no
-token:
-
-```bash
-git clone -b m1-1-start https://github.com/acend-swai/lab-trackit-java.git trackit
-cd trackit
-cp <the file from your mail> .env     # your personal keys
-set -a; source .env; set +a           # OpenCode reads the environment, not the file
-./verify.sh
-git commit --allow-empty -m "chore: start of my workshop repo"
-```
-
-Clone it in full - no `--depth`. Task 3 compares your result against
-`origin/m1-1-solution`, and lab 2 falls back to `origin/m2-start`; a shallow clone has
-neither. The clone you now have is yours: work on it, commit into it, and nothing you do
-reaches the workshop repo. If you want to keep your work after today, add a remote of your
-own with `git remote add mine <your repo>` and push there.
-
-Every line must read `[OK]`, except the health check at the very end - that answers only
-while the application runs, so `[MISSING]` there is expected now. If
-`OPENROUTER_API_KEY not exported` appears, you skipped the `source` line. In the
-devcontainer every new terminal sources `.env` for you.
-
-Claude Code talks to the Anthropic API directly, with no gateway in front of it. If you
-have your own licence, log in with your account and leave `ANTHROPIC_API_KEY` empty - a
-key set there overrides your subscription.
-
-**The task, identical in all three runs.** Paste it verbatim each time:
-
-```text
-Add two endpoints to the task API: create a task, and list all tasks. Keep the tasks in
-memory. Follow the patterns this project already uses, and make sure the tests pass.
-```
-
-**Step 2 - run it without grounding.** Move the context file aside, so the agent works
-from the code alone:
+Move the context file aside so the agent works from the code alone:
 
 ```bash
 mv AGENTS.md AGENTS.md.off
 claude
 ```
 
-Give it the task. Watch where it guesses: package layout, the `/api/v1` prefix,
-constructor injection, whether it writes a test at all. Do not correct it. When it
-reports done, note what it produced and throw the run away:
+Paste this job. Use the same text in every run, otherwise the comparison is worthless:
 
-```bash
-git checkout -- . && git clean -fd
+```text
+Add two endpoints to the task API: create a task, and list all tasks. Keep the tasks in
+memory. Follow the patterns this project already uses, and make sure the tests pass.
 ```
 
-**Step 3 - run it with grounding.** Put the context file back and start a fresh session:
+Watch where it guesses: package layout, the `/api/v1` prefix, constructor injection,
+whether it writes a test at all. Write those guesses down, do not correct them.
+
+Then put the context file back and throw the run away. Restore it first: `git clean -fd`
+removes untracked files, and `AGENTS.md.off` is one of them.
 
 ```bash
-mv AGENTS.md.off AGENTS.md
-claude
+mv AGENTS.md.off AGENTS.md            # the context file is back
+git checkout -- . && git clean -fd    # the generated code is gone
 ```
 
 `AGENTS.md` holds the stack, the layering, the coding standards, the git rules and the
 entity model. `CLAUDE.md` is one line, `@AGENTS.md`, so Claude Code and OpenCode read the
-same file. Give it the same task, unchanged.
+same file. Task 3 runs the same job with all of that in place, and the difference against
+what you just wrote down is the point.
 
-**Expected result.** The grounded run lands on `web/`, `service/`, `domain/` and `dto/`,
-uses `@RequestMapping("/api/v1/...")`, injects through the constructor and writes a
-`@WebMvcTest`. Keep this run - it is your F1 state.
+### Step 2: Run it on an open-weight model
 
-**Step 4 - run it on an open-weight model.** Same task, same prompt, through OpenCode
-against OpenRouter. Two models, one small and one large, so the only variable is how much
-model is behind the loop:
+Same job through OpenCode against OpenRouter, once per model:
 
 ```bash
 opencode
 ```
 
-Then `/models`, and run the task once per model:
+Type `/models` and pick:
 
 | Model id | What it is | 4-bit footprint |
 |---|---|---|
 | `qwen/qwen3-coder-30b-a3b-instruct` | 30B MoE, the small one | 16 GB, measured on our hardware |
 | `qwen/qwen3-coder-next` | 80B MoE, 3B active, 262k context | about 46 GB |
 
-`opencode.json` in the repo root lists these and reads your key from the environment.
-Others are in the README if you have time - the last three do not fit on a workstation,
-which is the whole point when the repository may not leave the building.
+`opencode.json` in the repo root lists both and reads your key from the environment.
 
-**The question is not which answer is prettier. It is where the small model breaks:**
+Do not judge which answer is prettier. Find where the small model breaks:
 
-- tool selection - did it pick the right tool for the step?
-- sticking to `AGENTS.md` - or did it drift from the standards?
-- reading its own error output - did it act on the failure, or repeat itself?
-- knowing when it is done - did it stop while red, or never stop?
+- Tool selection: did it pick the right tool for the step?
+- `AGENTS.md`: did it stick to the standards or drift?
+- Error output: did it act on the failure or repeat itself?
+- Stopping: did it stop while red, or never stop?
 
-Write one line per model on your comparison sheet. The module discussion runs on these
-rows.
+Fill in a column on the comparison sheet for each of the two models.
 
-**Take this to your team**
+**Take home:** Run grounded against ungrounded on your own repo before you judge any
+model. Most "the model is bad" verdicts are missing context, not missing capability.
 
-| | In this lab | In your repo |
-|---|---|---|
-| Pre-check | `./verify.sh` checks Java, both CLIs, the key and the build | Write one for your own repo and check the *agent* prerequisites, not just the app. Run it in onboarding and in CI |
-| Key handling | `.env` in the repo root, capped, expires tonight | The key belongs in your secret store. `.env` goes into `.gitignore` in the first commit, never later |
-| The comparison | grounded against ungrounded, on the same prompt | Do this once with your own repo before you judge any model. Most "the model is bad" verdicts are missing context, not missing capability |
-| Model choice | one small, one large, same family | Judge on iterations to green, not on wall-clock time. The small one is the interesting one - it shows you which step your task actually depends on |
+**Tip:** A pre-check like `verify.sh` that names which line failed turns a 20-minute
+debugging conversation into one sentence. Write one for your repo and check the agent
+prerequisites, not just the app.
 
-**Tip.** The `[OK]` line format costs nothing and pays for itself the first time someone
-says "it does not work". A pre-check that names which line failed turns a 20-minute
-debugging conversation into one sentence.
-
-**Reference.** [Claude Code commands](https://code.claude.com/docs/en/commands) ·
-[OpenCode configuration](https://opencode.ai/docs/config/) ·
+References: [OpenCode configuration](https://opencode.ai/docs/config/) ·
 [OpenRouter with OpenCode](https://openrouter.ai/docs/cookbook/coding-agents/opencode-integration)
 
-## Task 2 - Generate the context file, then sharpen it (6 min)
+## Task 2: Write the context file yourself (6 min)
 
-The context file is the strongest control you have over the loop. There is deliberately
-none on this branch. Do not write it from scratch - let Claude Code write the first draft
-and then turn it into rules.
+Task 1 used the `AGENTS.md` that ships on this branch. **Nobody hands you that file in your
+own repo**, so this is the task where you produce one: generate a draft with `/init`, put it
+where every tool will find it, and turn the description into rules.
 
-**Step 1 - generate it.**
+### Step 1: Put the shipped file aside
+
+You compare against it in step 4, so keep it. `CLAUDE.md` goes too, it is only a pointer at
+the file you just moved:
+
+```bash
+mv AGENTS.md AGENTS.reference.md
+rm CLAUDE.md
+```
+
+The repo now has no context file, which is the state your own repo is in today.
+
+### Step 2: Generate the draft
 
 ```text
 /init
 ```
 
-`/init` reads the repo and writes a `CLAUDE.md` that describes what it found: the stack,
-the layout, how to build and test. That is a description, not a set of rules - which is
-exactly the gap you close in step 3.
+`/init` reads the repo and writes a `CLAUDE.md` with the stack, the layout, and how to build
+and test. That is a description of what it found, not a set of rules.
 
-**Step 2 - adopt the repo convention.** This project keeps its rules in `AGENTS.md` and
-leaves `CLAUDE.md` as a one-line pointer, so every tool in the room reads the same file.
+### Step 3: Move it to AGENTS.md and leave a pointer
+
+Claude Code reads `CLAUDE.md`, Copilot reads `copilot-instructions.md`, OpenCode reads
+`AGENTS.md`. They are the same idea under three names, and keeping three copies means three
+files drifting apart. This project keeps the rules in `AGENTS.md` and makes `CLAUDE.md` a
+one-line pointer at it, so every tool in the room reads the same file and there is one file
+to review:
 
 ```bash
 mv CLAUDE.md AGENTS.md
 printf '@AGENTS.md\n' > CLAUDE.md
 ```
 
-`copilot-instructions.md`, `CLAUDE.md` and `AGENTS.md` are the same idea in three tools.
-Pick one per repo and point the others at it.
+Check it:
 
-**Step 3 - turn the description into rules.** Read what `/init` produced and add what it
-cannot know. These three blocks are the minimum, because each one changes what the agent
-does:
+```bash
+cat CLAUDE.md
+```
+
+```text
+@AGENTS.md
+```
+
+### Step 4: Turn the description into rules
+
+Add what `/init` cannot know. These three blocks are the minimum, because each one changes
+what the agent does:
 
 ```markdown
 ## Coding Standards
@@ -238,48 +281,58 @@ does:
 - No force-push
 ```
 
-**Step 4 - check that it took effect.** Ask something the agent can only answer from the
-file:
+Now compare with the file you set aside:
+
+```bash
+diff AGENTS.reference.md AGENTS.md
+```
+
+Take anything from it that would change what the agent does, ignore the rest, then drop it:
+
+```bash
+rm AGENTS.reference.md
+```
+
+### Step 5: Check that it took effect
+
+Ask something the agent can only answer from the file:
 
 ```text
 Which test naming convention does this project use, and what do you have to ask me
 about before you do it?
 ```
 
-It should name the sentence-style test names and the dependency rule without being told.
+It names the sentence-style test names and the dependency rule. If it does not, the file is
+in the wrong place or the session started before you wrote it. Restart and ask again.
 
-*If it does not:* the file is in the wrong place, or the session started before you wrote
-it. Restart the session and ask again.
+**Take home:** Run `/init` once per repo to get the draft, then curate it by hand. Only keep
+rules the agent cannot infer: your conventions, forbidden paths, the dependency rule, your
+git rules. It is configuration, so commit it and review it in pull requests like code.
 
-**Take this to your team**
-
-| | In this lab | In your repo |
-|---|---|---|
-| How it starts | `/init` writes the first draft | Same - run it once per repo, then curate. Never hand-write from nothing |
-| What goes in | four rule blocks that change behaviour | Only rules the agent cannot infer: your conventions, forbidden paths, the dependency rule, your git rules |
-| Where it lives | committed at the repo root | Committed and reviewed in pull requests like code. It is configuration, not a note |
-| Which file | `AGENTS.md` plus a `CLAUDE.md` pointer | Pick one name per repo and point the others at it, so Copilot, Claude Code and the rest read the same rules |
-
-**Tip.** The test for every line: what would the agent do differently because of it? A
-line that fails that test is costing you tokens on every single turn. Check the size with
+**Tip:** Test every line with one question: what would the agent do differently because of
+it? A line that fails that test costs you tokens on every turn. Check the size with
 `/context`.
 
-**Trap.** Teams write a 400-line context file, feel organised, and pay for it on every
-request. Short and enforced beats long and ignored.
+**Trap:** A 400-line context file feels organised and gets ignored. Short and enforced beats
+long and unread.
 
-**Reference.** [Claude Code commands](https://code.claude.com/docs/en/commands) ·
-[skills and context](https://code.claude.com/docs/en/skills)
+Reference: [skills and context](https://code.claude.com/docs/en/skills)
 
-## Task 3 - The inner loop: plan, build, test, run, verify (10 min)
+## Task 3: Run the inner loop end to end (10 min)
 
-Have the task API built: create a task and list all tasks. In memory, no database.
+Now we build the task API: create a task and list all tasks, in memory. Work the loop one
+stage at a time: **plan, build, test, run, verify**. An agent that is never made to close the
+loop reports done on red.
 
-This is the full inner loop, one stage at a time: **plan, build, test, run, verify**. Work
-them in order and do not skip the two that feel optional. The order is the lesson - an
-agent that is never made to close the loop reports done on red.
+### Step 1: Plan
 
-**1 Plan.** Write the task with an explicit non-scope, and have it plan before it edits.
-Start from this text:
+Start a session in the repo root:
+
+```bash
+claude
+```
+
+Type this at the prompt. It names the scope, the non-scope, and asks for a plan first:
 
 ```text
 Add two endpoints to trackit, following the pattern in HealthController:
@@ -295,35 +348,53 @@ Not in scope: a database, a frontend, authentication, updating or deleting tasks
 Show me your plan before you change any file.
 ```
 
-Read the plan before you approve it. Three things: does it stay in scope, does it add a
-dependency, does it follow the layering in your context file?
+Read the plan for three things: does it stay in scope, does it add a dependency, does it
+follow the layering in your context file?
 
-**2 Build.** Approve the run and let it write the code and the tests. Do not hand-patch
-while it works - a correction mid-run costs you the ability to judge the result.
+### Step 2: Build
 
-**3 Test.** The tests are part of the build, not a favour afterwards:
+Approve the plan by typing this. Do not just press enter, name what you are approving:
+
+```text
+The plan is fine. Implement exactly that, and stop when ./mvnw test passes.
+```
+
+Do not hand-patch while it works. A correction mid-run costs you the ability to judge the
+result.
+
+### Step 3: Test
+
+**You run the tests, not the agent.** Open a second terminal and leave the Claude session
+where it is:
 
 ```bash
 cd backend
 ./mvnw -q test
 ```
 
-The output should end in:
+The output ends in:
 
 ```text
 BUILD SUCCESS
 ```
 
-If it is red, hand it back to the agent with the failing output and let it fix on red.
-The task is not done until this line is green.
+If it is red, copy the failing output back into the Claude session:
 
-**4 Run.** A green test suite is not a running application:
+```text
+./mvnw -q test fails. Here is the output, fix it:
+
+<paste the failure here>
+```
+
+### Step 4: Run
+
+A green test suite is not a running application. In the second terminal:
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-In a second terminal:
+In a third terminal:
 
 ```bash
 curl -s -X POST localhost:8080/api/v1/tasks \
@@ -333,17 +404,34 @@ curl -s -X POST localhost:8080/api/v1/tasks \
 curl -s localhost:8080/api/v1/tasks
 ```
 
-Expected output, exactly:
+The output is:
 
 ```json
 201 {"id":1,"title":"Write the context file","project":"trackit","status":"OPEN"}
 [{"id":1,"title":"Write the context file","project":"trackit","status":"OPEN"}]
 ```
 
-**5 Verify.** The output above must match exactly. An empty title must answer `400`. And
-you can explain every file that was created - if you cannot, the loop ran without you.
+Check the validation too. An empty title must answer `400`:
 
-Only now commit:
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:8080/api/v1/tasks \
+  -H 'content-type: application/json' -d '{"title":"","project":"trackit"}'
+```
+
+```text
+400
+```
+
+### Step 5: Verify and commit
+
+The output above matches exactly, and you can explain every file that was created. Ask the
+session if you cannot:
+
+```text
+List every file you created or changed, one line each, and say why each one was needed.
+```
+
+Stop the application with `Ctrl+C`, then commit:
 
 ```bash
 cd .. && git add . && git commit -m "feat: create and list tasks in memory"
@@ -351,55 +439,49 @@ cd .. && git add . && git commit -m "feat: create and list tasks in memory"
 
 That commit is your rollback point for the rest of the day.
 
-**Then look at what it cost.**
+### Step 6: Read the cost and compare
+
+In the Claude session:
 
 ```text
 /cost
 ```
 
-Write the figure down. It is the number the module asks you for: the cost of one full
-loop on your own repo.
+Write the figure into the comparison sheet. That is the cost of one full loop on your own
+repo, and the module asks you for it.
 
-**Write down one moment.** The point where the agent did something you did not ask for: a file it touched, a dependency it added, a step it skipped, or a claim it made without checking. One line is enough. It is yours to keep - the transfer discussion in M4.2 comes back to
-it, and it is the most useful thing you take back to your own team.
-
-Compare against the reference when you are done:
+Then compare against the reference:
 
 ```bash
 git diff origin/m1-1-solution --stat
 ```
 
-A different file list is fine. Check one thing: does your version follow the rules you
-wrote in `AGENTS.md`? If it does not, the rule was too vague - that is the finding, not
-the diff.
+A different file list is fine. Check one thing: does your version follow the rules you wrote
+in `AGENTS.md`? If not, the rule was too vague. That is the finding, not the diff.
 
-**Take this to your team**
+**This is a good moment for the second thing you record.** If the agent did something you
+did not ask for during this loop, write that line down now.
 
-| | In this lab | In your repo |
-|---|---|---|
-| Plan first | "show me your plan before you change any file" | Make it the default for anything non-trivial. For risky changes, the plan is a review artefact, not a formality |
-| Non-scope | written into the task text | Keep it. Naming what is *not* in scope is what stops the agent widening the change |
-| Definition of done | you run the tests yourself | Put "tests run and pass" into the context file, and enforce it in CI. The agent does not do it unasked |
-| Rollback | commit as soon as it is green | Commit cadence per slice. Every green commit is a point you can return to |
-| Cost | `/cost` after the run | Measure one real loop on your own repo before you budget for a team |
+**Take home:** Make "show me your plan before you change any file" the default for anything
+non-trivial, put "tests run and pass" into the context file, and commit as soon as a slice
+is green.
 
-**Tip.** Read the plan for one thing: what does it touch that you did not ask about? That
-is where the scope creep lives, and it is visible in ten seconds.
+**Tip:** Read the plan for one thing: what does it touch that you did not ask about? That is
+where scope creep lives, and it is visible in ten seconds.
 
-**Trap.** Approving plans unread is the most common failure in this room and in every
-room. It feels like speed and it costs a review cycle later.
+**Trap:** Approving plans unread is the most common failure in every room. It feels like
+speed and costs a review cycle later.
 
-**Reference.** [Claude Code commands](https://code.claude.com/docs/en/commands) ·
-[costs and usage](https://code.claude.com/docs/en/costs)
+Reference: [costs and usage](https://code.claude.com/docs/en/costs)
 
-## Task 4 - Same task, second model (10 min)
+## Task 4: Same job, second model (10 min)
 
-Run task 3 again against a different model through the gateway. **Use the same task
-text** - the comparison only holds if the input is identical.
+We run task 3 again against a different model through the gateway. Use the same job text,
+the comparison only holds if the input is identical.
 
-Work on a throwaway copy so your own state stays intact. Clone the branch again rather
-than copying your working tree, so the second run starts from the same place the first one
-did:
+### Step 1: Start from a clean clone
+
+Clone the branch again so the second run starts where the first one did:
 
 ```bash
 cd ..
@@ -411,196 +493,178 @@ opencode
 
 `AGENTS.md` ships on the branch, so there is nothing to copy over.
 
-Switch the model inside opencode and run your task text again:
+### Step 2: Pick the model
 
 ```text
 /models
 ```
 
-The models offered are the ones in `GATEWAY_MODELS` in your `.env`. Do one run against a
-commercial model and one against an open-weights model. Fill one row per model on the
-comparison sheet.
+The models on offer are the ones in `GATEWAY_MODELS` in your `.env`. Take a commercial one
+for this run.
 
-| Criterion | Model A | Model B |
-|---|---|---|
-| Model name | | |
-| Turns until the tests passed | | |
-| Followed `AGENTS.md`? | | |
-| Invented dependencies | | |
-| Cost of the run | | |
-| Did you feel in control? | | |
+### Step 3: Run the same job
 
-**End of Part 1.** If you are here with time left, go to Part 2. If not, stop - you have
-everything the discussion and the afternoon need.
+Paste this, unchanged from task 3:
+
+```text
+Add two endpoints to trackit, following the pattern in HealthController:
+- POST /api/v1/tasks takes title and project, stores the task, returns 201 and the task
+- GET /api/v1/tasks returns all stored tasks
+
+A task has id, title, project and status. New tasks are OPEN.
+
+In scope: an in-memory store in the service layer, a record for the task, a request DTO
+with validation, one MockMvc test per endpoint.
+Not in scope: a database, a frontend, authentication, updating or deleting tasks.
+
+Show me your plan before you change any file.
+```
+
+### Step 4: Check the result yourself
+
+In a second terminal:
+
+```bash
+cd backend && ./mvnw -q test
+```
+
+```text
+BUILD SUCCESS
+```
+
+Count the turns it took to get there and fill in the column.
+
+### Step 5: Do it again on an open-weights model
+
+Throw the run away and repeat steps 2 to 4, this time picking an open-weights model:
+
+```bash
+git checkout -- . && git clean -fd
+opencode
+```
+
+**Take home:** Run this bake-off on your own codebase before you standardise on a model. A
+leaderboard says nothing about your repo. Judge on turns to green and rule adherence, not
+on wall-clock time.
+
+**Tip:** Give the small model mechanical work, a rename, a test stub, a format pass. Keep
+the large one for planning. Decide by task class, not by preference.
+
+**Trap:** "The cheap model is worse" is usually "the cheap model needed a clearer task".
+Note where it broke before you conclude anything.
+
+Reference: [OpenCode providers](https://opencode.ai/docs/providers/)
+
+**End of Part 1.** Go to Part 2 if you have time. If not, stop, you have everything the
+discussion and the afternoon need.
 
 ---
 
-**Take this to your team**
-
-| | In this lab | In your repo |
-|---|---|---|
-| Model choice | two models, same task text | Run the same bake-off on *your* codebase before you standardise. A leaderboard says nothing about your repo |
-| Criteria | the sheet: turns, adherence, invented dependencies, cost | Keep your own sheet. Iterations and rule adherence predict review load; wall-clock time does not |
-| Access | one gateway key per person, budget capped | A gateway instead of individual subscriptions gives you cost visibility, model choice and one place to revoke |
-| Fair comparison | identical prompt for every model | Same rule. The moment someone tunes the prompt per model, the comparison is worthless |
-
-**Tip.** Try the deliberately small model on mechanical work - a rename, a test stub, a
-format pass. Keep the large model for planning. Decide by task class, not by preference.
-
-**Trap.** "The cheap model is worse" is usually "the cheap model needed a clearer task".
-Note *where* it broke before you conclude anything.
-
-**Reference.** [opencode providers](https://opencode.ai/docs/providers/) ·
-[opencode configuration](https://opencode.ai/docs/config/)
-
 # Part 2 - ADVANCED
 
-**Optional.** Start only when Part 1 runs green and your commit is in place. Nothing
-later in the day depends on this part.
+Optional. Start when Part 1 is green and committed. The tasks are independent, pick what
+interests you.
 
-Each task deepens one task from Part 1. Pick the ones that interest you; they are
-independent of each other.
+## Task A1 - ADVANCED: Two harnesses on one repo
 
-## Task A1 - ADVANCED - Two harnesses on one repo
-
-*Deepens task 1.*
-
-Start opencode on the same repo in a second terminal, alongside your Claude Code
-session. Both read the same `.env`.
+*Deepens task 1.* Start OpenCode on the same repo in a second terminal, next to your
+Claude Code session. Both read the same `.env`:
 
 ```bash
 opencode
 ```
 
-Then answer, in one line each: what does each session know that the other does not, and
-what happens if both edit the same file.
+Answer in one line each: what does each session know that the other does not, and what
+happens if both edit the same file?
 
-**Take this to your team**
+**Take home:** One session drives the change you commit, the other explores. What the
+exploring session learns never pollutes the one you ship from.
 
-Two sessions is a habit, not a feature: one drives the change you are committing, the
-other explores or reads. What the exploring session learns never pollutes the one you
-ship from.
+**Trap:** Two agents editing the same file will fight. Give each one its own git worktree
+first, and never point two sessions at the same working tree.
 
-**Trap.** Two agents editing the same file will fight. Give each one its own git worktree
-before you run them in parallel, and never point two sessions at the same working tree.
+## Task A2 - ADVANCED: Derive the context file from the code
 
-**Reference.** [Claude Code commands](https://code.claude.com/docs/en/commands)
-
-## Task A2 - ADVANCED - Derive the context file from the code
-
-*Deepens task 2.*
-
-Throw away the template block from task 2 and write `AGENTS.md` from what is actually
-in the repo. Read `HealthController`, `docs/architecture.md` and
+*Deepens task 2.* Throw away the template from task 2 and write `AGENTS.md` from what is
+actually in the repo. Read `HealthController`, `docs/architecture.md` and
 `docs/adr/0001-layered-spring-architecture.md` first.
 
-Then answer: which of your rules would the agent have followed anyway, and which one
-actually changes its behaviour? That second answer is the only part of a context file
-that earns its tokens.
+Then build the context in layers instead of one file: project rules in `AGENTS.md`, test
+conventions in a second context file inside the test directory, plus a scratch file for
+findings during the session. Run `/context` and say which files are sent on every turn and
+what that costs.
 
-**Also build the context in layers** instead of one file: project rules in `AGENTS.md`,
-test conventions in a second context file inside the test directory, plus a scratch file
-for findings during the session. Then run `/context` and say which of these files
-is sent on every turn, and what that costs you.
+Answer: which of your rules would the agent have followed anyway? Those are the ones to
+delete.
 
-**Take this to your team**
+**Take home:** Layers keep a context file short: repo-wide rules at the root, specifics
+next to the code they govern. In a monorepo that is the difference between a usable file
+and an unreadable one.
 
-Layers are how a context file stays short: repo-wide rules at the root, specifics next to
-the code they govern, and a scratch file for what you learn during a session. In a
-monorepo that is the difference between a usable file and an unreadable one.
+**Trap:** Every layer is sent on every turn. `/context` tells you what you are paying.
 
-**Tip.** The question from this task is the one to ask at every review: which of these
-rules would the agent have followed anyway? Delete those.
+## Task A3 - ADVANCED: Plan and execute, strictly separated
 
-**Trap.** Every layer is sent on every turn. `/context` tells you what you are paying.
+*Deepens task 3.* Do the feature again on a fresh clone:
 
-**Reference.** [skills and context](https://code.claude.com/docs/en/skills) ·
-[Claude Code commands](https://code.claude.com/docs/en/commands)
-
-## Task A3 - ADVANCED - Plan and execute, strictly separated
-
-*Deepens task 3.*
-
-Do the feature again on a fresh clone, and this time:
-
-1. Write the task text yourself, without the template.
+1. Write the job text yourself, without the template.
 2. Have it plan in one turn. Do not let it execute. Judge the plan.
-3. Restrict the tool permissions to what this task actually needs, with
-   `/permissions` - deny what the task does not require.
+3. Restrict the tool permissions with `/permissions`, deny what this task does not need.
 4. Execute in a new turn.
-5. When it is done, ask:
+5. Ask: `Where were you uncertain in this task, and what did you guess?`
 
-```text
-Where were you uncertain in this task, and what did you guess?
-```
+Compare the two runs: did the separation change the result, or only your confidence in it?
 
-Compare the two runs: did the strict separation change the result, or only your
-confidence in it?
+**Take home:** Permission rules belong in the repository, not in each developer's head.
+Committed rules mean a new joiner inherits the deny list on clone. Build the list from
+what went wrong, not from imagination.
 
-**Take this to your team**
+**Trap:** A permission dialog is a prompt, and prompts get clicked through. What actually
+stops a command is a hook that refuses it. That is M3.
 
-Permission rules belong in the repository, not in each developer's head. Committed rules
-mean the whole team gets the same deny list, and a new joiner inherits it on clone.
-
-**Tip.** Build the deny list from what went wrong, not from imagination. One real
-incident is worth twenty hypothetical rules.
-
-**Trap.** A permission dialog is a prompt, and prompts get clicked through. What actually
-stops a command is a hook that refuses it - that is M3, and it is the difference between
-"the agent should not" and "the agent cannot".
-
-**Reference.** [permissions](https://code.claude.com/docs/en/permissions) ·
+References: [permissions](https://code.claude.com/docs/en/permissions) ·
 [hooks](https://code.claude.com/docs/en/hooks) ·
 [subagents](https://code.claude.com/docs/en/sub-agents)
 
-## Task A4 - ADVANCED - Three models, and where the small one breaks
+## Task A4 - ADVANCED: Three models, and where the small one breaks
 
-*Deepens task 4.*
+*Deepens task 4.* Run a third model, deliberately under 20 GB. Then name the step in the
+loop where it breaks and tick one:
 
-Run a third model, deliberately under 20 GB. Then name the step in the loop where it
-breaks. Tick one on the comparison sheet:
+- Tool choice: picked the wrong tool, or none
+- Context adherence: ignored `AGENTS.md`
+- Error reading: misread the test output or the exit code
+- Stopping: stopped while red, or would not stop
 
-- Tool choice - picked the wrong tool, or none
-- Context adherence - ignored `AGENTS.md`
-- Error reading - misread the test output or the exit code
-- Knowing when to stop - stopped while red, or would not stop
+**Take home:** A small local model answers a real question in this room: code that may not
+leave the company. It does not have to match the hosted model, it has to be good enough
+for the task class you give it. Judge on turns to green, not speed.
 
-That answer is worth more than the timings, and it is the one the room wants to hear.
+**Tip:** The measured numbers behind the module slide are in the incratec proof of concept:
+three open-weights models, 14 to 42 GB, all reached green on a bounded task with tests,
+and the 16 GB class was the practical entry point. See
+`research/2026-08-26_opencode-local-models-poc/RESULTS.md`.
+
+**Trap:** The same run showed the task was too easy to rank the three models. Do not
+generalise from one bounded task to "local models are fine", or to the opposite.
 
 ---
 
-**Take this to your team**
-
-A small local model is the answer to a question several people in this room have: code
-that may not leave the company. It does not have to be as good as the hosted model - it
-has to be good enough for the task class you give it.
-
-**Tip.** Judge a local model on iterations to green, not on speed. The measured numbers
-behind the module slide are in the incratec proof-of-concept: three open-weights models,
-14 to 42 GB, all reached green on a bounded task with tests, and the 16 GB class was the
-practical entry point.
-
-**Trap.** The same run showed the task was too easy to rank the three models. Do not
-generalise from one bounded task to "local models are fine" - or to the opposite.
-
-**Reference.** [opencode providers](https://opencode.ai/docs/providers/) ·
-incratec measurement, `research/2026-08-26_opencode-local-models-poc/RESULTS.md`
-
 ## Bring to the discussion
 
-Five minutes, one question, so have your answer ready in a sentence:
+Five minutes, one question, so have the answer ready in a sentence:
 
 - **What did the smaller model do differently, and where exactly did it break?**
 
-Three more are worth answering for yourself. They come back in M3 and in the transfer
-discussion after lunch:
+Three more are worth answering for yourself. They come back in M3 and after lunch:
 
 - The point where your loop got away from you
 - Whether you approved a plan you had not really read
-- Whether you have code that must not go to a hosted model, and what you do today
+- Whether you have code that must not go to a hosted model, and what you do about it today
 
 ## Further reading
 
-- Claude Code settings and context files: <https://code.claude.com/docs/en/settings>
-- opencode configuration and model switching: <https://opencode.ai/docs/config/>
-- This repo's own decisions: `docs/architecture.md`, `docs/adr/0001-*`
+- Claude Code settings: <https://code.claude.com/docs/en/settings>
+- Claude Code commands: <https://code.claude.com/docs/en/commands>
+- OpenCode configuration: <https://opencode.ai/docs/config/>
+- This repo's decisions: `docs/architecture.md`, `docs/adr/0001-*`
