@@ -1,15 +1,15 @@
 # Architecture
 
-Spring Boot 3.5, Java 21, Maven. One module, layered by responsibility. No database
-until M2, no frontend in this line.
+Spring Boot 3.5, Java 21, Maven for the backend. Vue 3, Vite and TypeScript for the
+frontend. PostgreSQL 17 for storage. One backend module, layered by responsibility.
 
-## Layers
+## Backend layers
 
 | Package | Holds | Rule |
 |---|---|---|
 | `web` | REST controllers | no business logic, no storage |
 | `service` | business logic | knows nothing about HTTP |
-| `domain` | records and enums | no framework annotations |
+| `domain` | records, enums, JPA entities | records carry no framework annotations |
 | `dto` | request payloads with validation | never returned, only accepted |
 
 A request travels `web` to `service` to `domain` and back. A controller never reaches
@@ -18,7 +18,27 @@ past `service`.
 ## Why records for the domain
 
 A task is a value. Records make it immutable and keep equality by value, which is what
-tests want. Persistence in M2 introduces entities; the records stay as the API shape.
+tests want. Persistence adds a `TaskEntity` next to the record rather than annotating
+it, so the API shape survives a change of storage.
+
+## Frontend layers
+
+| Folder | Holds | Rule |
+|---|---|---|
+| `api/` | one typed module per resource | the only place that speaks HTTP |
+| `views/` | one component per route | owns loading and error state |
+| `components/` | reusable pieces | never call the API themselves |
+| `router/` | the route table | the only place routes are registered |
+
+The Vite dev server proxies `/api` to the backend on port 8080. The browser sees one
+origin, so there is no CORS configuration to get wrong.
+
+## Storage
+
+PostgreSQL 17, started from `compose.yaml` in the repo root. The schema is owned by
+Flyway migrations in `backend/src/main/resources/db/migration/`. Hibernate runs with
+`ddl-auto: validate` so a drifted schema fails at startup instead of being silently
+rewritten.
 
 ## Endpoints
 

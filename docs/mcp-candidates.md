@@ -1,4 +1,4 @@
-# MCP server candidates for lab 3
+# MCP server candidates for lab 1.2
 
 Pick ONE. Every command below was run against Claude Code v2.1.258 on 4 September 2026
 and the resulting `.mcp.json` was checked. Versions are pinned on purpose - a server that
@@ -14,7 +14,10 @@ claude mcp add --scope project --transport http context7 https://mcp.context7.co
 ```
 
 Tools: `resolve-library-id`, `query-docs`. Cannot write anything.
-Good first choice if you have no real system-of-record case in mind.
+Good first choice if you have no real system-of-record case in mind, and the one that
+earns its keep in this lab: your frontend agent writes Vue 3 and PrimeVue against
+whatever the model remembers, and what it remembers is older than the versions in
+`frontend/package.json`. This server is how it reads the current API instead.
 
 If it rate-limits (the whole room shares one address), ask the trainer for the key and add
 `--header "Authorization: Bearer <key>"`.
@@ -30,7 +33,7 @@ The allowed directory is a positional argument, not a flag. Several are space-se
 `sandbox/` exists in this repo for exactly this - do not point it at your home directory.
 
 Tools include `write_file`, `edit_file`, `move_file`. This is the candidate to pick if you
-want to feel what "it can write" means when you narrow it in task 3.2.
+want to feel what "it can write" means when you narrow it in task 6.
 
 ## 3. Browser - Playwright (CAN WRITE, in the sense that matters)
 
@@ -58,6 +61,24 @@ tools. That is the shape to remember - the limit lives in the endpoint, not in a
 
 Full access would be `https://api.githubcopilot.com/mcp/` with OAuth or a token. Do not
 use that one today.
+
+## The database, and why it is not on this list
+
+TrackIt has a real PostgreSQL from this lab onward, so "point an MCP server at the
+database" is now a question you can actually ask. It is not on the list above, on
+purpose.
+
+`@modelcontextprotocol/server-postgres` is deprecated and frozen at 0.6.2, published
+4 December 2024 - the same trap as the deprecated GitHub server below. The maintained
+third-party alternatives change often enough that a command pinned in this handout
+would be wrong by the workshop day. If you want one, treat picking it as part of task
+6: vet it before you connect it, exactly as you would vet any other.
+
+The more useful lesson does not need a server at all. What protects a table from an
+agent is not the server and not the prompt - it is the grant on the role the connection
+uses. Task A3 has you build that role and prove the limit. A database MCP server on a
+read-only role is a different object from one holding the application credential, and
+that difference is the whole answer to "how do I stop it touching that table".
 
 ## Not on this list, and why
 

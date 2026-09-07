@@ -1,0 +1,36 @@
+# The database for TrackIt, and nothing else.
+#
+# Lab 1.2 needs a Postgres to talk to, so it is given. What is NOT given is the
+# application's own container setup - no Dockerfile, no app service, no secret
+# handling, no resource limits. That is M3, and this file is the "given database"
+# that M3 builds around.
+#
+# Start it from the repo root:
+#   docker compose up -d
+#   docker compose ps          # STATUS must read "healthy"
+#
+# The credentials below are development credentials, committed on purpose so the
+# lab starts without a secret handover. M3 replaces them with a supplied secret
+# that never enters the agent's context.
+
+services:
+  db:
+    image: postgres:17
+    container_name: trackit-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: trackit
+      POSTGRES_PASSWORD: trackit
+      POSTGRES_DB: trackit
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trackit -d trackit"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
