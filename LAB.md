@@ -394,6 +394,15 @@ claude mcp add --scope project --transport http context7 https://mcp.context7.co
 `--scope project` writes `.mcp.json` in the repo root. That file is committed, so this is a
 team decision, the same distinction you just met with plugin scopes.
 
+**Where the ones not on our list come from.** Three directories, and you vet before you
+add, not after:
+
+| Directory | What it gives you |
+|---|---|
+| <https://registry.modelcontextprotocol.io> | the official registry, authoritative server metadata |
+| <https://www.pulsemcp.com> | curated and filterable, with an official-provider filter |
+| <https://glama.ai/mcp/servers> | a quality, security and licence grade per server, and an in-browser Inspector to exercise one before you install it |
+
 ### Step 2: Approve it and check it connected
 
 ```bash
@@ -428,7 +437,7 @@ References: [MCP](https://code.claude.com/docs/en/mcp) · `docs/mcp-candidates.m
 
 ## Task 7: Write down what they can reach (5 min)
 
-No configuration here. You brought in a plugin and a server. Answer three questions for
+No configuration here. You brought in a plugin and a server. Answer four questions for
 **each** of them, in a new file `docs/mcp-scoping.md`:
 
 - **Slice.** Which part of which system does it touch? Not "GitHub", but which
@@ -437,6 +446,8 @@ repositories and which resource type. For the plugin: which of your files and wh
 service account, none at all?
 - **Direction.** Read-only or writing? Is that enforced by the endpoint, or only requested
 in a prompt?
+- **Maintainer.** Who publishes it, and when did they last touch it? An abandoned server
+still runs, and it is nobody's job to patch it.
 
 Then one line more. Three things together make a session dangerous:
 
@@ -447,7 +458,15 @@ Then one line more. Three things together make a session dangerous:
 With all three, content can act as an instruction and data can leave. Removing any one
 breaks the chain. Tick the ones present in your session and write one verdict line.
 
-**Take home:** These three questions work for anything you install. They take a minute and
+**This is not theoretical.** In CamoLeak, hidden instructions in a pull request description
+were read by GitHub Copilot, which then read the victim's private repositories under their
+own permissions and leaked the content through GitHub's own image proxy. The exfiltration
+channel was a domain the organisation already trusted, so monitoring saw ordinary image
+loads. All three conditions, and the exit was the one nobody had thought of as an exit.
+Source:
+<https://www.blackfog.com/camoleak-how-github-copilot-became-an-exfiltration-channel/>
+
+**Take home:** These four questions work for anything you install. They take a minute and
 they are the whole review.
 
 **Tip:** Anything nobody can describe in three lines does not get committed.
