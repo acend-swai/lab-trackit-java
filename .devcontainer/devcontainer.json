@@ -1,16 +1,38 @@
 {
   "name": "lab-trackit-java",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "dockerComposeFile": [
+    "../compose.yaml",
+    "docker-compose.yml"
+  ],
+  "service": "app",
+  "workspaceFolder": "/workspaces/trackit",
   "features": {
-    "ghcr.io/devcontainers/features/java:1": { "version": "21" },
-    "ghcr.io/devcontainers/features/node:1": { "version": "22" },
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "21"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    },
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
-  "forwardPorts": [8080, 5173, 5432],
+  "forwardPorts": [
+    8080,
+    5173,
+    5432
+  ],
   "portsAttributes": {
-    "8080": { "label": "TrackIt backend", "onAutoForward": "notify" },
-    "5173": { "label": "TrackIt frontend", "onAutoForward": "openBrowser" },
-    "5432": { "label": "TrackIt database", "onAutoForward": "silent" }
+    "8080": {
+      "label": "TrackIt backend",
+      "onAutoForward": "notify"
+    },
+    "5173": {
+      "label": "TrackIt frontend",
+      "onAutoForward": "openBrowser"
+    },
+    "5432": {
+      "label": "TrackIt database",
+      "onAutoForward": "silent"
+    }
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "remoteUser": "vscode",
