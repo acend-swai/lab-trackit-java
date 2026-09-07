@@ -58,3 +58,11 @@ does not exist answers 404, raised by `TaskNotFoundException`.
 `openspec/specs/` holds the live behaviour spec, merged from each archived change. It is
 the file to read before proposing a change and the file to change before writing code.
 `openspec/changes/` holds whatever is in flight.
+
+## Infrastructure
+
+`deploy/terraform/` describes TrackIt on Azure Container Apps with a managed PostgreSQL 17
+behind it. It is written and validated, never applied: `terraform validate` needs no
+credentials, and `.claude/hooks/check-infra.sh` blocks `apply` and `destroy` at the tool
+call. Secrets have no defaults and never enter a file - the database password arrives as
+`TF_VAR_db_password`.

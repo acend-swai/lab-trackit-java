@@ -29,6 +29,7 @@ This is the Java line of the TrackIt lab project. The Python line lives in
 - openspec/specs/ - the live spec, merged from archived changes. Read it before
   proposing a change; it is the current truth about how TrackIt behaves
 - openspec/changes/ - changes in flight, one directory each
+- deploy/terraform/ - infrastructure as code. Written and validated, never applied
 
 ## Coding Standards
 
@@ -90,3 +91,13 @@ This is the Java line of the TrackIt lab project. The Python line lives in
 
 Both are stored in PostgreSQL. The bounds on Comment come from
 `openspec/specs/task-comments/spec.md`, not from a guess - change the spec first.
+
+## Infrastructure rules
+
+- Terraform lives in `deploy/terraform/`, is formatted with `terraform fmt` and must
+  pass `terraform validate`
+- Provider versions are pinned. Never `latest`, for a provider or an image tag
+- No credential has a default and none is written into a file. They arrive through
+  environment variables, `TF_VAR_*` for Terraform
+- The configuration is written and validated here, never applied. `terraform apply` and
+  `terraform destroy` are blocked by `.claude/hooks/check-infra.sh`

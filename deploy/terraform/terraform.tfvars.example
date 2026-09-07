@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is git-ignored AND denied
+# in .claude/settings.json, so the agent cannot read it back.
+#
+# db_password does NOT belong here. Supply it through the environment:
+#   export TF_VAR_db_password='...'
+
+subscription_id = "00000000-0000-0000-0000-000000000000"
+environment     = "dev"
+backend_image   = "ghcr.io/acend-swai/trackit-backend:0.1.0"

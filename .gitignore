@@ -8,3 +8,9 @@ target/
 .vscode/
 .devcontainer/devcontainer-lock.json
 devcontainer-lock.json
+
+# lab 3: the credential never lands in a file
+deploy/terraform/terraform.tfvars
+deploy/terraform/.terraform/
+deploy/terraform/*.tfstate
+deploy/terraform/*.tfstate.backup
