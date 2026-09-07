@@ -12,7 +12,7 @@
 
 branches:
   m1-1-start:
-    role: starting point for lab 1, module M1.1
+    role: starting point for lab 1, module M1.1 - ships the context file the grounded-prompt half of the lab points at
     must_exist:
       - README.md
       - verify.sh
@@ -20,6 +20,8 @@ branches:
       - .env.example
       - .devcontainer/devcontainer.json
       - .devcontainer/post-create.sh
+      - AGENTS.md
+      - CLAUDE.md
       - docs/architecture.md
       - docs/adr/0001-layered-spring-architecture.md
       - backend/pom.xml
@@ -29,8 +31,6 @@ branches:
       - backend/src/main/java/ch/incratec/trackit/web/HealthController.java
       - backend/src/test/java/ch/incratec/trackit/web/HealthControllerTest.java
     must_not_exist:
-      - AGENTS.md
-      - CLAUDE.md
       - backend/src/main/java/ch/incratec/trackit/domain/Task.java
       - backend/src/main/java/ch/incratec/trackit/domain/TaskStatus.java
       - backend/src/main/java/ch/incratec/trackit/dto/CreateTaskRequest.java
