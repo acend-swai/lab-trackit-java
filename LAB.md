@@ -27,6 +27,17 @@ that split is the whole module.
 
 **Part 2 is advanced and optional.** Start it when Part 1 is green.
 
+## What you record today
+
+Keep a scratch file open. Three lines, written when they happen, and the discussion at the
+end runs on them:
+
+| From | Write down |
+|---|---|
+| Task 2 | The one thing the research report got wrong or missed |
+| Task 4 | Which of the four decisions the agent made that you would not have |
+| Task 5 | Any scenario that had no test, and how you found out |
+
 ## Where you start
 
 Continue on your own repo from lab 1.2. Check it first:
