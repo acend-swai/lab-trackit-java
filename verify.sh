@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# Pre-workshop verification for lab-trackit-java.
+# Same idiom as acend-swai/lab-hello-world: every line reads [OK] or [MISSING].
+
 set -uo pipefail
 
 echo "lab-trackit-java - verification"
@@ -33,11 +37,12 @@ check_java_21() {
 }
 
 check_java_21
-check_cmd "Claude Code CLI" claude
-check_cmd "OpenCode CLI"    opencode
+check_cmd "Node (installs the CLIs)" node
+check_cmd "Claude Code CLI"          claude
+check_cmd "OpenCode CLI"             opencode
 
 if [ ! -f .env ]; then
-  echo "[MISSING] .env - it arrives by mail on the workshop morning"
+  echo "[MISSING] .env - copy .env.example to .env; your key arrives by mail"
 elif grep -qE '^GATEWAY_API_KEY=.+' .env; then
   echo "[OK]      .env present, gateway key set"
 else
