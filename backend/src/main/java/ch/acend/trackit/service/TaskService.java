@@ -1,10 +1,10 @@
-package ch.incratec.trackit.service;
+package ch.acend.trackit.service;
 
-import ch.incratec.trackit.domain.Task;
-import ch.incratec.trackit.domain.TaskEntity;
-import ch.incratec.trackit.domain.TaskStatus;
-import ch.incratec.trackit.dto.CreateTaskRequest;
-import ch.incratec.trackit.repository.TaskRepository;
+import ch.acend.trackit.domain.Task;
+import ch.acend.trackit.domain.TaskEntity;
+import ch.acend.trackit.domain.TaskStatus;
+import ch.acend.trackit.dto.CreateTaskRequest;
+import ch.acend.trackit.repository.TaskRepository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;

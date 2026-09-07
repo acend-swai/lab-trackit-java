@@ -11,14 +11,14 @@ This is the Java line of the TrackIt lab project. The Python line lives in
 
 ## Architecture
 
-- backend/src/main/java/ch/incratec/trackit/
+- backend/src/main/java/ch/acend/trackit/
   - web/ - REST controllers, one per resource (e.g. TaskController.java)
   - service/ - business logic, one per resource (e.g. TaskService.java)
   - domain/ - records and enums, no framework annotations
   - dto/ - request payloads with validation annotations
   - repository/ - Spring Data interfaces, one per entity
   - TrackitApplication.java - the Spring Boot entry point
-- backend/src/test/java/ch/incratec/trackit/ - tests, mirroring the main package
+- backend/src/test/java/ch/acend/trackit/ - tests, mirroring the main package
 - backend/src/main/resources/db/migration/ - Flyway migrations, one per change
 - frontend/src/
   - api/ - one module per resource, all HTTP through `api/client.ts`

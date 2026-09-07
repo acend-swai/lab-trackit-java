@@ -1,4 +1,4 @@
-package ch.incratec.trackit.web;
+package ch.acend.trackit.web;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -7,10 +7,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import ch.incratec.trackit.domain.Task;
-import ch.incratec.trackit.domain.TaskStatus;
-import ch.incratec.trackit.dto.CreateTaskRequest;
-import ch.incratec.trackit.service.TaskService;
+import ch.acend.trackit.domain.Task;
+import ch.acend.trackit.domain.TaskStatus;
+import ch.acend.trackit.dto.CreateTaskRequest;
+import ch.acend.trackit.service.TaskService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
