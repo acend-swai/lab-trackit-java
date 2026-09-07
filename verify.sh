@@ -92,6 +92,18 @@ if [ -f .claude/hooks/check-infra.sh ]; then
   fi
 fi
 
+# --- terraform, on the lab 3 and lab 4 branches -------------------------------
+# Keyed off the declared devcontainer feature, not off deploy/terraform/: on m3-start
+# the participant only writes that directory in task 4, and the CLI has to be there
+# before the lab rather than at the first "terraform fmt -check".
+if grep -q "features/terraform" .devcontainer/devcontainer.json 2> /dev/null; then
+  if command -v terraform > /dev/null 2>&1; then
+    echo "[OK]      terraform ($(terraform version 2>&1 | head -n1))"
+  else
+    echo "[MISSING] terraform - lab 3 task 4 runs fmt/init/validate. Rebuild the container."
+  fi
+fi
+
 # --- the frontend, from the lab 1.2 branch onward -----------------------------
 if [ -d frontend ]; then
   if [ -d frontend/node_modules ]; then
