@@ -51,7 +51,6 @@ Tests green, nothing uncommitted. If either fails, take the reference state:
 
 ```bash
 git fetch origin && git checkout m2-start
-docker compose up -d
 ```
 
 Either way you have tasks in PostgreSQL and a task board in the browser.
