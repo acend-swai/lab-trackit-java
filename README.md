@@ -10,19 +10,27 @@ carry the same domain so the two are comparable.
 
 ## Branches
 
-Two per module: `-start` is where you begin, `-solution` is the reference state after
-the lab. Every `-start` branch compiles and its tests pass before you touch anything.
+`main` is the same commit as `m1-1-start`, so a plain clone starts you where the day
+starts. Each module has a `-start` branch and a `-solution` branch; every `-start` branch
+compiles and its tests pass before you touch anything.
+
+```bash
+git clone -b m1-1-start https://github.com/acend-swai/lab-trackit-java.git trackit
+```
 
 | Module | Start | Solution | Stage |
 |---|---|---|---|
 | M1.1 Agentic loop | `m1-1-start` | `m1-1-solution` | create and list a task, in memory |
-| M1.2 Skills, plugins, agents | `m1-2-start` | `m1-2-solution` | second endpoint from your own skill |
-| M1.3 MCP | `m1-3-start` | `m1-3-solution` | agent reaches a system beyond the repo |
+| M1.2 Extending and scoping | `m1-2-start` | `m1-2-solution` | second endpoint from your own skill, plus one scoped MCP server |
 | M2 Spec first | `m2-start` | `m2-solution` | persistence and validation, spec-driven |
 | M3 Infrastructure | `m3-start` | `m3-solution` | container setup, verified locally |
 | M4 Capstone | `m4-start` | `m4-solution` | reporting end to end |
 
-Only the M1.1 pair exists today. The others follow with their modules.
+`m1-2-mid` is an extra rejoin point inside lab 2: the state after task 2.3, before any MCP
+work. Use it if you lose the first half of that lab and want to be with the room again for
+the second.
+
+The M1.1 and M1.2 branches exist today. M2 to M4 follow with their modules.
 
 ## Requirements
 
