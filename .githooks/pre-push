@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+#
+# Local pre-push gate. Fast and best-effort - the real Definition-of-Done
+# gate runs in CI against the actual PR body (.github/workflows/dod-check.yml,
+# scripts/dod_check.sh) because a PR does not exist yet at push time. This
+# hook catches the two things that are cheap to check locally and are the
+# most common reason a push turns red in CI a minute later.
+#
+# Enable with: git config core.hooksPath .githooks
+set -uo pipefail
+
+repo_root="$(git rev-parse --show-toplevel 2> /dev/null)"
+[ -n "$repo_root" ] || exit 0
+cd "$repo_root" || exit 0
+
+remote="$1"
+range_arg=$(cat)
+changed_files=""
+if [ -n "$range_arg" ]; then
+  # Best-effort: diff against the upstream tracking branch if there is one,
+  # otherwise fall back to the last commit so the hook still says something.
+  base=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2> /dev/null || echo HEAD~1)
+  changed_files=$(git diff --name-only "$base"...HEAD 2> /dev/null || true)
+fi
+
+fail=0
+
+if printf '%s\n' "$changed_files" | grep -q '^backend/'; then
+  echo "pre-push: backend changed, running ./mvnw -q test"
+  if ! ( cd backend && ./mvnw -q -B test ); then
+    echo "pre-push: backend tests FAILED - push blocked." >&2
+    fail=1
+  fi
+fi
+
+if printf '%s\n' "$changed_files" | grep -q '^deploy/terraform/'; then
+  echo "pre-push: deploy/terraform changed, running terraform fmt -check && terraform validate"
+  if command -v terraform > /dev/null 2>&1; then
+    if ! ( cd deploy/terraform && terraform fmt -check && terraform init -backend=false -input=false > /dev/null && terraform validate ); then
+      echo "pre-push: terraform fmt/validate FAILED - push blocked." >&2
+      fail=1
+    fi
+  else
+    echo "pre-push: terraform CLI not installed, skipping fmt/validate - CI will still check this." >&2
+  fi
+fi
+
+echo "pre-push: reminder - your PR body needs a 'Spec: <path>' or 'no-spec: <reason>' line and, for"
+echo "pre-push: any unchecked acceptance criterion, an '## Out of scope' entry. CI enforces this,"
+echo "pre-push: this hook cannot - see .github/pull_request_template.md."
+
+exit "$fail"

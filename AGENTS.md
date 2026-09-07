@@ -101,3 +101,33 @@ Both are stored in PostgreSQL. The bounds on Comment come from
   environment variables, `TF_VAR_*` for Terraform
 - The configuration is written and validated here, never applied. `terraform apply` and
   `terraform destroy` are blocked by `.claude/hooks/check-infra.sh`
+
+## Agent roster
+
+- `db-builder`, `frontend-builder` - subsystem-partitioned, safe to run together
+  because their write scopes never overlap (`backend/` vs `frontend/`)
+- `api-reviewer` - read-only review of REST endpoints against this file
+- `planner` - authors an OpenSpec change (proposal, spec, tasks). Writes no code
+- `implementer` - works an OpenSpec change's `tasks.md`, test first
+- `tester` - verifies every acceptance scenario has a passing test naming it
+- `security` - re-runs the infrastructure checklist and the protected-path check
+  from `docs/adr/0003-agent-security-boundary.md`
+
+`planner`/`implementer`/`tester`/`security` are mirrored byte-for-byte as
+`.github/agents/*.agent.md` so GitHub Copilot's cloud agent works under the same
+roles (`scripts/check_agent_parity.sh` enforces this in CI). `db-builder` and
+`frontend-builder` are Claude-Code-only on purpose - see that ADR.
+
+## Full-agentic guardrails (this branch)
+
+- `.claude/`, `.github/`, `.mcp.json`, `deploy/terraform/`, `lab-manifest.yml`
+  cannot be edited by an agent (`.claude/hooks/block-protected-edits.sh`) and
+  require a human reviewer on any PR (`.github/CODEOWNERS`), regardless of who
+  opened it
+- A pull request needs a linked OpenSpec change or a `no-spec: <reason>` line,
+  and every unchecked acceptance criterion needs an `## Out of scope` entry -
+  enforced by `scripts/dod_check.sh` in `.github/workflows/dod-check.yml`
+- Merging to `main` builds and publishes a container image to GHCR
+  (`.github/workflows/deploy.yml`). It never runs `terraform apply` - applying
+  stays a human decision, made locally, exactly as the infrastructure rules
+  above require of an agent

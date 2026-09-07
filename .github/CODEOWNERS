@@ -1,0 +1,15 @@
+# CODEOWNERS - see docs/adr/0003-agent-security-boundary.md.
+#
+# Every path below defines the harness, the CI gate, or the infrastructure
+# itself - none of them merge without a human reviewer, whether the PR was
+# opened by a person, Claude Code, or GitHub Copilot's cloud agent.
+#
+# Replace the placeholder handle below with the real maintainer team or
+# handles for your fork before relying on this file - GitHub only enforces
+# CODEOWNERS review with a real, existing owner.
+
+.claude/                    @acend-swai/lab-maintainers
+.github/                    @acend-swai/lab-maintainers
+.mcp.json                   @acend-swai/lab-maintainers
+deploy/terraform/           @acend-swai/lab-maintainers
+lab-manifest.yml            @acend-swai/lab-maintainers

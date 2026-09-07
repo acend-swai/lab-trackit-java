@@ -1,0 +1,47 @@
+name: "Copilot Setup Steps"
+
+# GitHub's cloud Copilot coding agent looks for a job named exactly
+# "copilot-setup-steps" and runs it to prepare the environment before a
+# session starts. workflow_dispatch lets you run and verify it by hand too.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["**"]
+    paths:
+      - ".github/workflows/copilot-setup-steps.yml"
+  pull_request:
+    paths:
+      - ".github/workflows/copilot-setup-steps.yml"
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Warm the Maven cache
+        working-directory: backend
+        run: ./mvnw -q -B dependency:go-offline
+
+      - name: Install frontend dependencies
+        if: hashFiles('frontend/package.json') != ''
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify jq is available for the harness hooks
+        run: |
+          jq --version
+          echo "hooks under .claude/hooks/ fail closed without jq - see docs/adr/0003-agent-security-boundary.md"
