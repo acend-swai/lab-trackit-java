@@ -98,6 +98,16 @@ if [ -d frontend ]; then
   fi
 fi
 
+# jq is not optional: the lab 3 PreToolUse hook parses its input with it, and that
+# hook fails CLOSED, so a missing jq blocks every Bash call rather than silently
+# waving commands through. Install it here so nobody meets that in the room.
+echo "--- installing jq (the lab 3 hook needs it)"
+if command -v jq > /dev/null 2>&1 || sudo apt-get install -y jq > /dev/null 2>&1; then
+  echo "[OK]      jq ($(jq --version 2>&1))"
+else
+  warn "jq could not be installed. The lab 3 hook will block every Bash command until it is."
+fi
+
 # Pulling postgres:17 on the workshop morning is the single slowest thing that can
 # happen in the room. Do it now, while the container builds.
 if [ -f compose.yaml ]; then
@@ -106,6 +116,17 @@ if [ -f compose.yaml ]; then
     echo "[OK]      postgres:17 pulled"
   else
     warn "postgres:17 could not be pulled. Run 'docker pull postgres:17' before the workshop day."
+  fi
+fi
+
+# Lab 3 connects the Terraform MCP server over stdio in Docker, and verifies its own
+# output with the Terraform CLI. Both are pulled here rather than during the lab.
+if [ -f deploy/terraform/versions.tf ] || grep -q "terraform" .mcp.json 2> /dev/null; then
+  echo "--- pre-pulling the Terraform MCP server image"
+  if docker pull hashicorp/terraform-mcp-server:1.3.0 > /dev/null 2>&1; then
+    echo "[OK]      hashicorp/terraform-mcp-server:1.3.0 pulled"
+  else
+    warn "the Terraform MCP server image could not be pulled. Run 'docker pull hashicorp/terraform-mcp-server:1.3.0' before the workshop day."
   fi
 fi
 
