@@ -1,36 +1,39 @@
 package ch.incratec.trackit.service;
 
 import ch.incratec.trackit.domain.Task;
+import ch.incratec.trackit.domain.TaskEntity;
 import ch.incratec.trackit.domain.TaskStatus;
 import ch.incratec.trackit.dto.CreateTaskRequest;
+import ch.incratec.trackit.repository.TaskRepository;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-/** Business logic for tasks. Holds them in memory until M2 adds persistence. */
+/** Business logic for tasks. Tasks are stored in PostgreSQL since lab 1.2. */
 @Service
 public class TaskService {
 
-    private final List<Task> tasks = new CopyOnWriteArrayList<>();
-    private final AtomicLong nextId = new AtomicLong(1);
+    private final TaskRepository taskRepository;
 
+    public TaskService(TaskRepository taskRepository) {
+        this.taskRepository = taskRepository;
+    }
+
+    @Transactional
     public Task create(CreateTaskRequest request) {
-        Task task = new Task(
-                nextId.getAndIncrement(),
-                request.title(),
-                request.project(),
-                TaskStatus.OPEN);
-        tasks.add(task);
-        return task;
+        TaskEntity saved = taskRepository.save(
+                new TaskEntity(request.title(), request.project(), TaskStatus.OPEN));
+        return saved.toDomain();
     }
 
+    @Transactional(readOnly = true)
     public List<Task> findAll() {
-        return List.copyOf(tasks);
+        return taskRepository.findAll().stream().map(TaskEntity::toDomain).toList();
     }
 
+    @Transactional(readOnly = true)
     public Optional<Task> findById(long id) {
-        return tasks.stream().filter(task -> task.id() == id).findFirst();
+        return taskRepository.findById(id).map(TaskEntity::toDomain);
     }
 }
