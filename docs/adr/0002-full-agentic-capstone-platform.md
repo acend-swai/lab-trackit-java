@@ -22,7 +22,7 @@ repository already has:
 - Terraform for Azure Container Apps in `deploy/terraform/`, written and validated,
   never applied (M3)
 
-The workshop's Stufe 4 asks for one more thing none of that gives you: a session
+The full-agentic stage asks for one more thing none of that gives you: a session
 that goes from a feature request to a merged, deployed artifact without a human
 in the implementation loop - while keeping every guardrail above intact, and
 without the harness deciding for itself what "done" means.
