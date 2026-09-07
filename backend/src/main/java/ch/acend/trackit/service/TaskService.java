@@ -1,8 +1,8 @@
-package ch.incratec.trackit.service;
+package ch.acend.trackit.service;
 
-import ch.incratec.trackit.domain.Task;
-import ch.incratec.trackit.domain.TaskStatus;
-import ch.incratec.trackit.dto.CreateTaskRequest;
+import ch.acend.trackit.domain.Task;
+import ch.acend.trackit.domain.TaskStatus;
+import ch.acend.trackit.dto.CreateTaskRequest;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;

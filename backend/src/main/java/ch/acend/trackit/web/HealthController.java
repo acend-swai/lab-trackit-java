@@ -1,4 +1,4 @@
-package ch.incratec.trackit.web;
+package ch.acend.trackit.web;
 
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;

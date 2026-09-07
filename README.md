@@ -25,10 +25,10 @@ keep your work, add a remote of your own and push there.
 | Module | Start | Solution | Stage |
 |---|---|---|---|
 | M1.1 Agentic loop | `m1-1-start` | `m1-1-solution` | create and list a task, in memory |
-| M1.2 Extending and scoping | `m1-2-start` | `m1-2-solution` | tasks stored in PostgreSQL and a task board in the browser, built by two agents at once |
-| M2 Spec first | `m2-start` | `m2-solution` | the next feature, spec-driven, tests first |
-| M3 Infrastructure | `m3-start` | `m3-solution` | container setup, verified locally |
-| M4 Capstone | `m4-start` | `m4-solution` | reporting end to end |
+| M1.2 Extending and scoping | `m1-2-start` | `m1-2-solution` | tasks in PostgreSQL and a task board in the browser, built with the skills the repo ships |
+| M2 Spec first | `m2-start` | `m2-solution` | comments on tasks, specified before written |
+| M3 Infrastructure | `m3-start` | `m3-solution` | deny rules, a blocking hook, and Terraform that validates |
+| M4 Capstone | not built yet | not built yet | reporting end to end, shown as a demo |
 
 `m1-2-mid` is an extra rejoin point inside lab 1.2: the state after task 4, with the
 database and the frontend built, before any MCP work. Use it if you lose the first half of
@@ -42,6 +42,11 @@ database - or the devcontainer in `.devcontainer/`, which brings all three.
 `m1-1-*` needs none of it beyond Java: the database and the frontend arrive on the lab 1.2
 branches, and `verify.sh` only checks for them where they exist.
 
+## Package namespace
+
+Java code lives under `ch.acend.trackit`, matching the `acend-swai` organisation this
+repository belongs to.
+
 ## The database
 
 From `m1-2-start` onward the repo carries `compose.yaml` with a single Postgres service:
@@ -51,8 +56,16 @@ docker compose up -d
 docker compose ps          # STATUS must read "healthy"
 ```
 
-That is the database only. The application has no container of its own yet - building
-that, with secrets and resource limits, is M3.
+That is the database only. The application has no container of its own yet. M3 writes
+the infrastructure code for it - Terraform against Azure Container Apps - and validates
+it without applying anything.
+
+## Lab handouts
+
+`LAB.md` in the repo root is the handout for the branch you are on. It is **generated**:
+the source lives in `workshops/2026-09-08_workshop_tage/labs/instructions/` in the
+`inc-edu-sweai` repository and is shipped here by `ship.sh`. Edit it there, not on the
+branch - the next ship overwrites whatever is here.
 
 ## Verify before the lab
 
