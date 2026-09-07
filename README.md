@@ -141,31 +141,31 @@ gateway is OpenRouter and your key arrives by mail in `.env`; it starts with `sk
 `opencode.json` in the repo root reads that key from the environment and lists the models
 for the lab.
 
-**Run these two.** Same family, two sizes, so the only variable is how much model is
-behind the loop:
+**Run these two.** Both are open weights, but only one of them runs on hardware you own,
+so the variable is how much model the loop can afford when the repository may not leave the
+building:
 
 | Model id | Size | 4-bit footprint |
 |---|---|---|
-| `qwen/qwen3-coder-30b-a3b-instruct` | 30B MoE, the small one | 16 GB, measured |
+| `moonshotai/kimi-k3` | frontier MoE, open weights | far beyond a workstation |
 | `qwen/qwen3-coder-next` | 80B MoE, 3B active, 262k context | about 46 GB |
 
 Give both the same task and the same prompt. The question is not which answer is prettier,
-it is **where the small model breaks**: tool selection, sticking to `AGENTS.md`, reading
+it is **where the smaller model breaks**: tool selection, sticking to `AGENTS.md`, reading
 its own error output, or knowing when it is done.
 
-**Then take any others you have time for.** The first three still fit on a workstation, the
-last three do not - which is the whole point when the repository may not leave the building:
+**Then take any others you have time for.** The first two still fit on a workstation, the
+last two do not:
 
 | Model id | What it is | 4-bit footprint |
 |---|---|---|
 | `mistralai/devstral-2512` | Devstral 2, 123B dense | about 62 GB |
 | `nvidia/nemotron-3-super-120b-a12b` | 120B MoE, 12B active, 1M context | about 60 GB |
-| `moonshotai/kimi-k3` | frontier MoE, open weights | far beyond a workstation |
 | `deepseek/deepseek-v4-flash` | frontier MoE, open weights | far beyond a workstation |
 | `qwen/qwen3.8-max-0902` | Qwen flagship, hosted only | not open weights |
 
-Switch between them in the session with `/models`. The 16 GB figure is measured on our own
-hardware; the others are the published 4-bit requirements.
+Switch between them in the session with `/models`. The footprints are the published 4-bit
+requirements.
 
 OpenCode reads the environment, not the file. In the devcontainer this is done for you:
 every new terminal sources `.env`, bash or zsh, login shell or not, and it is re-read on
