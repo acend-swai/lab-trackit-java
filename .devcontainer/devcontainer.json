@@ -1,8 +1,16 @@
 {
   "name": "lab-trackit-java",
-  "image": "maven:3.9-eclipse-temurin-21",
-  "workspaceFolder": "/workspaces/lab-trackit-java",
-  "postCreateCommand": "cd backend && ./mvnw -q -B dependency:go-offline || true",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": { "version": "21" },
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" }
+  },
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": { "label": "TrackIt backend", "onAutoForward": "notify" }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteUser": "vscode",
   "customizations": {
     "vscode": {
       "extensions": [
