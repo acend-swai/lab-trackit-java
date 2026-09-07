@@ -102,14 +102,16 @@ last three do not - which is the whole point when the repository may not leave t
 Switch between them in the session with `/models`. The 16 GB figure is measured on our own
 hardware; the others are the published 4-bit requirements.
 
-OpenCode reads the environment, not the file, so export `.env` in the shell you start it
-from:
+OpenCode reads the environment, not the file. In the devcontainer this is done for you:
+every new terminal sources `.env`, bash or zsh, login shell or not, and it is re-read on
+each shell start - so a key you paste in later works in the next terminal, no rebuild.
+Open a fresh terminal after editing `.env`.
+
+Outside the container, export it yourself before starting OpenCode:
 
 ```bash
 set -a; source .env; set +a
 opencode
 ```
-
-In the devcontainer every new terminal does this for you.
 
 Docs: <https://openrouter.ai/docs/cookbook/coding-agents/opencode-integration>
