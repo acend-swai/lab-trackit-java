@@ -29,29 +29,29 @@ branches:
       - backend/pom.xml
       - backend/mvnw
       - backend/src/main/resources/application.yml
-      - backend/src/main/java/ch/incratec/trackit/TrackitApplication.java
-      - backend/src/main/java/ch/incratec/trackit/web/HealthController.java
-      - backend/src/test/java/ch/incratec/trackit/web/HealthControllerTest.java
+      - backend/src/main/java/ch/acend/trackit/TrackitApplication.java
+      - backend/src/main/java/ch/acend/trackit/web/HealthController.java
+      - backend/src/test/java/ch/acend/trackit/web/HealthControllerTest.java
     must_not_exist:
-      - backend/src/main/java/ch/incratec/trackit/domain/Task.java
-      - backend/src/main/java/ch/incratec/trackit/domain/TaskStatus.java
-      - backend/src/main/java/ch/incratec/trackit/dto/CreateTaskRequest.java
-      - backend/src/main/java/ch/incratec/trackit/service/TaskService.java
-      - backend/src/main/java/ch/incratec/trackit/web/TaskController.java
-      - backend/src/test/java/ch/incratec/trackit/web/TaskControllerTest.java
+      - backend/src/main/java/ch/acend/trackit/domain/Task.java
+      - backend/src/main/java/ch/acend/trackit/domain/TaskStatus.java
+      - backend/src/main/java/ch/acend/trackit/dto/CreateTaskRequest.java
+      - backend/src/main/java/ch/acend/trackit/service/TaskService.java
+      - backend/src/main/java/ch/acend/trackit/web/TaskController.java
+      - backend/src/test/java/ch/acend/trackit/web/TaskControllerTest.java
 
   m1-1-solution:
     role: reference state after lab 1
     must_exist:
       - AGENTS.md
       - CLAUDE.md
-      - backend/src/main/java/ch/incratec/trackit/domain/Task.java
-      - backend/src/main/java/ch/incratec/trackit/domain/TaskStatus.java
-      - backend/src/main/java/ch/incratec/trackit/dto/CreateTaskRequest.java
-      - backend/src/main/java/ch/incratec/trackit/service/TaskService.java
-      - backend/src/main/java/ch/incratec/trackit/web/TaskController.java
-      - backend/src/test/java/ch/incratec/trackit/web/TaskControllerTest.java
-      - backend/src/main/java/ch/incratec/trackit/web/HealthController.java
+      - backend/src/main/java/ch/acend/trackit/domain/Task.java
+      - backend/src/main/java/ch/acend/trackit/domain/TaskStatus.java
+      - backend/src/main/java/ch/acend/trackit/dto/CreateTaskRequest.java
+      - backend/src/main/java/ch/acend/trackit/service/TaskService.java
+      - backend/src/main/java/ch/acend/trackit/web/TaskController.java
+      - backend/src/test/java/ch/acend/trackit/web/TaskControllerTest.java
+      - backend/src/main/java/ch/acend/trackit/web/HealthController.java
 
   m1-2-start:
     role: starting point for lab 1.2 - the M1.1 solution plus everything the standard path USES but does not write. The two house-pattern skills are given, so no participant has to author a skill or an agent to finish Parts 1 and 2. What the lab has them build stays out.
@@ -77,13 +77,13 @@ branches:
       - .claude/skills/add-view/SKILL.md
       - .claude/agents/api-reviewer.md
       - backend/pom.xml
-      - backend/src/main/java/ch/incratec/trackit/domain/Task.java
-      - backend/src/main/java/ch/incratec/trackit/domain/TaskStatus.java
-      - backend/src/main/java/ch/incratec/trackit/dto/CreateTaskRequest.java
-      - backend/src/main/java/ch/incratec/trackit/service/TaskService.java
-      - backend/src/main/java/ch/incratec/trackit/web/TaskController.java
-      - backend/src/main/java/ch/incratec/trackit/web/HealthController.java
-      - backend/src/test/java/ch/incratec/trackit/web/TaskControllerTest.java
+      - backend/src/main/java/ch/acend/trackit/domain/Task.java
+      - backend/src/main/java/ch/acend/trackit/domain/TaskStatus.java
+      - backend/src/main/java/ch/acend/trackit/dto/CreateTaskRequest.java
+      - backend/src/main/java/ch/acend/trackit/service/TaskService.java
+      - backend/src/main/java/ch/acend/trackit/web/TaskController.java
+      - backend/src/main/java/ch/acend/trackit/web/HealthController.java
+      - backend/src/test/java/ch/acend/trackit/web/TaskControllerTest.java
       - frontend/package.json
       - frontend/package-lock.json
       - frontend/vite.config.ts
@@ -96,8 +96,8 @@ branches:
       - frontend/src/views/HomeView.vue
     must_not_exist:
       # task 3 - the standard path builds persistence with the given skill
-      - backend/src/main/java/ch/incratec/trackit/domain/TaskEntity.java
-      - backend/src/main/java/ch/incratec/trackit/repository/TaskRepository.java
+      - backend/src/main/java/ch/acend/trackit/domain/TaskEntity.java
+      - backend/src/main/java/ch/acend/trackit/repository/TaskRepository.java
       - backend/src/main/resources/db/migration/V1__create_task.sql
       # task 4 - the standard path builds the task board with the given skill
       - frontend/src/api/tasks.ts
@@ -118,8 +118,8 @@ branches:
       - .claude/skills/commit-message/SKILL.md
       - .claude/agents/api-reviewer.md
       - compose.yaml
-      - backend/src/main/java/ch/incratec/trackit/domain/TaskEntity.java
-      - backend/src/main/java/ch/incratec/trackit/repository/TaskRepository.java
+      - backend/src/main/java/ch/acend/trackit/domain/TaskEntity.java
+      - backend/src/main/java/ch/acend/trackit/repository/TaskRepository.java
       - backend/src/main/resources/db/migration/V1__create_task.sql
       - frontend/src/api/tasks.ts
       - frontend/src/views/TaskBoardView.vue
@@ -144,18 +144,19 @@ branches:
       - .mcp.json
       - docs/mcp-scoping.md
       - compose.yaml
-      - backend/src/main/java/ch/incratec/trackit/domain/TaskEntity.java
-      - backend/src/main/java/ch/incratec/trackit/repository/TaskRepository.java
+      - backend/src/main/java/ch/acend/trackit/domain/TaskEntity.java
+      - backend/src/main/java/ch/acend/trackit/repository/TaskRepository.java
       - backend/src/main/resources/db/migration/V1__create_task.sql
       - frontend/src/api/tasks.ts
       - frontend/src/views/TaskBoardView.vue
     must_not_exist:
       - frontend/src/views/HomeView.vue
-      - backend/src/main/java/ch/incratec/trackit/web/TaskNotFoundException.java
+      - backend/src/main/java/ch/acend/trackit/web/TaskNotFoundException.java
 
   m2-start:
-    role: starting point for lab 2, module M2 - the lab 1.2 solution without its handout. Lab 2 ships its own LAB.md when it is built.
+    role: starting point for lab 2, module M2 - the lab 1.2 solution plus the lab 2 handout. OpenSpec is installed during the lab, so nothing under openspec/ ships here.
     must_exist:
+      - LAB.md
       - .claude/skills/add-persistence/SKILL.md
       - .claude/skills/add-view/SKILL.md
       - .claude/agents/db-builder.md
@@ -163,9 +164,78 @@ branches:
       - .mcp.json
       - docs/mcp-scoping.md
       - compose.yaml
-      - backend/src/main/java/ch/incratec/trackit/domain/TaskEntity.java
+      - backend/src/main/java/ch/acend/trackit/domain/TaskEntity.java
       - backend/src/main/resources/db/migration/V1__create_task.sql
       - frontend/src/api/tasks.ts
       - frontend/src/views/TaskBoardView.vue
     must_not_exist:
+      # task 1 installs OpenSpec, tasks 3 to 6 produce everything under openspec/
+      - openspec/specs/task-comments/spec.md
+      # tasks 3 to 5 build the comment feature
+      - backend/src/main/java/ch/acend/trackit/domain/Comment.java
+      - backend/src/main/java/ch/acend/trackit/domain/CommentEntity.java
+      - backend/src/main/java/ch/acend/trackit/repository/CommentRepository.java
+      - backend/src/main/java/ch/acend/trackit/service/CommentService.java
+      - backend/src/main/java/ch/acend/trackit/dto/CreateCommentRequest.java
+      - backend/src/main/java/ch/acend/trackit/web/CommentController.java
+      - backend/src/main/resources/db/migration/V2__create_comment.sql
+      - backend/src/test/java/ch/acend/trackit/web/CommentControllerTest.java
+
+  m2-solution:
+    role: reference state after lab 2 - task comments, specified before written. Carries the archived change and the merged live spec, which is the artefact the module is actually about.
+    must_exist:
       - LAB.md
+      - openspec/specs/task-comments/spec.md
+      - openspec/changes/archive/2026-09-08-add-task-comments/proposal.md
+      - openspec/changes/archive/2026-09-08-add-task-comments/tasks.md
+      - openspec/changes/archive/2026-09-08-add-task-comments/specs/task-comments/spec.md
+      - backend/src/main/java/ch/acend/trackit/domain/Comment.java
+      - backend/src/main/java/ch/acend/trackit/domain/CommentEntity.java
+      - backend/src/main/java/ch/acend/trackit/repository/CommentRepository.java
+      - backend/src/main/java/ch/acend/trackit/service/CommentService.java
+      - backend/src/main/java/ch/acend/trackit/dto/CreateCommentRequest.java
+      - backend/src/main/java/ch/acend/trackit/web/CommentController.java
+      - backend/src/main/java/ch/acend/trackit/web/TaskNotFoundException.java
+      - backend/src/main/resources/db/migration/V2__create_comment.sql
+      - backend/src/test/java/ch/acend/trackit/web/CommentControllerTest.java
+    must_not_exist:
+      - deploy/terraform/main.tf
+      - .claude/settings.json
+      - .claude/hooks/check-infra.sh
+
+  m3-start:
+    role: starting point for lab 3, module M3 - the lab 2 solution plus the lab 3 handout. Everything the lab hardens or generates is absent.
+    must_exist:
+      - LAB.md
+      - openspec/specs/task-comments/spec.md
+      - backend/src/main/java/ch/acend/trackit/web/CommentController.java
+      - backend/src/main/resources/db/migration/V2__create_comment.sql
+      - compose.yaml
+      - .mcp.json
+    must_not_exist:
+      # task 1 writes the deny rules
+      - .claude/settings.json
+      # task 2 writes the hook
+      - .claude/hooks/check-infra.sh
+      # task 4 generates the infrastructure
+      - deploy/terraform/main.tf
+      - deploy/terraform/variables.tf
+      - deploy/terraform/versions.tf
+      - deploy/terraform/outputs.tf
+
+  m3-solution:
+    role: reference state after lab 3 - deny rules, a PreToolUse hook that fails closed, the Terraform MCP server connected, and a configuration that passes terraform validate. Nothing is applied.
+    must_exist:
+      - LAB.md
+      - .claude/settings.json
+      - .claude/hooks/check-infra.sh
+      - .mcp.json
+      - deploy/terraform/versions.tf
+      - deploy/terraform/variables.tf
+      - deploy/terraform/main.tf
+      - deploy/terraform/outputs.tf
+      - deploy/terraform/terraform.tfvars.example
+      - openspec/specs/task-comments/spec.md
+    must_not_exist:
+      # the credential never lands in a file, in this repo or any participant's
+      - deploy/terraform/terraform.tfvars
