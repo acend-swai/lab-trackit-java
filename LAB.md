@@ -213,6 +213,8 @@ cd backend
 
 Ends in `BUILD SUCCESS`. Hand the failing output back if not.
 
+Start the application against the database:
+
 ```bash
 ./mvnw spring-boot:run
 ```
@@ -242,6 +244,8 @@ A green test suite proved none of that. The controller test mocks the service aw
 whole storage path is absent from the run. Persistence is proven by a restart and by
 nothing else.
 
+Commit the slice now that it survives a restart:
+
 ```bash
 cd .. && git add -A && git commit -m "feat: store tasks in postgres"
 ```
@@ -251,8 +255,8 @@ That is your real acceptance criterion.
 
 **Tip:** Anything you have typed into a prompt three times is a skill.
 
-**Trap:** `BUILD SUCCESS` feeling like proof. Here it is green with no database running at
-all.
+**Trap:** `BUILD SUCCESS` feeling like proof. The suite passes with no database running
+at all.
 
 Reference: [skills](https://code.claude.com/docs/en/skills)
 
@@ -282,6 +286,8 @@ npm run dev
 
 Open <http://localhost:5173> with the backend still running, add a task, and see it in the
 list. Reload the page, it is still there, because it is in the database now.
+
+Commit the board:
 
 ```bash
 cd .. && git add -A && git commit -m "feat: add the task board"
@@ -517,7 +523,7 @@ unreadable and a duplicated line drifts in two places at once.
 
 Reference: [skills](https://code.claude.com/docs/en/skills)
 
-## Task A2 - ADVANCED: Two agents, one turn, two subsystems
+## Task A2 - ADVANCED: Run two agents in one turn
 
 *Deepens tasks 3 and 4. Start here if you only do one advanced task.*
 
@@ -596,7 +602,7 @@ required section of every report.
 another definition to keep true as the repo changes.
 
 **Trap:** Two agents in one working tree with overlapping paths. There is no conflict
-marker, the second write simply wins and you find out in review.
+marker, the second write wins and you find out in review.
 
 Reference: [subagents](https://code.claude.com/docs/en/sub-agents)
 
@@ -716,7 +722,7 @@ whether they trust it, it is what its agents can reach in your repository.
 
 Reference: [plugins](https://code.claude.com/docs/en/plugins)
 
-## Task A7 - ADVANCED: A database role the agent cannot write through
+## Task A7 - ADVANCED: Give the agent a read-only database role
 
 *Deepens task 7.* Give the agent a way into the database that cannot write:
 
