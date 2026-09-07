@@ -3,13 +3,17 @@
 # Devcontainer post-create for lab-trackit-java.
 #
 # Installs the two AI coding CLIs the workshop runs on (Claude Code, OpenCode),
-# seeds .env and warms the Maven cache. Every step verifies itself and prints a
-# loud WARNING when it fails - a broken install must never pass silently, or a
-# participant only finds out at the start of the first lab.
+# makes .env part of the environment of every shell, and warms the Maven cache.
+# Every step verifies itself and prints a loud WARNING when it fails - a broken
+# install must never pass silently, or a participant only finds out at the start
+# of the first lab.
 #
 # Baseline: acend-swai/lab-hello-world (same npm packages, same [OK] idiom).
 
 set -uo pipefail
+
+WORKSPACE="$PWD"
+ENV_SNIPPET="$HOME/.trackit-env.sh"
 
 warn() { echo "WARNING: $*" >&2; }
 
@@ -38,16 +42,39 @@ else
   warn ".env could not be created. Copy .env.example to .env by hand."
 fi
 
-# opencode.json reads OPENROUTER_API_KEY from the environment, and OpenCode does
-# not load .env itself. Give every terminal in this container the file.
-line="set -a; [ -f '$PWD/.env' ] && . '$PWD/.env'; set +a"
-if grep -qF "$line" "$HOME/.bashrc" 2> /dev/null; then
-  echo "[OK]      .env already sourced by new terminals"
-elif echo "$line" >> "$HOME/.bashrc"; then
-  echo "[OK]      new terminals will source .env"
-else
-  warn "could not extend ~/.bashrc - run 'set -a; source .env; set +a' before starting OpenCode"
+# OpenCode reads OPENROUTER_API_KEY from the environment and does not load .env
+# itself. One snippet holds the logic; every shell startup file sources it, so
+# interactive and login shells, bash and zsh, all see the same variables. It
+# re-reads .env on every shell start, which is what makes a key added later work
+# in the next terminal without a rebuild.
+echo "--- wiring .env into every shell"
+cat > "$ENV_SNIPPET" <<SNIPPET
+# lab-trackit-java: put .env into the environment. Written by post-create.sh.
+if [ -f "$WORKSPACE/.env" ]; then
+  set -a
+  . "$WORKSPACE/.env"
+  set +a
 fi
+SNIPPET
+
+if [ -f "$ENV_SNIPPET" ]; then
+  echo "[OK]      $ENV_SNIPPET written"
+else
+  warn "could not write $ENV_SNIPPET - run 'set -a; source .env; set +a' before starting OpenCode"
+fi
+
+source_line=". \"\$HOME/.trackit-env.sh\""
+guarded="[ -f \"\$HOME/.trackit-env.sh\" ] && $source_line"
+for rc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile"; do
+  [ -e "$rc" ] || touch "$rc" 2> /dev/null || continue
+  if grep -qF "trackit-env.sh" "$rc" 2> /dev/null; then
+    echo "[OK]      $(basename "$rc") already sources it"
+  elif printf '%s\n' "$guarded" >> "$rc"; then
+    echo "[OK]      $(basename "$rc") sources it now"
+  else
+    warn "could not extend $rc"
+  fi
+done
 
 echo "--- warming the Maven cache"
 if ( cd backend && ./mvnw -q -B dependency:go-offline ); then
@@ -57,4 +84,5 @@ else
 fi
 
 echo "-------------------------------"
-echo "Setup done. Run ./verify.sh - every line must read [OK]."
+echo "Setup done. Open a NEW terminal so .env is loaded, then run ./verify.sh -"
+echo "every line must read [OK]."
