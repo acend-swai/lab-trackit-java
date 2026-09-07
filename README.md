@@ -58,8 +58,8 @@ root, next to this README. It is in `.gitignore`.
 
 Claude Code runs against the Anthropic API directly, no gateway. With your own licence,
 log in with your account and leave `ANTHROPIC_API_KEY` empty - a key set there overrides
-your subscription. Without a licence, use the key from your mail. The `GATEWAY_*` values
-belong to OpenCode alone.
+your subscription. Without a licence, use the key from your mail. The OpenRouter key
+belongs to OpenCode alone.
 
 ## Context file
 
@@ -68,36 +68,37 @@ and the entity model. `CLAUDE.md` is one line, `@AGENTS.md`, so Claude Code and 
 read the same file and there is only one place to change it. Lab 1.1 uses it as the
 grounding for the second half of the comparison. Lab 1.2 writes one from scratch.
 
-## OpenCode against the gateway
+## OpenCode against OpenRouter
 
-Lab 1.1 runs the same task once more through OpenCode against an open-weight model. Your
-key and the base URL come with the `.env` you receive by mail.
+Lab 1.1 runs the same task once more through OpenCode against an open-weight model. The
+gateway is OpenRouter and your key arrives by mail; it starts with `sk-or-v1-`.
 
-OpenCode does not read `.env`, so export it in the shell you start OpenCode from:
+Store it once, inside OpenCode:
 
 ```bash
-set -a; source .env; set +a
+opencode
+/connect
 ```
 
-Then put a provider block in `opencode.json` in the repo root:
+Search for OpenRouter and paste the key. It is saved to
+`~/.local/share/opencode/auth.json`, not read from `.env`.
+
+`opencode.json` in the repo root already lists the three models for the lab. Switch
+between them in the session with `/models`:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
   "provider": {
-    "workshop-gateway": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Workshop gateway",
-      "options": {
-        "baseURL": "<GATEWAY_BASE_URL from your .env>",
-        "apiKey": "{env:GATEWAY_API_KEY}"
-      },
+    "openrouter": {
       "models": {
-        "<one of GATEWAY_MODELS>": { "name": "Open-weight model" }
+        "qwen/qwen3.8-max-0902": {},
+        "moonshotai/kimi-k3": {},
+        "deepseek/deepseek-v4-flash": {}
       }
     }
   }
 }
 ```
 
-Pick the model in the session with `/models`. Docs: <https://opencode.ai/docs/providers/>
+Docs: <https://openrouter.ai/docs/cookbook/coding-agents/opencode-integration>
