@@ -6,11 +6,10 @@
         "apiKey": "{env:OPENROUTER_API_KEY}"
       },
       "models": {
-        "qwen/qwen3-coder-30b-a3b-instruct": {},
+        "moonshotai/kimi-k3": {},
         "qwen/qwen3-coder-next": {},
         "mistralai/devstral-2512": {},
         "nvidia/nemotron-3-super-120b-a12b": {},
-        "moonshotai/kimi-k3": {},
         "deepseek/deepseek-v4-flash": {},
         "qwen/qwen3.8-max-0902": {}
       }
