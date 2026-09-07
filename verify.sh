@@ -83,6 +83,15 @@ if [ -f compose.yaml ]; then
   fi
 fi
 
+# --- jq, needed by the lab 3 hook --------------------------------------------
+if [ -f .claude/hooks/check-infra.sh ]; then
+  if command -v jq > /dev/null 2>&1; then
+    echo "[OK]      jq ($(jq --version 2>&1))"
+  else
+    echo "[MISSING] jq - the lab 3 hook fails closed without it and will block every Bash call"
+  fi
+fi
+
 # --- the frontend, from the lab 1.2 branch onward -----------------------------
 if [ -d frontend ]; then
   if [ -d frontend/node_modules ]; then
