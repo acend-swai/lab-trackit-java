@@ -248,7 +248,7 @@ judgement with description.
 
 Reference: [Claude Code commands](https://code.claude.com/docs/en/commands)
 
-## Task 2: Use the skill and the agent the branch ships (5 min)
+## Task 2: Use a skill and an agent (5 min)
 
 ### Step 1: Fire the skill without naming it
 
@@ -307,7 +307,7 @@ agent is a real boundary.
 **Tip:** When a skill does not fire, fix the description first, not the body. Write
 descriptions as the phrasings people actually type.
 
-**Trap:** Treating a skill as a sandbox. If you need something to be unable to write, use
+**Trap:** Do NOT treat a skill as a sandbox. If you need something to be unable to write, use
 an agent.
 
 References: [skills](https://code.claude.com/docs/en/skills) ·
@@ -334,13 +334,18 @@ Show me your plan before you change any file.
 You did not name the skill, so check the plan for the three things the skill prescribes: an
 entity *beside* the record, a Flyway migration, and `ddl-auto: validate`.
 
-If any of the three is missing, send it back. A plan that ignores the skill produces code
-that ignores it too:
+If all three are in the plan, the skill fired. Go to Step 3.
+
+Send the plan back only when one of the three is actually missing. A plan that ignores the
+skill produces code that ignores it too:
 
 ```text
 That plan does not follow the add-persistence skill in .claude/skills. Read it and plan
 again.
 ```
+
+**Note.** Sending back a plan that already follows the skill costs you a turn and gets you a
+question back, because there is nothing for it to correct. Read the three before you type.
 
 ### Step 3: Approve the dependencies by name
 
@@ -355,32 +360,53 @@ The plan is fine and those dependencies are fine. Implement exactly that, and st
 
 ### Step 4: Run the test suite yourself
 
-In a second terminal:
+Terminal 1 is the Claude session. Open a second terminal and run the suite there without
+`-q`, because the build result is the line you came to read:
 
 ```bash
 cd backend
-./mvnw -q test
+./mvnw test
 ```
 
-The output ends in:
+The output ends in a count of the tests and the build result:
 
 ```text
-BUILD SUCCESS
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
 ```
 
 Hand the failing output back to the Claude session if it does not.
 
+**Note.** `./mvnw -q test` prints no `BUILD SUCCESS` and no test count. `-q` hides
+everything at INFO level, and the build result is an INFO line. Under `-q` a passing run and
+a failing run look nearly identical, so use it only where you check the exit code instead.
+
 ### Step 5: Start the application against the database
+
+The tests are done, so reuse terminal 2 for the application:
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-Spring Boot logs a `Started` line once it is up:
+On the first start Flyway creates the table, and Spring Boot logs a `Started` line once it
+is up. These are an excerpt, the rest of the startup log is between them:
 
 ```text
-Started TrackitApplication in 4.312 seconds (process running for 4.9)
+o.f.core.internal.command.DbMigrate  : Migrating schema "public" to version "1 - create task table"
+o.f.core.internal.command.DbMigrate  : Successfully applied 1 migration to schema "public", now at version v1
+ch.acend.trackit.TrackitApplication  : Started TrackitApplication in 1.493 seconds (process running for 1.599)
 ```
+
+Those two `DbMigrate` lines are the migration doing the work. Hibernate is on
+`ddl-auto: validate` and creates nothing, so a run without them has no table.
+
+**Note.** Only the first start migrates. On later starts Flyway finds version 1 already
+applied and logs no `Migrating` line, which is correct.
 
 Leave it running in that terminal.
 
@@ -400,16 +426,19 @@ The output holds a generated id and the title you sent:
 {"id":1,"title":"Survive a restart","project":"trackit","status":"OPEN"}
 ```
 
+Note your id. It is `1` on a fresh database, and higher if you have run this lab before,
+because the `pgdata` volume in `compose.yaml` keeps the rows between runs.
+
 ### Step 7: Make the check the tests cannot make
 
-Stop the application with `Ctrl+C` in the second terminal, start it again with
-`./mvnw spring-boot:run`, and ask for the list:
+Stop the application with `Ctrl+C` in terminal 2, start it again with
+`./mvnw spring-boot:run`, and ask for the list from terminal 3:
 
 ```bash
 curl -s localhost:8080/api/v1/tasks
 ```
 
-The output should be your task, returned by a process that started with an empty memory:
+The output is the task you created, returned by a process that started with an empty memory:
 
 ```json
 [{"id":1,"title":"Survive a restart","project":"trackit","status":"OPEN"}]
@@ -430,13 +459,16 @@ docker exec trackit-db psql -U trackit -d trackit -c 'SELECT * FROM task;'
 (1 row)
 ```
 
+The id and the row count are yours. Both are higher if the volume already held tasks.
+
 A green test suite proved none of that. The controller test mocks the service away, so the
 whole storage path is absent from the run. Persistence is proven by a restart and by
 nothing else.
 
 ### Step 8: Commit the slice
 
-It survives a restart, so commit it. Go back to the repo root first:
+It survives a restart, so commit it. Stop the application with `Ctrl+C` in terminal 2, then
+commit from the repo root:
 
 ```bash
 cd .. && git add -A && git commit -m "service: store tasks in postgres"
@@ -446,10 +478,30 @@ cd .. && git add -A && git commit -m "service: store tasks in postgres"
 
 ```text
 [m1-2-start 4d5e6f7] service: store tasks in postgres
- 8 files changed, 214 insertions(+), 11 deletions(-)
+ 7 files changed, 214 insertions(+), 11 deletions(-)
 ```
 
-The hash and the counts are yours, not these.
+Seven files: `pom.xml`, the entity, the repository, the migration, `application.yml`, the
+service, and the controller test. The hash and the line counts are yours, not these.
+
+### Step 9: Find what it refused to touch
+
+Skip this step if you are short of time, Task 4 needs the full 8 minutes.
+
+The skill forbids annotating the `Task` record, and `AGENTS.md` is outside this job. Both
+now contradict the code. Ask the session what it left alone:
+
+```text
+Which files did you notice were now wrong, but leave unchanged, and why?
+```
+
+It names the javadoc on the `Task` record, `Persistence arrives in M2; for now tasks live in
+memory`, and the closing line of the Entity Model section in `AGENTS.md`. Both describe
+in-memory storage that you just replaced.
+
+An agent that stops at a boundary it can see past is the behaviour you want. It reported the
+inconsistency instead of widening its own scope to fix it. Leave both as they are, M2 covers
+them.
 
 **Take home:** For every feature, name the check the test suite cannot make, then make it.
 That is your real acceptance criterion.
