@@ -38,6 +38,17 @@ else
   warn ".env could not be created. Copy .env.example to .env by hand."
 fi
 
+# opencode.json reads OPENROUTER_API_KEY from the environment, and OpenCode does
+# not load .env itself. Give every terminal in this container the file.
+line="set -a; [ -f '$PWD/.env' ] && . '$PWD/.env'; set +a"
+if grep -qF "$line" "$HOME/.bashrc" 2> /dev/null; then
+  echo "[OK]      .env already sourced by new terminals"
+elif echo "$line" >> "$HOME/.bashrc"; then
+  echo "[OK]      new terminals will source .env"
+else
+  warn "could not extend ~/.bashrc - run 'set -a; source .env; set +a' before starting OpenCode"
+fi
+
 echo "--- warming the Maven cache"
 if ( cd backend && ./mvnw -q -B dependency:go-offline ); then
   echo "[OK]      Maven dependencies cached"
