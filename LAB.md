@@ -103,8 +103,6 @@ your own licence, leave `ANTHROPIC_API_KEY` empty and log in with your Anthropic
 Claude Code talks to the Anthropic API directly, with no gateway in front of it, so the
 credential it finds is the one it bills. Task 0 starts your first session, so settle this now.
 
-
-
 ## What you record today (Advanced)
 
 Two things travel with you out of this lab. Set them up now, before task 0.
@@ -182,6 +180,9 @@ names the mode you are in. `CHEATSHEET.md` in the repo root has the full table.
 ---
 
 # Part 1 - Standard
+
+The goal of the next steps is to get to know Claude Code and the main features for agentic coding.
+If you already familiar with these commands and tasks, please proceed to the following sections in the lab.
 
 ## Task 0: Let the agent onboard you to the repo (3 min)
 
@@ -268,9 +269,9 @@ Look for the four things that go wrong most often:
 
 Check the result and let Claude fix any problems using this structure:
 
-Select **Tell Claude what to change** 
+Select **Tell Claude what to change**
 
-Enter your corrections into the input field as a prompt. Use a numbered, so Claude applies the list and rewrites the plan. 
+Enter your corrections into the input field as a prompt. Use a numbered, so Claude applies the list and rewrites the plan.
 This example shows how it should look like - adapt depending on your code base.
 
 ```text
@@ -584,123 +585,7 @@ Most "the model is bad" verdicts are missing context, not missing capability.
 debugging conversation into one sentence. Write one for your repo and check the agent
 prerequisites, not just the app.
 
-## Task 4: Write the context file yourself (6 min, optional)
-
-Tasks 1 and 3 showed what the shipped `AGENTS.md` is worth. **Nobody hands you that file in
-your own repo**, so this is the task where you produce one: generate a draft with `/init`, put
-it where every tool will find it, and turn the description into rules.
-
-### Step 1: Put the shipped file aside
-
-You compare against it in step 4, so keep it. `CLAUDE.md` goes too, it is only a pointer at
-the file you just moved:
-
-```bash
-mv AGENTS.md AGENTS.reference.md
-rm CLAUDE.md
-```
-
-The repo now has no context file, which is the state your own repo is in today.
-
-### Step 2: Generate the draft
-
-```text
-/init
-```
-
-`/init` reads the repo and writes a `CLAUDE.md` with the stack, the layout, and how to build
-and test. That is a description of what it found, not a set of rules.
-
-### Step 3: Move it to AGENTS.md and leave a pointer
-
-Claude Code reads `CLAUDE.md`, Copilot reads `copilot-instructions.md`, OpenCode reads
-`AGENTS.md`. They are the same idea under three names, and keeping three copies means three
-files drifting apart. This project keeps the rules in `AGENTS.md` and makes `CLAUDE.md` a
-one-line pointer at it, so every tool in the room reads the same file and there is one file
-to review:
-
-```bash
-mv CLAUDE.md AGENTS.md
-printf '@AGENTS.md\n' > CLAUDE.md
-```
-
-Check it:
-
-```bash
-cat CLAUDE.md
-```
-
-The output should be:
-
-```text
-@AGENTS.md
-```
-
-### Step 4: Turn the description into rules
-
-Add what `/init` cannot know. These three blocks are the minimum, because each one changes
-what the agent does:
-
-```markdown
-## Coding Standards
-- Records for value types, no Lombok
-- Constructor injection only, never field injection
-- Tests use @WebMvcTest(TheController.class) and inject MockMvc
-- Test names read as a sentence: postTaskReturnsCreated
-
-## Constraints
-- DO NOT add a dependency to pom.xml without saying so first
-- DO NOT put business logic in a controller
-- Every new endpoint MUST have at least one MockMvc test
-
-## Git rules
-- Commit before every non-trivial task
-- Commit as soon as a slice runs green
-- No amend on an accepted commit
-- No force-push
-```
-
-Now compare with the file you set aside:
-
-```bash
-diff AGENTS.reference.md AGENTS.md
-```
-
-`diff` prints the lines that differ, the shipped file's marked `<` and yours marked `>`. Take
-anything from it that would change what the agent does, ignore the rest, then drop the file:
-
-```bash
-rm AGENTS.reference.md
-```
-
-`rm` prints nothing, and `ls AGENTS*` now shows `AGENTS.md` alone.
-
-### Step 5: Check that it took effect
-
-Ask something the agent can only answer from the file:
-
-```text
-Which test naming convention does this project use, and what do you have to ask me
-about before you do it?
-```
-
-It names the sentence-style test names and the dependency rule. If it does not, the file is
-in the wrong place or the session started before you wrote it. Restart and ask again.
-
-**Take home:** Run `/init` once per repo to get the draft, then curate it by hand. Only keep
-rules the agent cannot infer: your conventions, forbidden paths, the dependency rule, your
-git rules. It is configuration, so commit it and review it in pull requests like code.
-
-**Tip:** Test every line with one question: what would the agent do differently because of
-it? A line that fails that test costs you tokens on every turn. Check the size with
-`/context`.
-
-**Trap:** A 400-line context file feels organised and gets ignored. Short and enforced beats
-long and unread.
-
-Reference: [skills and context](https://code.claude.com/docs/en/skills)
-
-## Task 5: Run the same job using OpenCode and open-weight models (optional)
+## Task 4: Run the same job using OpenCode and open-weight models
 
 We run task 1 again, this time through OpenCode against OpenRouter on `moonshotai/kimi-k3`.
 Use the same job text, the comparison only holds if the input is identical. Steps 1 to 4 are
@@ -915,7 +800,7 @@ and an unreadable one.
 
 **Trap:** Every layer is sent on every turn. `/context` tells you what you are paying.
 
-## Task A3 - ADVANCED: Separate the plan from the execution
+## Task A3 - ADVANCED: Split the plan from the execution
 
 *Deepens task 1.* In task 1 you approved each action as it came up, and the job text was
 written for you. Here we build the same feature again, but you write the job text, the agent
