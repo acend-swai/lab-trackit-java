@@ -169,8 +169,17 @@ wrote it. Check what it decided, not how it sounds.
 It works the checklist in `tasks.md`: **tests first, from the acceptance scenarios**, then
 the code until they pass.
 
-Watch the order. If it writes the implementation before the tests, stop it and say so. A
-test written after the code tests the code, a test written from the spec tests the spec.
+Watch the order. If it writes the implementation before the tests, press `Esc` to interrupt
+and type:
+
+```text
+Stop. Write the tests from the acceptance scenarios in spec.md first, then the code until
+they pass.
+```
+
+A test written after the code tests the code, a test written from the spec tests the spec.
+
+Then run the suite yourself, in a second terminal:
 
 ```bash
 cd backend && ./mvnw -q test
