@@ -16,11 +16,9 @@ and compare what comes back.
 `m1-1-start` ships one endpoint, `GET /api/v1/health`. That is the pattern the agent
 copies, so read it before you generate anything.
 
-**Part 1 is for everyone.** Setup plus four tasks, about 36 minutes. Task 4 has to happen:
-it fills the comparison sheet the module discussion runs on.
+**Part 1 is for everyone.** Setup plus four tasks.
 
-**Part 2 is advanced and optional.** Start it when Part 1 is green. Nothing later in the
-day depends on it.
+**Part 2 is advanced and optional.** Start it when finished with part 1.
 
 ## Where you start
 
@@ -78,7 +76,9 @@ A key set there overrides your subscription.
 
 ## What you record today
 
-Two things travel with you out of this lab. Set them up now, before you start task 1.
+We want to investigate the difference of the models related to the workload. 
+Please fill in the numbers and your experience, so we can compare this later and discuss your experience. 
+Feel free to use other than the suggested models, if you want.
 
 **1. The comparison sheet.** Copy this into a scratch file. You fill one column per model
 you run today, two in task 1 and two in task 4. The five-minute discussion at the end of
@@ -94,10 +94,8 @@ the module runs on it, so bring it filled in.
 | Cost of the run | | | | |
 | Did you feel in control? | | | | |
 
-**2. One moment where the agent got away from you.** A file it touched, a dependency it
-added, a step it skipped, a claim it made without checking. One line, written down when it
-happens. The transfer discussion in M4.2 comes back to it, and it is the most useful thing
-you take back to your own team.
+**2. One moment where the agent got away from you.** Whenever you experience a 
+difference from the expected behavior, please not it down into the table above.
 
 ## Commands you use today
 
