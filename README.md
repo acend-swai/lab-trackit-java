@@ -19,8 +19,8 @@ git clone -b m1-1-start https://github.com/acend-swai/lab-trackit-java.git track
 
 The repo is public, so this needs no account and no token. Clone it in full - a `--depth`
 clone has no `origin/m1-1-solution` to compare against and no `origin/m2-start` to fall
-back to. Your clone is yours: nothing you commit reaches this repo, and if you want to
-keep your work, add a remote of your own and push there.
+back to. Your clone is yours: nothing you commit reaches this repo. To keep your work,
+see [Keep your work in your own fork](#keep-your-work-in-your-own-fork) below.
 
 | Module | Start | Solution | Stage |
 |---|---|---|---|
@@ -49,6 +49,43 @@ On that branch, `docs/adr/0002-full-agentic-capstone-platform.md` records what t
 is and deliberately is not, `docs/adr/0003-agent-security-boundary.md` the security
 boundary, and `openspec/changes/add-task-summary/` holds an unimplemented feature the
 branch ships ready to build.
+
+## Keep your work in your own fork
+
+You have read access here, so your commits cannot go to this repo. To keep them, fork the
+repo and let your clone push there instead.
+
+Press **Fork** on <https://github.com/acend-swai/lab-trackit-java>, then run this once from
+the repo root:
+
+```bash
+scripts/use-my-fork.sh https://github.com/<your-user>/lab-trackit-java.git
+```
+
+The output ends with:
+
+```text
+  git push          goes to mine (https://github.com/<your-user>/lab-trackit-java.git)
+  git fetch origin  brings lab updates from the workshop repo
+```
+
+Push the branch you are on, and your work is on your fork:
+
+```bash
+git push -u mine m1-1-start
+```
+
+From here `git push` on its own goes to your fork, and `git fetch origin` still brings lab
+branches and fixes from this repo.
+
+Do not add the fork by hand. A fork carries the same branch names as this repo, so once
+both remotes know `m1-2-start`, `git checkout m1-2-start` fails with `matched more than one
+remote tracking branch`. The script prevents that: it keeps `origin` pointing here, adds
+your fork as `mine`, and sets `remote.pushDefault` and `checkout.defaultRemote` so pushes
+go to the fork while branch names keep resolving to this repo.
+
+If you already cloned your fork instead of this repo, run the same command - it repoints
+`origin` here and moves your fork to `mine`.
 
 ## Requirements
 
