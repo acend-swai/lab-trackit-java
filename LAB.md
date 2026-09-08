@@ -79,10 +79,9 @@ git checkout -b m1-2-start origin/m1-2-start
 m1-2-start
 ```
 
-**Note.** If you added a second remote in lab 1.1 and it carries the same branch names, a
-plain `git checkout m1-2-start` fails with `matched multiple (2) remote tracking branches`.
-The line above names the remote, so it works either way. If the branch already exists
-locally, drop the `-b` and the `origin/m1-2-start`.
+**Note.** The line above names `origin`, so it lands on the workshop branch whether or not
+you added your fork in lab 1.1. If the branch already exists locally, drop the `-b` and the
+`origin/m1-2-start`.
 
 **Note.** You do not need your lab 1.1 result here. `m1-2-start` is the lab 1.1 solution
 with new scaffolding on top.
