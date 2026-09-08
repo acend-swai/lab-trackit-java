@@ -72,22 +72,39 @@ git commit --allow-empty -m "chore: start of my workshop repo"
 
 `git log --oneline -1` shows that commit at the top of your history.
 
-### Keep your clone
+### Send your commits to your own fork
 
-This clone is yours. Work in it, commit into it, break it. You have read access and nothing
-you do reaches the workshop repo. To keep the work after today, push it to an empty repo of your own, under a branch name of your own:
+This clone is yours. Work in it, commit into it, break it. You have read access to the
+workshop repo and nothing you do reaches it.
+
+To keep your work after today, fork the repo on GitHub and point your clone at the fork.
+Open <https://github.com/acend-swai/lab-trackit-java> and press **Fork**. Then wire up the
+clone, from the repo root:
 
 ```bash
-git remote add mine <your repo>
-git push -u mine m1-1-start:my-workshop
+scripts/use-my-fork.sh https://github.com/<your-user>/lab-trackit-java.git
 ```
 
-`git remote -v` shows `mine` next to `origin`, and the branch `my-workshop` shows up on your own remote.
+The output ends with:
 
-Point `mine` at an empty repo, not at a fork of this one. A fork carries the same branch
-names as `origin`, and every later `git checkout mN-start` then fails with
-`matched multiple (2) remote tracking branches`. If you already added a fork, name the
-remote on each checkout: `git checkout -b m1-2-start origin/m1-2-start`.
+```text
+  git push          goes to mine (https://github.com/<your-user>/lab-trackit-java.git)
+  git fetch origin  brings lab updates from the workshop repo
+```
+
+Push the branch you are on, so the fork has your work:
+
+```bash
+git push -u mine m1-1-start
+```
+
+Your branch shows up on your fork on GitHub, and `git push` on its own goes there for the
+rest of the day.
+
+**Note.** `origin` stays the workshop repo, so every `git fetch origin` and every
+`git checkout mN-start` in the later labs works unchanged. The script sets
+`checkout.defaultRemote`, which keeps a branch name that exists on both remotes pointing at
+the workshop repo.
 
 ### Bring your own stack
 
